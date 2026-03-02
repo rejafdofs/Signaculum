@@ -1,4 +1,4 @@
--- UkaLean.StatusPermanens
+-- PuraShiori.StatusPermanens
 -- 永続化（persistentia）の型クラスと補助關數にゃん♪
 -- ghost_status.bin への讀み書きを擔ふにゃ
 

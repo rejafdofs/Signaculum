@@ -1,4 +1,4 @@
--- UkaLean.SakuraScriptum
+-- PuraShiori.SakuraScriptum
 -- ★ SakuraScript モナド DSL にゃん♪
 -- do 記法で型安全に SakuraScript を組み立てられるにゃ
 

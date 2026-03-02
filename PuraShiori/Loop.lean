@@ -1,7 +1,7 @@
--- UkaLean.Loop
+-- PuraShiori.Loop
 -- ゴースト本體（ghost.exe）として標準入出力で中繼器と通信する小循環（loop）にゃん。
 
-import UkaLean.Exporta
+import PuraShiori.Exporta
 
 namespace UkaLean
 

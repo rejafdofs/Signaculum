@@ -32,7 +32,7 @@ version = "0.1.0"
 [[require]]
 git = "https://github.com/rejafdofs/uka-lean"
 rev = "main"
-name = "うちのこゴースト化用lean SHIORi"
+name = "PuraShiori"
 
 [[lean_lib]]
 name = "Ghost"
@@ -49,7 +49,7 @@ root = "Main"
 ```lean
 -- Main.lean
 import PuraShiori
-open PuraShiori Sakura
+open UkaLean Sakura
 
 varia perpetua numerusSalutationum : Nat := 0
 
@@ -73,7 +73,7 @@ eventum "OnClose" fun _ => do
 
 construe
 
-def main : IO Unit := PuraShiori.loopPrincipalis
+def main : IO Unit := UkaLean.loopPrincipalis
 ```
 
 ### ④ 構築(aedificatio)して實行體(exsecutabile) `ghost.exe` を作るにゃ

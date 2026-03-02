@@ -1,7 +1,7 @@
--- UkaLean.Responsum
+-- PuraShiori.Responsum
 -- SHIORI/3.0 應答の構築にゃん
 
-import UkaLean.Protocollum
+import PuraShiori.Protocollum
 
 namespace UkaLean
 

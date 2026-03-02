@@ -1,12 +1,12 @@
--- UkaLean.Syntaxis
+-- PuraShiori.Syntaxis
 -- ゴーストDSL構文擴張にゃん♪
 -- varia / eventum / construe の3つの構文擴張を提供するにゃ
 -- 環境拡張 GhostAccumulatio に variae（變數宣言）と eventa（事象宣言）を累積するにゃ
 
 import Lean
-import UkaLean.StatusPermanens
-import UkaLean.Exporta
-import UkaLean.Loop
+import PuraShiori.StatusPermanens
+import PuraShiori.Exporta
+import PuraShiori.Loop
 
 open Lean Elab Command
 

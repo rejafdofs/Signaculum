@@ -1,8 +1,8 @@
--- UkaLean.Exporta
+-- PuraShiori.Exporta
 -- @[export] を用ゐた FFI 輸出關數群にゃん
 -- C 包裝（ffi/shiori.c）からこれらの關數が呼ばれるにゃ
 
-import UkaLean.Nuculum
+import PuraShiori.Nuculum
 
 namespace UkaLean
 

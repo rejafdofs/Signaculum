@@ -1,4 +1,4 @@
--- UkaLean.Protocollum
+-- PuraShiori.Protocollum
 -- SHIORI/3.0 プロトコッルムの共通型と定數にゃん
 
 namespace UkaLean

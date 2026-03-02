@@ -1,10 +1,10 @@
--- UkaLean.Nuculum
+-- PuraShiori.Nuculum
 -- 栞の核心骨格にゃん。處理器の登錄と事象のルーティングを擔ふにゃ
 
-import UkaLean.Protocollum
-import UkaLean.SakuraScriptum
-import UkaLean.Rogatio
-import UkaLean.Responsum
+import PuraShiori.Protocollum
+import PuraShiori.SakuraScriptum
+import PuraShiori.Rogatio
+import PuraShiori.Responsum
 
 namespace UkaLean
 

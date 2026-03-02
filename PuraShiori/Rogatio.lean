@@ -1,7 +1,7 @@
--- UkaLean.Rogatio
+-- PuraShiori.Rogatio
 -- SHIORI/3.0 要求の構文解析にゃん
 
-import UkaLean.Protocollum
+import PuraShiori.Protocollum
 
 namespace UkaLean
 

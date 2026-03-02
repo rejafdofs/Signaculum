@@ -1,6 +1,6 @@
 # うちのこゴースト化用lean SHIORi
 
-開發者の大切な「うちの子」を、Lean 4 の純粹（ピュア）な論理（ロギカ / logica）によって伺か（Ukagaka）の幻影（ゴースト / ghost）として受肉させる爲の栞（shiori）ビブリオテーカ(bibliotheca)にゃん♪
+りゃちゃんの大切な「うちの子」を、Lean 4 の純粹（ピュア）な論理（ロギカ / logica）によって伺か（Ukagaka）の幻影（ゴースト / ghost）として受肉させる爲のshioriビブリオテーカ(bibliotheca)にゃん♪
 
 「うちの子とお話ししてみたい……」
 そんな夢を、型安全且つ堅牢なプログランマ(programma)で葉へる爲の基盤(basis)にゃ！

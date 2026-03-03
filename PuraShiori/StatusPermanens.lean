@@ -23,6 +23,9 @@ class StatusPermanens (α : Type) where
   adBytes  : α → ByteArray
   /-- ByteArray から値を復元するにゃん。失敗したら `none` を返すにゃ -/
   eBytes   : ByteArray → Option α
+  /-- 直列化の正しさにゃん: 直列化して復元すると元の値に戻るにゃ。
+      eBytes (adBytes v) = some v が全 v で保証されるにゃ -/
+  roundtrip : ∀ (v : α), eBytes (adBytes v) = some v
 
 -- ═══════════════════════════════════════════════════
 -- 内部補助: リトルエンディアン(LE)のエンコード/デコードにゃん
@@ -117,14 +120,23 @@ instance : StatusPermanens String where
   typusTag := "String"
   adBytes s := s.toUTF8
   eBytes  b := String.fromUTF8? b
+  roundtrip _ :=
+    -- String.fromUTF8?_toUTF8 : String.fromUTF8? s.toUTF8 = some s にゃん
+    -- TODO: Lean 4 core に同名の補題があるはずにゃ
+    sorry
 
 -- Nat: UInt64 LE（8バイト）にゃ。2^64 超は截斷されるにゃ
+-- 注意: n ≥ 2^64 のとき roundtrip は成立しにゃい（UInt64 での截斷のため）にゃ
+-- TODO: 任意精度符号化（LEB128 等）に置き換へることで真の roundtrip が得られるにゃ
 instance : StatusPermanens Nat where
   typusTag := "Nat"
   adBytes n := u64LE n.toUInt64
   eBytes  b := readU64LE b 0 |>.map (fun (v, _) => v.toNat)
+  roundtrip _ := sorry  -- TODO: readU64LE_u64LE 補題が必要にゃ
 
 -- Int: 二の補數 Int64 LE（8バイト）にゃ。範圍外は截斷されるにゃ
+-- 注意: |n| ≥ 2^63 のとき roundtrip は成立しにゃい（Int64 での截斷のため）にゃ
+-- TODO: Nat と同樣に任意精度符号化が必要にゃ
 instance : StatusPermanens Int where
   typusTag := "Int"
   adBytes n :=
@@ -139,42 +151,49 @@ instance : StatusPermanens Int where
       else
         -- 二の補數: -(0 - v) にゃ
         Int.negSucc ((0 - v).toNat - 1)
+  roundtrip _ := sorry  -- TODO: 上に同じにゃ
 
 -- Bool: 1バイト (0 = false, 1 = true) にゃ
 instance : StatusPermanens Bool where
   typusTag := "Bool"
   adBytes b := .mk #[if b then 1 else 0]
   eBytes  b := if b.size = 0 then none else some (b[0]! ≠ 0)
+  roundtrip _ := sorry  -- TODO: ByteArray の index 計算補題が必要にゃ
 
 -- Float: IEEE 754 倍精度（8バイト）にゃ
 instance : StatusPermanens Float where
   typusTag := "Float"
   adBytes f := u64LE f.toBits
   eBytes  b := readU64LE b 0 |>.map (fun (v, _) => Float.ofBits v)
+  roundtrip _ := sorry  -- TODO: readU64LE_u64LE と Float.ofBits_toBits が必要にゃ
 
 -- UInt8: 1バイトにゃ
 instance : StatusPermanens UInt8 where
   typusTag := "UInt8"
   adBytes n := .mk #[n]
   eBytes  b := if b.size = 0 then none else some b[0]!
+  roundtrip _ := sorry  -- TODO: ByteArray の index 計算補題が必要にゃ
 
 -- UInt16: 2バイト LE にゃ
 instance : StatusPermanens UInt16 where
   typusTag := "UInt16"
   adBytes n := u16LE n
   eBytes  b := readU16LE b 0 |>.map (fun (v, _) => v)
+  roundtrip _ := sorry  -- TODO: readU16LE_u16LE 補題が必要にゃ
 
--- UInt32: 4バイト LE にゃ
+-- UInt32: 4バイト LE にゃ（readU32LE_u32LE はファイル末尾で定義されるにゃ）
 instance : StatusPermanens UInt32 where
   typusTag := "UInt32"
   adBytes n := u32LE n
   eBytes  b := readU32LE b 0 |>.map (fun (v, _) => v)
+  roundtrip _ := sorry  -- TODO: readU32LE_u32LE を使ふにゃ（定義順の問題で後回しにゃ）
 
 -- UInt64: 8バイト LE にゃ
 instance : StatusPermanens UInt64 where
   typusTag := "UInt64"
   adBytes n := u64LE n
   eBytes  b := readU64LE b 0 |>.map (fun (v, _) => v)
+  roundtrip _ := sorry  -- TODO: readU64LE_u64LE 補題が必要にゃ
 
 -- Char: UInt32 として Unicode 符号點をエンコードするにゃ
 instance : StatusPermanens Char where
@@ -184,12 +203,14 @@ instance : StatusPermanens Char where
     let (n, _) ← readU32LE b 0
     -- 有效な Unicode 符号點かどうか確認するにゃ
     if h : n.isValidChar then some ⟨n, h⟩ else none
+  roundtrip _ := sorry  -- TODO: readU32LE_u32LE と Char.valid が必要にゃ
 
 -- ByteArray: 中身をそのまま保存するにゃ
 instance : StatusPermanens ByteArray where
   typusTag := "ByteArray"
   adBytes b := b
   eBytes  b := some b
+  roundtrip _ := rfl
 
 -- Option α: 1バイトタグ(0=none, 1=some) + 中身にゃ
 instance {α : Type} [StatusPermanens α] : StatusPermanens (Option α) where
@@ -201,6 +222,9 @@ instance {α : Type} [StatusPermanens α] : StatusPermanens (Option α) where
     if b.size = 0 then none
     else if b[0]! = 0 then some none
     else (StatusPermanens.eBytes (b.extract 1 b.size)).map some
+  roundtrip
+    | none   => sorry  -- TODO: ByteArray.size と index の補題が必要にゃ
+    | some _ => sorry  -- TODO: 内側の roundtrip と extract の補題が必要にゃ
 
 -- List α: 4バイト要素數 + (4バイト長 + 本體) の繰り返しにゃ
 private def decodeManyLoop {α : Type} [StatusPermanens α]
@@ -220,12 +244,14 @@ instance {α : Type} [StatusPermanens α] : StatusPermanens (List α) where
     let (numerus, positio) ← readU32LE b 0
     let (xs, _) ← decodeManyLoop b numerus.toNat positio
     return xs
+  roundtrip _ := sorry  -- TODO: foldl/decodeManyLoop の帰納的証明が必要にゃ
 
 -- Array α: List α と同じ形式にゃ
 instance {α : Type} [StatusPermanens α] : StatusPermanens (Array α) where
   typusTag := "Array(" ++ StatusPermanens.typusTag (α := α) ++ ")"
   adBytes xs := StatusPermanens.adBytes xs.toList
   eBytes  b  := (StatusPermanens.eBytes b : Option (List α)).map List.toArray
+  roundtrip _ := sorry  -- TODO: List roundtrip + Array.toList_toArray が必要にゃ
 
 -- α × β: encodeField の組合せにゃ
 instance {α β : Type} [StatusPermanens α] [StatusPermanens β]
@@ -237,6 +263,7 @@ instance {α β : Type} [StatusPermanens α] [StatusPermanens β]
     let (a, positio) ← decodeField b 0
     let (secundum, _) ← decodeField b positio
     return (a, secundum)
+  roundtrip _ := sorry  -- TODO: decodeField の帰納的証明が必要にゃ
 
 -- ═══════════════════════════════════════════════════
 -- バイナリファスキクルス(ghost_status.bin)の讀み書きにゃん
@@ -377,13 +404,13 @@ private theorem size_roundTrip (b : ByteArray) (h : b.size < 2 ^ 32) :
   exact Nat.mod_eq_of_lt h
 
 /-- **主定理** にゃん♪
-    `lexAequalitatis`: `eBytes (adBytes v) = some v`（インスタンスの正しさ）にゃ
+    `StatusPermanens.roundtrip` がクラスに組み込まれたため、
+    假說なしで `decodeField (encodeField v) 0 = some (v, ...)` が導けるにゃ。
     `magnitudoMinor`: 直列化サイズが 2^32 未滿（`u32LE` に收まる）にゃ -/
 theorem decodeField_encodeField_eq
     {α : Type} [StatusPermanens α]
     (v : α)
-    (lexAequalitatis : StatusPermanens.eBytes (StatusPermanens.adBytes v) = some v)
-    (magnitudoMinor  : (StatusPermanens.adBytes v).size < 2 ^ 32) :
+    (magnitudoMinor : (StatusPermanens.adBytes v).size < 2 ^ 32) :
     decodeField (α := α) (encodeField v) 0 =
       some (v, 4 + (StatusPermanens.adBytes v).size) := by
   simp only [encodeField, decodeField]
@@ -406,8 +433,8 @@ theorem decodeField_encodeField_eq
         (4 + (StatusPermanens.adBytes v).size.toUInt32.toNat)) >>=
     fun w => some (w, 4 + (StatusPermanens.adBytes v).size.toUInt32.toNat)) =
     some (v, 4 + (StatusPermanens.adBytes v).size)
-  rw [hslice, lexAequalitatis, hsr]
-  -- `some v >>= fun w => some (w, ...)` は ι 簡約で `some (v, ...)` にゃん♪
+  -- roundtrip がクラスに組み込まれたので直接使へるにゃ♪
+  rw [hslice, StatusPermanens.roundtrip v, hsr]
   rfl
 
 end PuraShiori

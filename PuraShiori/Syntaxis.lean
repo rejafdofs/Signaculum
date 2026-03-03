@@ -1,14 +1,15 @@
 -- PuraShiori.Syntaxis
 -- ゴーストDSL構文擴張にゃん♪
--- varia / eventum / construe の3つの構文擴張を提供するにゃ
--- 環境拡張 GhostAccumulatio に variae（變數宣言）と eventa（事象宣言）を累積するにゃ
+-- varia / eventum / excita(ident形) / insere(ident形) / construe の構文擴張を提供するにゃ
+-- 環境拡張 GhostAccumulatio に variae・eventa・lazyEventa を累積するにゃ
 
 import Lean
+import PuraShiori.Citationes
 import PuraShiori.StatusPermanens
 import PuraShiori.Exporta
 import PuraShiori.Loop
 
-open Lean Elab Command
+open Lean Elab Command Term Meta
 
 namespace PuraShiori
 
@@ -32,10 +33,20 @@ structure GhostEventDecl where
   /-- 生成した處理器の完全修飾名にゃ -/
   tractatorNomen : Name
 
+/-- def ベースの遅延登録事象にゃん。excita/insere の識別子形で積まれるにゃ -/
+structure LazyEventDecl where
+  /-- 元の def の完全修飾名にゃ -/
+  declNomen   : Name
+  /-- 派生したイベント名（完全修飾文字列）にゃ -/
+  nomenEventi : String
+  /-- 明示的パラメータ数にゃ（Reference 抽出数に使ふにゃ）-/
+  paramCount  : Nat
+
 /-- ゴーストの累積宣言にゃん。construe 時に全部參照するにゃ -/
 structure GhostAccumulatio where
-  variae : Array GhostVarDecl   := #[]
-  eventa : Array GhostEventDecl := #[]
+  variae     : Array GhostVarDecl   := #[]
+  eventa     : Array GhostEventDecl := #[]
+  lazyEventa : Array LazyEventDecl  := #[]
 
 -- Inhabited インスタンスにゃん♪
 instance : Inhabited GhostVarDecl :=
@@ -43,6 +54,9 @@ instance : Inhabited GhostVarDecl :=
 
 instance : Inhabited GhostEventDecl :=
   ⟨{ nomen := "", tractatorNomen := .anonymous }⟩
+
+instance : Inhabited LazyEventDecl :=
+  ⟨{ declNomen := .anonymous, nomenEventi := "", paramCount := 0 }⟩
 
 instance : Inhabited GhostAccumulatio := ⟨{}⟩
 
@@ -54,25 +68,17 @@ initialize ghostAccumulatioExt : EnvExtension GhostAccumulatio ←
 -- varia 構文擴張にゃん
 -- ═══════════════════════════════════════════════════
 
-/-- 永続化變數を宣言するにゃん♪
-    `initialize greetCount : IO.Ref Nat ← IO.mkRef 0` を生成して
-    ghost_status.bin に保存・復元されるやうにするにゃ -/
+/-- 永続化變數を宣言するにゃん♪ -/
 elab "varia" "perpetua" n:ident ":" t:term ":=" v:term : command => do
-  -- initialize を生成するにゃ
   elabCommand (← `(initialize $n : IO.Ref $t ← IO.mkRef $v))
-  -- 環境拡張に登錄するにゃ♪（variae に push するにゃ）
   modifyEnv fun env =>
     ghostAccumulatioExt.modifyState env fun acc =>
       { acc with variae := acc.variae.push {
           nomen := n.getId, typusSyntax := t, permanet := true } }
 
-/-- 一時變數を宣言するにゃん。
-    `initialize lastEvent : IO.Ref String ← IO.mkRef ""` を生成するにゃ。
-    永続化されにゃいにゃ -/
+/-- 一時變數を宣言するにゃん -/
 elab "varia" "temporaria" n:ident ":" t:term ":=" v:term : command => do
-  -- initialize を生成するにゃ
   elabCommand (← `(initialize $n : IO.Ref $t ← IO.mkRef $v))
-  -- 環境拡張に登錄するにゃ（permanet = false、variae に push するにゃ）
   modifyEnv fun env =>
     ghostAccumulatioExt.modifyState env fun acc =>
       { acc with variae := acc.variae.push {
@@ -82,24 +88,75 @@ elab "varia" "temporaria" n:ident ":" t:term ":=" v:term : command => do
 -- eventum 構文擴張にゃん
 -- ═══════════════════════════════════════════════════
 
-/-- 事象處理器を宣言するにゃん♪
-    `def _tractator_OnBoot : PuraShiori.Tractator := body` を即時生成するにゃ。
-    型エッロルはここで檢出されるにゃ -/
+/-- 事象處理器を宣言するにゃん♪ -/
 elab "eventum" nomenEventi:str body:term : command => do
   let nomen := nomenEventi.getString
-  -- _tractator_OnBoot のやうな識別子を作るにゃ
   let nomenBasisTractatorum := "_tractator_" ++ nomen
   let identTractatorum := mkIdent (Name.mkSimple nomenBasisTractatorum)
-  -- 處理器を定義するにゃん♪
   elabCommand (← `(def $identTractatorum : PuraShiori.Tractator := $body))
-  -- 現在の名前空間を加味した完全修飾名にゃ
   let ns ← getCurrNamespace
   let nomenPlenumTractatorum := ns ++ Name.mkSimple nomenBasisTractatorum
-  -- 環境拡張に登錄するにゃ（eventa に push するにゃ）
   modifyEnv fun env =>
     ghostAccumulatioExt.modifyState env fun acc =>
       { acc with eventa := acc.eventa.push {
           nomen, tractatorNomen := nomenPlenumTractatorum } }
+
+-- ═══════════════════════════════════════════════════
+-- def ベース事象の補助にゃん
+-- ═══════════════════════════════════════════════════
+
+/-- Expr の先頭にある明示的 forall の数を数えるにゃん♪ -/
+private partial def countExplicitParams : Lean.Expr → MetaM Nat
+  | .forallE _ _ body .default => return 1 + (← countExplicitParams body)
+  | .forallE _ _ body _        => countExplicitParams body
+  | _                          => return 0
+
+/-- ident を項として展開して const 名と引數リストを取り出すにゃん♪ -/
+private def resolveToConst (f : Ident) : TermElabM Name := do
+  let fExpr ← elabTerm f none
+  let fExpr ← instantiateMVars fExpr
+  match fExpr with
+  | .const n _ => return n
+  | _ => throwError "excita/insere: 関数定数の識別子を渡してにゃ: {f}"
+
+/-- def ベース事象を lazyEventa に登録する共通処理にゃん -/
+private def registraLazium (f : Ident) : TermElabM String := do
+  let fname ← resolveToConst f
+  let env ← getEnv
+  let some info := env.find? fname |
+    throwError "excita/insere: {fname} が見つからにゃいにゃ"
+  let paramCount ← countExplicitParams info.type
+  let nomenEventi := fname.toString
+  unless (ghostAccumulatioExt.getState env).lazyEventa.any (·.declNomen == fname) do
+    modifyEnv (ghostAccumulatioExt.modifyState · fun a =>
+      { a with lazyEventa := a.lazyEventa.push {
+          declNomen := fname, nomenEventi, paramCount } })
+  return nomenEventi
+
+-- ═══════════════════════════════════════════════════
+-- excita / insere の識別子形 elab にゃん
+-- ═══════════════════════════════════════════════════
+
+/-- `excita f arg1 arg2 ...` — def ベース事象を raise するにゃん♪
+    f は `def f (p1 : T1) ... : SakuraIO Unit` の形で定義された關數にゃ。
+    引數は ToRef で文字列に変換されて Reference に渡されるにゃ。
+    SSP 組み込み事象には `excita "OnBoot"` の文字列形を使ふにゃ -/
+elab "excita" f:ident args:term* : term => do
+  let nomenEventi ← registraLazium f
+  let argTerms ← args.mapM fun a => `(PuraShiori.Citatio.toRef $a)
+  elabTerm
+    (← `(PuraShiori.Sakura.excita $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
+    none
+
+/-- `insere f arg1 arg2 ...` — def ベース事象を embed するにゃん♪
+    f は `def f (p1 : T1) ... : SakuraIO Unit` の形で定義された關數にゃ。
+    引數は Citatio.toRef で文字列に変換されて Reference に渡されるにゃ -/
+elab "insere" f:ident args:term* : term => do
+  let nomenEventi ← registraLazium f
+  let argTerms ← args.mapM fun a => `(PuraShiori.Citatio.toRef $a)
+  elabTerm
+    (← `(PuraShiori.Sakura.insere $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
+    none
 
 -- ═══════════════════════════════════════════════════
 -- construe 構文擴張にゃん
@@ -107,73 +164,70 @@ elab "eventum" nomenEventi:str body:term : command => do
 
 set_option hygiene false
 
-/-- ゴーストを組み立てて SSP に登錄するにゃん♪
-    varia と eventum の宣言を讀み取り、栞を構築・登錄するにゃ。
-    永続變數がある場合は讀込・書出フックも自動生成するにゃ。
-
-    **型安全な永続化にゃん♪**
-    保存時に `typusTag`（型の文字列識別子）も記録するにゃ。
-    復元時はタグが一致した時だけ値を讀み込むにゃ。
-    ゴーストの更新で變數の型が變はっても安全にゃん！ -/
+/-- ゴーストを組み立てて SSP に登錄するにゃん♪ -/
 elab "construe" : command => do
   let env ← getEnv
   let acc := ghostAccumulatioExt.getState env
   let variaePermanentes := acc.variae.filter (·.permanet)
   let eventa := acc.eventa
 
-  -- tractatores のペアを Syntax として組み立てるにゃ
-  -- [("OnBoot", _tractator_OnBoot), ("OnClose", _tractator_OnClose)]
-  let pariaTractatorum : Array (TSyntax `term) ← eventa.mapM fun e => do
+  -- eventa からペアを組み立てるにゃ
+  let mut pariaTractatorum : Array (TSyntax `term) ← eventa.mapM fun e => do
     let identTractatorum := mkIdent e.tractatorNomen
     let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit e.nomen⟩
     `(($signumNominis, $identTractatorum))
 
+  -- lazyEventa のラッパーを生成してペアを追加するにゃ♪
+  for e in acc.lazyEventa do
+    let declIdent := mkIdent e.declNomen
+    -- ラッパー名: .を_に変換して衝突回避するにゃ
+    let tractorNome := Name.mkSimple
+      ("_tractator_lazy_" ++ e.nomenEventi.map (fun c => if c == '.' then '_' else c))
+    let tractorIdent := mkIdent tractorNome
+
+    -- 各 Reference を FromRef で抽出して直接引數に渡すにゃ
+    -- def _tractator_lazy_... : Tractator := fun req =>
+    --   onGreet (FromRef.fromRef ((req.referentiam 0).getD ""))
+    --           (FromRef.fromRef ((req.referentiam 1).getD ""))
+    let argExprs : Array (TSyntax `term) ← (Array.range e.paramCount).mapM fun i => do
+      let idx := Syntax.mkNumLit (toString i)
+      `(PuraShiori.Citatio.fromRef ((req.referentiam $idx).getD ""))
+
+    elabCommand (← `(
+      def $tractorIdent : PuraShiori.Tractator := fun req => $declIdent $argExprs*))
+
+    let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit e.nomenEventi⟩
+    pariaTractatorum := pariaTractatorum.push (← `(($signumNominis, $tractorIdent)))
+
   if variaePermanentes.isEmpty then
-    -- 永続化にゃし: シンプレクス(simplex)にゃ registraShiori を使ふにゃ
-    -- servaStatum は何もしにゃい版を生成（コンパイルエッロル防止にゃ）
     elabCommand (← `(def servaStatum : IO Unit := pure ()))
     elabCommand (← `(
       initialize (PuraShiori.registraShiori [$pariaTractatorum,*])
     ))
   else
-    -- 永続化あり: 型タグ付き讀込・書出フックを生成するにゃ♪
-
-    -- 讀込フック(onerare)の要素を生成するにゃ
-    -- ("greetCount", fun _tag _s => do
-    --   if _tag == StatusPermanens.typusTag (α := Nat) then
-    --     if let (some _v : Option Nat) := eBytes _s then greetCount.set _v)
     let elementaOnerandi : Array (TSyntax `term) ← variaePermanentes.mapM fun v => do
       let identVariae := mkIdent v.nomen
       let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit v.nomen.toString⟩
       let syntaxisTypi : TSyntax `term := ⟨v.typusSyntax⟩
       `(($signumNominis, fun _tag _s => do
-          -- 型タグが一致した時だけ復元するにゃん♪
           if _tag == PuraShiori.StatusPermanens.typusTag (α := $syntaxisTypi) then
             if let (some _v : Option $syntaxisTypi) :=
                 PuraShiori.StatusPermanens.eBytes _s then
               ($identVariae).set _v))
 
-    -- 書出フック(exire)の要素を生成するにゃ
-    -- ("greetCount", do
-    --   let _v ← greetCount.get
-    --   return (StatusPermanens.typusTag (α := Nat), adBytes _v))
     let elementaServandi : Array (TSyntax `term) ← variaePermanentes.mapM fun v => do
       let identVariae := mkIdent v.nomen
       let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit v.nomen.toString⟩
       let syntaxisTypi : TSyntax `term := ⟨v.typusSyntax⟩
       `(($signumNominis, do
           let _v ← ($identVariae).get
-          -- 型タグと直列化バイトの組を返すにゃん♪
           return (PuraShiori.StatusPermanens.typusTag (α := $syntaxisTypi),
                   PuraShiori.StatusPermanens.adBytes _v)))
 
-    -- terminusTractatorum 等を先に組み立ててから渡すにゃん♪
     let terminusTractatorum ← `([$pariaTractatorum,*])
     let terminusOnerandi    ← `([$elementaOnerandi,*])
     let terminusServandi    ← `([$elementaServandi,*])
 
-    -- servaStatum: 任意の時點で永続化變數を保存できる關數にゃん♪
-    -- onExire フックと同じ保存ロジックを共有するにゃ
     elabCommand (← `(
       def servaStatum : IO Unit := do
         let _domus ← PuraShiori.domusObtinere
@@ -181,8 +235,6 @@ elab "construe" : command => do
         let _paria ← PuraShiori.executareScripturam $terminusServandi
         PuraShiori.scribeMappam _via _paria))
 
-    -- 全體を一括生成するにゃん♪
-    -- onExire は servaStatum を呼ぶだけにゃ（コード重複排除にゃん♪）
     elabCommand (← `(
       initialize (PuraShiori.registraShioriEx
         $terminusTractatorum

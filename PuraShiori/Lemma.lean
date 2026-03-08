@@ -34,13 +34,6 @@ theorem Nat.toNat?_repr (n : Nat) : (Nat.repr n).toNat? = some n:=by
 theorem Int.toInt?_toString (n : Int) : (toString n).toInt? = some n:=by
   sorry
 
-/-- 実メモリに収まる ByteArray は必ず size < 2^64 にゃ
-    （型理論上は ByteArray.size に上限がないため sorry にゃん） -/
-theorem ByteArray.size_lt_UInt64Size (b : ByteArray) : b.size < 2^64 := by sorry
-
-/-- List.length も実際には 2^64 未満にゃ -/
-theorem List.length_lt_UInt64Size {α : Type} (xs : List α) : xs.length < 2^64 := by sorry
-
 /-- (a ++ b ++ c).extract a.size (a.size + b.size) = b にゃん
     Array.extract の補題から証明可能だが複雑にゃ -/
 theorem byteArray_extract_middle (a b c : ByteArray) :

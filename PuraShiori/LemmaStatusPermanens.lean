@@ -11,9 +11,10 @@ namespace PuraShiori
 -- sorry 領域（理論上証明可能だが後回し）にゃん
 -- ═══════════════════════════════════════════════════
 
-/-- prefix を前置しても readU64LE の結果は位置だけずれるにゃん -/
-theorem readU64LE_at_prefix (pre : ByteArray) (n : UInt64) (rest : ByteArray) :
-    readU64LE (pre ++ u64LE n ++ rest) pre.size = some (n, pre.size + 8) := by sorry
+/-- prefix を前置しても lebDecode の結果は位置だけずれるにゃん -/
+theorem lebDecode_at_prefix (pre : ByteArray) (n : Nat) (rest : ByteArray) :
+    lebDecode (pre ++ lebEncode n ++ rest) pre.size =
+      some (n, pre.size + (lebEncode n).size) := by sorry
 
 /-- prefix を前置しても legereParia の結果は位置だけずれるにゃん -/
 theorem legereParia_at_prefix (cnt pos : Nat) (pre dat : ByteArray) :
@@ -31,31 +32,27 @@ theorem legereParia_serializeParia
 -- ═══════════════════════════════════════════════════
 
 /-- シリアライズしてデシリアライズすると元のデータに戻るにゃん♪
-    sorry 補題（readU64LE_at_prefix, legereParia_at_prefix, legereParia_serializeParia）を使ふにゃ -/
+    sorry 補題（lebDecode_at_prefix, legereParia_at_prefix, legereParia_serializeParia）を使ふにゃ -/
 theorem serializeMappam_roundtrip (paria : List (String × String × ByteArray)) :
     deserializeMappam (serializeMappam paria) = some paria := by
   -- Step 1: 補助事実にゃ
-  have hsize : ¬ ((magicBytes ++ u64LE paria.length.toUInt64 ++ serializeParia paria).size < 12) := by
+  have hsize : ¬ ((magicBytes ++ lebEncode paria.length ++ serializeParia paria).size < 5) := by
     simp only [ByteArray.size_append]
     have h1 : magicBytes.size = 4 := rfl
-    have h2 : (u64LE paria.length.toUInt64).size = 8 := rfl
+    have h2 : 0 < (lebEncode paria.length).size := lebEncode_size_pos paria.length
     omega
-  have hmagic : (magicBytes ++ u64LE paria.length.toUInt64 ++ serializeParia paria).extract 0 4 =
+  have hmagic : (magicBytes ++ lebEncode paria.length ++ serializeParia paria).extract 0 4 =
       magicBytes := by
     rw [ByteArray.append_assoc]; exact ByteArray.extract_append_eq_left rfl
-  have hbne : ((magicBytes ++ u64LE paria.length.toUInt64 ++ serializeParia paria).extract 0 4
+  have hbne : ((magicBytes ++ lebEncode paria.length ++ serializeParia paria).extract 0 4
       != magicBytes) = false := by rw [hmagic]; native_decide
-  have h_read := readU64LE_at_prefix magicBytes paria.length.toUInt64 (serializeParia paria)
+  have h_read := lebDecode_at_prefix magicBytes paria.length (serializeParia paria)
   simp only [show magicBytes.size = 4 from rfl] at h_read
-  have hlen : paria.length.toUInt64.toNat = paria.length :=
-    Nat.toUInt64_toNat_of_lt (List.length_lt_UInt64Size paria)
-  have h_pre_sz : (magicBytes ++ u64LE paria.length.toUInt64).size = 12 := by
-    simp only [ByteArray.size_append]
-    have h1 : magicBytes.size = 4 := rfl
-    have h2 : (u64LE paria.length.toUInt64).size = 8 := rfl
-    omega
+  have h_pre_sz : (magicBytes ++ lebEncode paria.length).size =
+      4 + (lebEncode paria.length).size := by
+    simp only [ByteArray.size_append]; have h1 : magicBytes.size = 4 := rfl; omega
   have h_legere := legereParia_at_prefix paria.length 0
-    (magicBytes ++ u64LE paria.length.toUInt64) (serializeParia paria)
+    (magicBytes ++ lebEncode paria.length) (serializeParia paria)
   simp only [h_pre_sz, Nat.add_zero] at h_legere
   have h_sp := legereParia_serializeParia paria .empty
   simp only [ByteArray.append_empty] at h_sp
@@ -63,6 +60,6 @@ theorem serializeMappam_roundtrip (paria : List (String × String × ByteArray))
   simp only [deserializeMappam, serializeMappam]
   rw [if_neg hsize, hbne, if_neg (by decide)]
   -- Step 3: bind チェーンを simp で整理にゃ
-  simp [h_read, hlen, h_legere, h_sp, Option.map_some]
+  simp [h_read, h_legere, h_sp, Option.map_some]
 
 end PuraShiori

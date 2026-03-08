@@ -84,6 +84,44 @@ def readU64LE (b : ByteArray) (positio : Nat) : Option (UInt64 × Nat) :=
     positio + 8)
 
 -- ═══════════════════════════════════════════════════
+-- LEB128: 任意精度 Nat のバイト列エンコードにゃん
+-- u64LE と違い 2^64 超の値も正確に往復するにゃ♪
+-- ═══════════════════════════════════════════════════
+
+/-- LEB128 エンコード: 7 ビットずつ、続きあり = 最上位ビット 1 にゃ -/
+def lebEncode (n : Nat) : ByteArray :=
+  if n < 128 then .mk #[n.toUInt8]
+  else .mk #[((n % 128 + 128).toUInt8)] ++ lebEncode (n / 128)
+termination_by n
+decreasing_by
+  apply Nat.div_lt_self
+  · omega
+  · decide
+
+/-- LEB128 デコード補助（燃料付き）にゃ -/
+private def lebDecodeLoop : Nat → ByteArray → Nat → Nat → Nat → Option (Nat × Nat)
+  | 0,        _, _,   _,   _    => none
+  | fuel + 1, b, pos, acc, mult =>
+    if pos < b.size then
+      let byte := b[pos]!.toNat
+      if byte < 128 then some (acc + byte * mult, pos + 1)
+      else lebDecodeLoop fuel b (pos + 1) (acc + (byte - 128) * mult) (mult * 128)
+    else none
+
+/-- LEB128 デコード: `pos` から読み出して `(値, 次の位置)` を返すにゃ -/
+def lebDecode (b : ByteArray) (pos : Nat) : Option (Nat × Nat) :=
+  lebDecodeLoop (b.size - pos + 1) b pos 0 1
+
+/-- lebDecode と lebEncode は往復するにゃん（証明可能だが後回し）-/
+private theorem lebDecode_lebEncode (n : Nat) (rest : ByteArray) :
+    lebDecode (lebEncode n ++ rest) 0 = some (n, (lebEncode n).size) := by
+  sorry
+
+/-- lebEncode は必ず 1 バイト以上を返すにゃん -/
+theorem lebEncode_size_pos (n : Nat) : 0 < (lebEncode n).size := by
+  sorry
+
+-- ═══════════════════════════════════════════════════
 -- 公開補助: 自作構造體のインスタンス實裝に使ふにゃん♪
 -- ═══════════════════════════════════════════════════
 
@@ -95,7 +133,7 @@ def readU64LE (b : ByteArray) (positio : Nat) : Option (UInt64 × Nat) :=
     -/
 def encodeField {α : Type} [StatusPermanens α] (v : α) : ByteArray :=
   let b := StatusPermanens.adBytes v
-  u64LE b.size.toUInt64 ++ b
+  lebEncode b.size ++ b
 
 /-- `positio` 位置から1フィールドを復元して `(値, 次の位置)` を返すにゃん。
     自作構造體の `eBytes` 實裝に使ふにゃ:
@@ -108,10 +146,10 @@ def encodeField {α : Type} [StatusPermanens α] (v : α) : ByteArray :=
     -/
 def decodeField {α : Type} [StatusPermanens α]
     (b : ByteArray) (positio : Nat) : Option (α × Nat) := do
-  let (longitudo, pos') ← readU64LE b positio
-  let sectio := b.extract pos' (pos' + longitudo.toNat)
+  let (longitudo, pos') ← lebDecode b positio
+  let sectio := b.extract pos' (pos' + longitudo)
   let v ← StatusPermanens.eBytes sectio
-  return (v, pos' + longitudo.toNat)
+  return (v, pos' + longitudo)
 
 -- ═══════════════════════════════════════════════════
 -- LE 往復補題にゃん（インスタンスより前に定義するにゃ）
@@ -196,10 +234,10 @@ private theorem byteArray_extract_after_prefix (a b : ByteArray) :
   ByteArray.extract_append_eq_right rfl rfl
 
 theorem encodeField_size {α : Type} [StatusPermanens α] (v : α) :
-    (encodeField v).size = 8 + (StatusPermanens.adBytes v).size := by
-  change (u64LE (StatusPermanens.adBytes v).size.toUInt64 ++ StatusPermanens.adBytes v).size = _
+    (encodeField v).size =
+      (lebEncode (StatusPermanens.adBytes v).size).size + (StatusPermanens.adBytes v).size := by
+  change (lebEncode (StatusPermanens.adBytes v).size ++ StatusPermanens.adBytes v).size = _
   rw [ByteArray.size_append]
-  rfl
 
 theorem option_bind_pure_some {α β : Type} (x : α) (y : β) :
   (some x >>= fun v_1 => pure (v_1, y)) = some (x, y) := rfl
@@ -219,27 +257,21 @@ private theorem decodeField_encodeField {α : Type} [StatusPermanens α]
     (v : α) (rest : ByteArray) :
     decodeField (encodeField v ++ rest) 0 = some (v, (encodeField v).size) := by
   unfold decodeField encodeField
-  -- readU64LE_u64LE: u64LE n ++ adBytes v ++ rest → some (n, 8)
-  have h_read := readU64LE_u64LE (StatusPermanens.adBytes v).size.toUInt64
-                   (StatusPermanens.adBytes v ++ rest)
-  rw [← ByteArray.append_assoc] at h_read
-  simp only [h_read, bind, Option.bind]
-  -- longitudo.toNat = (adBytes v).size
-  have hsize := ByteArray.size_lt_UInt64Size (StatusPermanens.adBytes v)
-  have hnat : (StatusPermanens.adBytes v).size.toUInt64.toNat =
-              (StatusPermanens.adBytes v).size :=
-    Nat.toUInt64_toNat_of_lt hsize
-  -- extract 8 (8 + adBytes.size) = adBytes v (中間スライス)
-  have hext : (u64LE (StatusPermanens.adBytes v).size.toUInt64 ++
-               StatusPermanens.adBytes v ++ rest).extract 8
-               (8 + (StatusPermanens.adBytes v).size) =
+  -- lebDecode (lebEncode sz ++ adBytes v ++ rest) 0 = some (sz, (lebEncode sz).size)
+  have h_leb := lebDecode_lebEncode (StatusPermanens.adBytes v).size
+                  (StatusPermanens.adBytes v ++ rest)
+  rw [← ByteArray.append_assoc] at h_leb
+  simp only [h_leb, bind, Option.bind]
+  -- extract (lebEncode sz).size ((lebEncode sz).size + sz) = adBytes v
+  have hext : (lebEncode (StatusPermanens.adBytes v).size ++
+               StatusPermanens.adBytes v ++ rest).extract
+               (lebEncode (StatusPermanens.adBytes v).size).size
+               ((lebEncode (StatusPermanens.adBytes v).size).size +
+                (StatusPermanens.adBytes v).size) =
               StatusPermanens.adBytes v :=
-    byteArray_extract_middle (u64LE _) (StatusPermanens.adBytes v) rest
-  have hu64sz : (u64LE (StatusPermanens.adBytes v).size.toUInt64).size = 8 := by
-    unfold u64LE
-    rfl
-  rw [hnat, hext, StatusPermanens.roundtrip v]
-  simp [hu64sz]
+    byteArray_extract_middle (lebEncode _) (StatusPermanens.adBytes v) rest
+  rw [hext, StatusPermanens.roundtrip v]
+  simp [ByteArray.size_append]
 
 -- ═══════════════════════════════════════════════════
 -- 基本型のインスタンスにゃん
@@ -432,25 +464,21 @@ private theorem decodeManyLoop_encodeManyLoop (α : Type) [StatusPermanens α]
 instance {α : Type} [StatusPermanens α] : StatusPermanens (List α) where
   typusTag := "List(" ++ StatusPermanens.typusTag (α := α) ++ ")"
   adBytes xs :=
-    u64LE xs.length.toUInt64 ++ encodeManyLoop xs
+    lebEncode xs.length ++ encodeManyLoop xs
   eBytes b := do
-    let (numerus, positio) ← readU64LE b 0
-    let (xs, _) ← decodeManyLoop b numerus.toNat positio
+    let (numerus, positio) ← lebDecode b 0
+    let (xs, _) ← decodeManyLoop b numerus positio
     return xs
   roundtrip xs := by
     simp only []
-    have h_read := readU64LE_u64LE xs.length.toUInt64 (encodeManyLoop xs)
-    simp only [bind, Option.bind, h_read]
-    -- xs.length.toUInt64.toNat = xs.length にゃ
-    have sz : xs.length.toUInt64.toNat = xs.length :=
-      Nat.toUInt64_toNat_of_lt (List.length_lt_UInt64Size xs)
-    rw [sz]
-    -- decodeManyLoop (u64LE ... ++ encodeManyLoop xs) xs.length 8
+    -- lebDecode (lebEncode xs.length ++ encodeManyLoop xs) 0 = some (xs.length, ...)
+    have h_leb := lebDecode_lebEncode xs.length (encodeManyLoop xs)
+    simp only [bind, Option.bind, h_leb]
+    -- decodeManyLoop (lebEncode ... ++ encodeManyLoop xs) xs.length (lebEncode ...).size
     -- = decodeManyLoop (encodeManyLoop xs) xs.length 0 にゃ（prefix 無視）
-    have u64_sz : (u64LE xs.length.toUInt64).size = 8 := by unfold u64LE; rfl
     have hml := decodeManyLoop_ignore_prefix α xs.length 0
-      (u64LE xs.length.toUInt64) (encodeManyLoop xs)
-    simp only [u64_sz, Nat.add_zero] at hml
+      (lebEncode xs.length) (encodeManyLoop xs)
+    simp only [Nat.add_zero] at hml
     rw [hml]
     have henc := decodeManyLoop_encodeManyLoop α xs .empty
     simp only [ByteArray.append_empty] at henc
@@ -555,16 +583,16 @@ def legereParia
 
 /-- `(名前, 型タグ, ByteArray)` の三つ組のリストをバイナリに直列化するにゃん（純粋）♪ -/
 def serializeMappam (paria : List (String × String × ByteArray)) : ByteArray :=
-  magicBytes ++ u64LE paria.length.toUInt64 ++ serializeParia paria
+  magicBytes ++ lebEncode paria.length ++ serializeParia paria
 
 /-- バイナリから `(名前, 型タグ, ByteArray)` の三つ組を復元するにゃん（純粋）♪
     不正なバイト列の場合は `none` を返すにゃ -/
 def deserializeMappam (b : ByteArray) : Option (List (String × String × ByteArray)) := do
-  -- 最低12バイト必要にゃ（マジック4 + エントリ數8）
-  if b.size < 12 then failure
+  -- 最低5バイト必要にゃ（マジック4 + LEB128 最低1バイト）
+  if b.size < 5 then failure
   if b.extract 0 4 != magicBytes then failure
-  let (numerus, positio) ← readU64LE b 4
-  let (paria, _)         ← legereParia b numerus.toNat positio
+  let (numerus, positio) ← lebDecode b 4
+  let (paria, _)         ← legereParia b numerus positio
   return paria
 
 /-- `ghost_status.bin` から `(名前, 型タグ, ByteArray)` の三つ組を讀み込むにゃん♪

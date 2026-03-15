@@ -3,6 +3,7 @@
 -- C 包裝（ffi/shiori.c）からこれらの關數が呼ばれるにゃ
 
 import PuraShiori.Nuculum
+import PuraShiori.Loop
 
 namespace PuraShiori
 
@@ -82,5 +83,22 @@ def exportaRequest (catenaRogationis : @& String) : IO String := do
       return Responsum.errorInternus.adProtocollum
   catch e =>
     return s!"[FATAL in exportaRequest] {e}"
+
+-- ═══════════════════════════════════════════════════
+-- 非同期タスク管理（GC 對策）にゃん
+-- ═══════════════════════════════════════════════════
+
+/-- タスク保管庫にゃん（GC 對策）。完了待ちの IO タスクをここに保持するにゃ -/
+initialize taskusCustodia : IO.Ref (Array (Task (Except IO.Error Unit))) ← IO.mkRef #[]
+
+/-- IO アクシオー（Actio）をバックグラウンドで起動して GC から保護するにゃん♪
+    例外は registrareVestigium に流れるのでゴーストがクラッシュしにゃいにゃ -/
+def spawnaMunitus (actio : IO Unit) : IO Unit := do
+  let task ← IO.asTask (actio.catch (fun e =>
+    registrareVestigium s!"[PERNICIES spawna] {e}"))
+  taskusCustodia.modify (fun arr =>
+    -- 上限 256 を超えたら後半だけ殘すにゃ（古いタスクを捨てるにゃ）
+    let arr' := arr.push task
+    if arr'.size > 256 then arr'.extract 128 arr'.size else arr')
 
 end PuraShiori

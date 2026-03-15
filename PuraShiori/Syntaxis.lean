@@ -8,6 +8,7 @@ import PuraShiori.Citationes
 import PuraShiori.StatusPermanens
 import PuraShiori.Exporta
 import PuraShiori.Loop
+import PuraShiori.Sstp
 
 open Lean Elab Command Term Meta
 
@@ -156,6 +157,106 @@ elab "insere" f:ident args:term* : term => do
   let argTerms ← args.mapM fun a => `(PuraShiori.Citatio.toRef $a)
   elabTerm
     (← `(PuraShiori.Sakura.insere $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
+    none
+
+-- ═══════════════════════════════════════════════════
+-- A: 事象発火拡張形 elab にゃん
+-- ═══════════════════════════════════════════════════
+
+/-- `notifica f arg1 arg2 ...` — def ベース通知事象を發生させるにゃん♪
+    f は `def f (p1 : T1) ... : SakuraIO Unit` の形で定義された關數にゃ。
+    引數は Citatio.toRef で文字列に変換されて Reference に渡されるにゃ -/
+elab "notifica" f:ident args:term* : term => do
+  let nomenEventi ← registraLazium f
+  let argTerms ← args.mapM fun a => `(PuraShiori.Citatio.toRef $a)
+  elabTerm
+    (← `(PuraShiori.Sakura.notifica $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
+    none
+
+/-- `excitaPostTempus ms repeat f arg1 arg2 ...` — def ベース事象を遅延発火させるにゃん♪
+    ms はミリ秒、repeat は繰返し回數（0=無限）にゃ -/
+elab "excitaPostTempus" ms:term repetitio:term f:ident args:term* : term => do
+  let nomenEventi ← registraLazium f
+  let argTerms ← args.mapM fun a => `(PuraShiori.Citatio.toRef $a)
+  elabTerm
+    (← `(PuraShiori.Sakura.excitaPostTempus $ms $repetitio $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
+    none
+
+/-- `notificaPostTempus ms repetitio f arg1 arg2 ...` — def ベース通知事象を遅延発火させるにゃん♪ -/
+elab "notificaPostTempus" ms:term repetitio:term f:ident args:term* : term => do
+  let nomenEventi ← registraLazium f
+  let argTerms ← args.mapM fun a => `(PuraShiori.Citatio.toRef $a)
+  elabTerm
+    (← `(PuraShiori.Sakura.notificaPostTempus $ms $repetitio $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
+    none
+
+/-- `optioEventum titulus f arg1 arg2 ...` — def ベース事象附き選擇肢にゃん♪
+    titulus は表示文字列にゃ。f は def で定義されたコールバックにゃ -/
+elab "optioEventum" titulus:term f:ident args:term* : term => do
+  let nomenEventi ← registraLazium f
+  let argTerms ← args.mapM fun a => `(PuraShiori.Citatio.toRef $a)
+  elabTerm
+    (← `(PuraShiori.Sakura.optioEventum $titulus $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
+    none
+
+-- ═══════════════════════════════════════════════════
+-- B: コールバック登録形 elab にゃん
+-- ═══════════════════════════════════════════════════
+
+/-- `aperiInputum modus f titulus textus` — def ベースのテキスト入力ボックスを開くにゃん♪
+    f は入力結果を受け取る def にゃ。SSP がランタイムで Reference に値を渡すにゃ -/
+elab "aperiInputum" modus:term f:ident titulus:term textus:term : term => do
+  let nomenEventi ← registraLazium f
+  elabTerm
+    (← `(PuraShiori.Sakura.aperiInputum $modus $(Syntax.mkStrLit nomenEventi) $titulus $textus))
+    none
+
+/-- `aperiInputumNumerale modus f titulus a b c` — def ベースの數値入力ボックスを開くにゃん♪
+    a/b/c は年月日・時分秒・值最小最大に對應するにゃ -/
+elab "aperiInputumNumerale" modus:term f:ident titulus:term a:term b:term c:term : term => do
+  let nomenEventi ← registraLazium f
+  elabTerm
+    (← `(PuraShiori.Sakura.aperiInputumNumerale $modus $(Syntax.mkStrLit nomenEventi) $titulus $a $b $c))
+    none
+
+/-- `aperiInputumIP f titulus ip1 ip2 ip3 ip4` — def ベースの IP アドレス入力ボックスを開くにゃん♪ -/
+elab "aperiInputumIP" f:ident titulus:term ip1:term ip2:term ip3:term ip4:term : term => do
+  let nomenEventi ← registraLazium f
+  elabTerm
+    (← `(PuraShiori.Sakura.aperiInputumIP $(Syntax.mkStrLit nomenEventi) $titulus $ip1 $ip2 $ip3 $ip4))
+    none
+
+/-- `legeProprietatem f proprietates` — def ベースのプロパティ取得にゃん♪
+    f は結果を受け取る def にゃ。proprietates は `List Proprietas` にゃ -/
+elab "legeProprietatem" f:ident proprietates:term : term => do
+  let nomenEventi ← registraLazium f
+  elabTerm
+    (← `(PuraShiori.Sakura.legeProprietatem $(Syntax.mkStrLit nomenEventi) $proprietates))
+    none
+
+-- ═══════════════════════════════════════════════════
+-- 非同期起動 elab にゃん
+-- ═══════════════════════════════════════════════════
+
+/-- `spawna f arg1 arg2 ...` — IO Unit アクシオーをバックグラウンドで起動するにゃん♪
+    f は `def f (p1 : T1) ... : IO Unit` の形で定義された關數にゃ。
+    引數は直接渡す（同一プロセス内にゃ）。
+    SakuraIO の蓄積スクリプトは變化しにゃいにゃ -/
+elab "spawna" f:ident args:term* : term => do
+  let callTerm ← `($f $args*)
+  elabTerm
+    (← `(liftM (PuraShiori.spawnaMunitus $callTerm)))
+    none
+
+/-- `spawnaScriptum f arg1 arg2 ...` — SakuraIO Unit アクシオーをバックグラウンドで起動するにゃん♪
+    f は `def f (p1 : T1) ... : SakuraIO Unit` の形で定義された關數にゃ。
+    バックグラウンドで Sakura.currere して SSTP 経由で SSP にスクリプトを送信するにゃ -/
+elab "spawnaScriptum" f:ident args:term* : term => do
+  let callTerm ← `($f $args*)
+  elabTerm
+    (← `(liftM (PuraShiori.spawnaMunitus do
+      let _s ← PuraShiori.Sakura.currere $callTerm
+      PuraShiori.Sstp.mitteSstpScriptum _s)))
     none
 
 -- ═══════════════════════════════════════════════════

@@ -177,6 +177,103 @@ construe
 `excita` は `\![raise,...]` に展開、`insere` は `\![embed,...]` に展開されるにゃ。
 SSP 組み込み事象には文字列形 `excita "OnBoot"` を使ふにゃ。
 
+識別子形は `notifica`、`excitaPostTempus`、`notificaPostTempus`、`optioEventum` にも使へるにゃ：
+
+```lean
+-- 通知（notify）
+notifica onGreet "れゃ" 42
+
+-- 遅延 raise（5秒後、1回）
+excitaPostTempus 5000 1 onGreet "れゃ" 42
+
+-- 遅延通知（1秒ごと、無限）
+notificaPostTempus 1000 0 onGreet "れゃ" 42
+
+-- 事象附き選択肢
+optioEventum "詳しく" onChosen "topic1"
+```
+
+B 形式（コールバック登録）は入力結果を受け取る def のイベント名を自動登録するにゃ：
+
+```lean
+-- テキスト入力結果を受け取る def
+def onTextEntered (text : String) : SakuraIO Unit := do
+  sakura; superficies 0; loqui s!"入力: {text}"; finis
+
+-- 入力ボックスを開く（def 形式）
+aperiInputum .simplex onTextEntered "名前を入力" ""
+aperiInputumNumerale .gradus onAgeSelected "年齢" 25 0 100
+aperiInputumIP onIPSelected "IP アドレス" 192 168 1 1
+legeProprietatem onPropResult [.ghostName, .shellName]
+```
+
+---
+
+## 非同期処理 (Actiones Asynchronae)
+
+`Tractator` は同期関数なので、HTTP 取得など重い IO を直接実行すると SSP 全体がブロックする。
+`spawna` / `spawnaScriptum` を使うと、IO をバックグラウンドスレッドで起動し、完了後に SSTP 経由でスクリプトを届けられるにゃ。
+
+### `spawna f args*`
+
+`f : T1 → ... → IO Unit` をバックグラウンドで起動するにゃ。
+結果の返却は `f` の中で `Sstp.mitteSstpScriptum` を呼ぶことで行うにゃ。
+
+```lean
+import PuraShiori
+open PuraShiori Sakura
+
+-- バックグラウンドで動く IO 関数にゃ
+def downloadAndDisplay (url : String) : IO Unit := do
+  let data := "取得ダータ"  -- 実際は HTTP 等にゃ
+  Sstp.mitteSstpScriptum s!"\\h\\s[0]{data}\\e"
+
+eventum "OnBoot" fun _ => do
+  spawna downloadAndDisplay "https://example.com"
+  loqui "取得中..."; finis
+
+construe
+```
+
+`spawna` は SakuraIO の蓄積スクリプトを変化させにゃいにゃ。
+現在のハンドラはすぐ返り、バックグラウンドタスクが完了すると別スクリプトが SSP に届くにゃ。
+
+### `spawnaScriptum f args*`
+
+`f : T1 → ... → SakuraIO Unit` をバックグラウンドで起動し、
+`Sakura.currere` でスクリプト文字列化して SSTP 送信するにゃ。
+
+```lean
+-- 通常の SakuraIO 関数をそのまま非同期に使へるにゃ
+def displayData (data : String) : SakuraIO Unit := do
+  sakura; superficies 0; loqui data; finis
+
+eventum "OnHttpDone" fun req => do
+  let data := (req.referentiam 0).getD ""
+  spawnaScriptum displayData data   -- 現ハンドラは即返り、表示は後から届くにゃ
+  finis
+
+construe
+```
+
+### 動作保証にゃ
+
+- タスクは `taskusCustodia` に保持されるので、完了前に GC されにゃいにゃ
+- `spawna` 内で例外が起きても `registrareVestigium` に流れるだけで、ゴーストはクラッシュしにゃいにゃ
+- `spawna` / `spawnaScriptum` は `SakuraIO Unit` を返す（`liftM` による持ち上げ）にゃ
+
+### SSTP 直接送信 (`Sstp`)
+
+バックグラウンド外でも `PuraShiori.Sstp` を使へるにゃ。
+
+```lean
+-- SakuraScript を SSP に送信にゃ
+Sstp.mitteSstpScriptum "\\h\\s[0]こんにちは\\e"
+
+-- SHIORI イヴェントゥムを SSP に通知にゃ
+Sstp.excitaEventum "OnSomeEvent" ["arg0", "arg1"]
+```
+
 ---
 
 ## SakuraScriptum 命令一覧 (Mandata)
@@ -213,6 +310,9 @@ SSP 組み込み事象には文字列形 `excita "OnBoot"` を使ふにゃ。
 | `excita "Event"` | SSP 組み込み事象を発生させるにゃ（文字列形）にゃ |
 | `excita f args*` | def ベース事象を発生させるにゃ（識別子形）にゃ |
 | `insere f args*` | def ベース事象を埋め込むにゃ（識別子形）にゃ |
+| `notifica f args*` | def ベース通知事象を発生させるにゃ |
+| `excitaPostTempus ms repetitio f args*` | def ベース事象を遅延発火させるにゃ |
+| `notificaPostTempus ms repetitio f args*` | def ベース通知事象を遅延発火させるにゃ |
 | `exitus` | ゴーストを終了させるにゃ |
 
 ### 選択肢
@@ -220,8 +320,18 @@ SSP 組み込み事象には文字列形 `excita "OnBoot"` を使ふにゃ。
 | 命令 | 意味 |
 |---|---|
 | `optio "表示名" "EventName"` | 選択肢を追加にゃ |
-| `optioEventum "表示名" "EventName" ["r0","r1"]` | Reference 付き選択肢にゃ |
+| `optioEventum "表示名" "EventName" ["r0","r1"]` | 文字列形 Reference 付き選択肢にゃ |
+| `optioEventum "表示名" f args*` | def ベース事象附き選択肢にゃ（識別子形）にゃ |
 | `ancora "signum"` … `fineAncora` | 錨（クリック可能テキスト）にゃ |
+
+### 入力ボックス（def ベース形）
+
+| 命令 | 意味 |
+|---|---|
+| `aperiInputum modus f titulus textus` | def ベースのテキスト入力ボックスを開くにゃ |
+| `aperiInputumNumerale modus f titulus a b c` | def ベースの数値入力ボックスを開くにゃ |
+| `aperiInputumIP f titulus ip1 ip2 ip3 ip4` | def ベースの IP アドレス入力ボックスを開くにゃ |
+| `legeProprietatem f proprietates` | def ベースのプロパティ取得にゃ |
 
 ### 書体
 
@@ -322,7 +432,7 @@ class Citatio (α : Type) where
   roundtrip : forall (a : α), fromRef (toRef a) = a   -- 往復が定理として保証されるにゃ
 ```
 
-基本型（`Nat` `Int` `Bool` `String` `Char` `UInt8/16/32/64` `Option α` `α × β`）の実体が定義済みにゃ。
+基本型（`Nat` `Int` `Bool` `String` `Char` `UInt8/16/32/64` `Option α` `List α` `α × β`）の実体が定義済みにゃ。
 
 ---
 

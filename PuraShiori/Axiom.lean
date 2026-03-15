@@ -1,5 +1,5 @@
 -- PuraShiori.Axiom
--- 理論上証明できない（opaque extern 等）公理を置く場所にゃん
--- 現在は空。Float は StatusPermanens のスコープ外になったので除去した。
+-- 理論上証明できない PuraShiori 固有の公理置き場にゃん♪
+-- 既存型の公理（String.Internal.append_eq_append 等）は LemmaGeneralis に移動してゐるにゃ
 -- 将来ここに追加する候補:
 --   axiom Float.ofBits_toBits (f : Float) : Float.ofBits f.toBits = f  -- opaque なので証明不能

@@ -15,21 +15,35 @@ rev = "main"
 [[require]]
 name = "Repl"
 git = "https://github.com/leanprover-community/repl"
+[[require]]
+name = "LemmaGeneralis"
+git = "https://github.com/rejafdofs/LemmaGeneralis"
+rev = "main"
 
 [[require]]
-name = "Aesop"
-scope = "leanprover-community"
+name = "SstpCliens"
+git = "https://github.com/rejafdofs/SstpCliens"
+rev = "main"
+
 # ライブラリ本體にゃん。Exemplum（使用例）は含めにゃいにゃ
 [[lean_lib]]
 name = "PuraShiori"
 globs = [
   "PuraShiori",
   "PuraShiori.Protocollum",
+  "PuraShiori.SakuraTypi",
+  "PuraShiori.SakuraFundamentum",
+  "PuraShiori.SakuraTextus",
+  "PuraShiori.SakuraFenestra",
+  "PuraShiori.SakuraSystema",
   "PuraShiori.SakuraScriptum",
   "PuraShiori.Rogatio",
   "PuraShiori.Responsum",
   "PuraShiori.Nuculum",
   "PuraShiori.Exporta",
   "PuraShiori.StatusPermanens",
+  "PuraShiori.InstantiaStatusPermanens",
+  "PuraShiori.LemmaStatusPermanens",
+  "PuraShiori.Sstp",
   "PuraShiori.Syntaxis",
 ]

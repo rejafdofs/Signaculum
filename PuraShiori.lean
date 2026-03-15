@@ -10,6 +10,7 @@ import PuraShiori.Exporta
 import PuraShiori.StatusPermanens
 import PuraShiori.LemmaStatusPermanens
 import PuraShiori.Citationes
+import PuraShiori.Sstp
 import PuraShiori.Syntaxis
 import PuraShiori.Loop
 import PuraShiori.Varia

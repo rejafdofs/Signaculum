@@ -20,9 +20,11 @@ name = "LemmaGeneralis"
 git = "https://github.com/rejafdofs/LemmaGeneralis"
 rev = "main"
 
-[[require]]
-name = "SstpCliens"
-git = "https://github.com/rejafdofs/SstpCliens"
+# ディレクトゥム SSTP — WM_COPYDATA ヴィアー SSP ニ ソウシン スルニャン
+[[extern_lib]]
+name = "sstpDirectum"
+srcDir = "PuraShiori/c"
+linkLibs = ["user32"]
 
 # ライブラリ本體にゃん。Exemplum（使用例）は含めにゃいにゃ
 [[lean_lib]]

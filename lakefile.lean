@@ -15,13 +15,14 @@ require Repl from git "https://github.com/leanprover-community/repl"
 require LemmaGeneralis from git "https://github.com/rejafdofs/LemmaGeneralis"@"main"
 
 extern_lib sstpDirectum pkg := do
+  let lean ← getLeanInstall
   let leanIncludeDir ← getLeanIncludeDir
   let srcFile := pkg.dir / "PuraShiori" / "c" / "sstpDirectum.c"
   let oFile := pkg.buildDir / "c" / "sstpDirectum.o"
   let libFile := pkg.buildDir / "lib" / nameToStaticLib "sstpDirectum"
   Job.async do
     buildFileUnlessUpToDate' oFile do
-      compileO oFile srcFile #[s!"-I{leanIncludeDir}"]
+      compileO oFile srcFile #[s!"-I{leanIncludeDir}"] lean.cc
     buildFileUnlessUpToDate' libFile do
       compileStaticLib libFile #[oFile]
     return libFile

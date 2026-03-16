@@ -3,9 +3,16 @@
 -- C 包裝（ffi/shiori.c）からこれらの關數が呼ばれるにゃ
 
 import PuraShiori.Nuculum
-import PuraShiori.Loop
 
 namespace PuraShiori
+
+/-- ログ出力用（depurgatio）關數にゃん。現在は無效化（inactivatus）してゐるにゃ -/
+def registrareVestigium (_nuntius : String) : IO Unit := do
+  return ()
+  -- let domus := "C:\\Users\\a\\ghost_lean_trace.txt"
+  -- let scriptor ← IO.FS.Handle.mk domus IO.FS.Mode.append
+  -- scriptor.putStrLn _nuntius
+  -- scriptor.flush
 
 /-- 全域の栞參照にゃん。initialize で自動的に作られるにゃ -/
 initialize shioriGlobalis : IO.Ref (Option Shiori) ← IO.mkRef none
@@ -94,8 +101,9 @@ initialize taskusCustodia : IO.Ref (Array (Task (Except IO.Error Unit))) ← IO.
 /-- IO アクシオー（Actio）をバックグラウンドで起動して GC から保護するにゃん♪
     例外は registrareVestigium に流れるのでゴーストがクラッシュしにゃいにゃ -/
 def spawnaMunitus (actio : IO Unit) : IO Unit := do
-  let task ← IO.asTask (actio.catch (fun e =>
-    registrareVestigium s!"[PERNICIES spawna] {e}"))
+  let task ← IO.asTask do
+    try actio
+    catch e => registrareVestigium s!"[PERNICIES spawna] {e}"
   taskusCustodia.modify (fun arr =>
     -- 上限 256 を超えたら後半だけ殘すにゃ（古いタスクを捨てるにゃ）
     let arr' := arr.push task

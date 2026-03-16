@@ -5,14 +5,6 @@ import PuraShiori.Exporta
 
 namespace PuraShiori
 
-/-- ログ出力用（depurgatio）關數にゃん。現在は無效化（inactivatus）してゐるにゃ -/
-def registrareVestigium (_nuntius : String) : IO Unit := do
-  return ()
-  -- let domus := "C:\\Users\\a\\ghost_lean_trace.txt"
-  -- let scriptor ← IO.FS.Handle.mk domus IO.FS.Mode.append
-  -- scriptor.putStrLn _nuntius
-  -- scriptor.flush
-
 /-- リトルエンディアン 4バイトを發信（出力）するにゃん -/
 def egressusU32 (rivusEgressus : IO.FS.Stream) (numerus : UInt32) : IO Unit := do
   let series : ByteArray := ⟨#[

@@ -1,6 +1,6 @@
 /* PuraShiori/c/sstpDirectum.c
- * ディレクトゥム SSTP — WM_COPYDATA ヴィアー SSP ニ スクリプトゥムヲ ミッテレ スルニャン
- * ソケットゥムヲ ツカハズニ ウィンドウズ IPC ヲ ツカフニャン */
+ * ディレクトゥム SSTP — WM_COPYDATA ヴィアー SSP にスクリプトゥムをミッテレするにゃん
+ * ソケットゥムを使はずにウィンドウズ IPC を使ふにゃん */
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -19,10 +19,10 @@ static int sstp_directum_mittere_raw(const char* data, DWORD size) {
     return 0;
 }
 
-/* Lean FFI エントリーポイントゥム — ストリングヲ ウケトッテ ソウシン スルニャン */
+/* Lean FFI エントリーポイントゥム — ストリングを受け取つて送信するにゃん */
 LEAN_EXPORT lean_obj_res sstp_directum_mittere(lean_obj_arg request, lean_obj_arg world) {
     const char* str = lean_string_cstr(request);
-    /* strlen ヲ ツカフ — lean_string_byte_size ハ ヌルジヲ フクムカラニャン */
+    /* strlen を使ふ — lean_string_byte_size はヌル字を含むからにゃん */
     sstp_directum_mittere_raw(str, (DWORD)strlen(str));
     return lean_io_result_mk_ok(lean_box(0));
 }

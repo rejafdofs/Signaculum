@@ -1,7 +1,7 @@
 -- PuraShiori.SakuraSystema
 -- イベント・音響・HTTP・プロパティ・ゴースト管理 にゃん♪
 
-import PuraShiori.SakuraFundamentum
+import PuraShiori.Sakura.Fundamentum
 
 namespace PuraShiori
 

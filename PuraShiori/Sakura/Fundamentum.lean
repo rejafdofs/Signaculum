@@ -1,7 +1,7 @@
 -- PuraShiori.SakuraFundamentum
 -- 基底発出プリミティウィ。emitte / evade* / loqui / crudus にゃん♪
 
-import PuraShiori.SakuraTypi
+import PuraShiori.Sakura.Typi
 
 namespace PuraShiori
 

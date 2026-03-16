@@ -2,14 +2,14 @@
 
 
 import PuraShiori.Protocollum
-import PuraShiori.SakuraScriptum
+import PuraShiori.Sakura.Scriptum
 import PuraShiori.Rogatio
 import PuraShiori.Responsum
 import PuraShiori.Nuculum
 import PuraShiori.Exporta
-import PuraShiori.StatusPermanens
-import PuraShiori.LemmaStatusPermanens
-import PuraShiori.Citationes
+import PuraShiori.Memoria.StatusPermanens
+import PuraShiori.Memoria.Lemma
+import PuraShiori.Memoria.Citationes
 import PuraShiori.Sstp
 import PuraShiori.Syntaxis
 import PuraShiori.Loop

@@ -2,7 +2,7 @@
 -- Citatio 型クラスの各型へのインスタンティアにゃん♪
 -- fromRef (toRef a) = a がすべてのインスタンティアで保証されるにゃ
 
-import PuraShiori.Citatio
+import PuraShiori.Memoria.Citatio
 import Aesop
 namespace PuraShiori
 

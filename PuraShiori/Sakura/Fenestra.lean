@@ -1,7 +1,7 @@
 -- PuraShiori.SakuraFenestra
 -- ウィンドウ・UI 管理・モード制御 にゃん♪
 
-import PuraShiori.SakuraFundamentum
+import PuraShiori.Sakura.Fundamentum
 
 namespace PuraShiori
 

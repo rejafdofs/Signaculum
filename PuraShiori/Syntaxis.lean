@@ -4,8 +4,8 @@
 -- 環境拡張 GhostAccumulatio に variae・eventa・lazyEventa を累積するにゃ
 
 import Lean
-import PuraShiori.Citationes
-import PuraShiori.StatusPermanens
+import PuraShiori.Memoria.Citationes
+import PuraShiori.Memoria.StatusPermanens
 import PuraShiori.Exporta
 import PuraShiori.Loop
 import PuraShiori.Sstp

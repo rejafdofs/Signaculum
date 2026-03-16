@@ -23,7 +23,6 @@ rev = "main"
 [[require]]
 name = "SstpCliens"
 git = "https://github.com/rejafdofs/SstpCliens"
-rev = "main"
 
 # ライブラリ本體にゃん。Exemplum（使用例）は含めにゃいにゃ
 [[lean_lib]]
@@ -31,19 +30,18 @@ name = "PuraShiori"
 globs = [
   "PuraShiori",
   "PuraShiori.Protocollum",
-  "PuraShiori.SakuraTypi",
-  "PuraShiori.SakuraFundamentum",
-  "PuraShiori.SakuraTextus",
-  "PuraShiori.SakuraFenestra",
-  "PuraShiori.SakuraSystema",
-  "PuraShiori.SakuraScriptum",
+  "PuraShiori.Sakura.Typi",
+  "PuraShiori.Sakura.Fundamentum",
+  "PuraShiori.Sakura.Textus",
+  "PuraShiori.Sakura.Fenestra",
+  "PuraShiori.Sakura.Systema",
+  "PuraShiori.Sakura.Scriptum",
   "PuraShiori.Rogatio",
   "PuraShiori.Responsum",
   "PuraShiori.Nuculum",
   "PuraShiori.Exporta",
-  "PuraShiori.StatusPermanens",
-  "PuraShiori.InstantiaStatusPermanens",
-  "PuraShiori.LemmaStatusPermanens",
+  "PuraShiori.Memoria.StatusPermanens",
+  "PuraShiori.Memoria.Lemma",
   "PuraShiori.Sstp",
   "PuraShiori.Syntaxis",
 ]

@@ -2,7 +2,7 @@
 -- 栞の核心骨格にゃん。處理器の登錄と事象のルーティングを擔ふにゃ
 
 import PuraShiori.Protocollum
-import PuraShiori.SakuraScriptum
+import PuraShiori.Sakura.Scriptum
 import PuraShiori.Rogatio
 import PuraShiori.Responsum
 

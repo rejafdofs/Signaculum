@@ -1,7 +1,7 @@
 -- PuraShiori.SakuraTextus
 -- テキスト表示・書体・選択肢・タイミング にゃん♪
 
-import PuraShiori.SakuraFundamentum
+import PuraShiori.Sakura.Fundamentum
 
 namespace PuraShiori
 

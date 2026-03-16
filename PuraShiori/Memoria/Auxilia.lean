@@ -5,7 +5,7 @@
 import Std.Tactic.BVDecide
 import LemmaGeneralis
 import Aesop
-import PuraShiori.StatusPermanens
+import PuraShiori.Memoria.StatusPermanens
 namespace PuraShiori
 
 -- ═══════════════════════════════════════════════════
@@ -435,7 +435,7 @@ def legereParia
           return ((nomenEntriae, tag, valor) :: residuum, positioFinalis)
 
 -- ─────────────────────────────────────────────────────────────────────────
--- レクルスス補題と serializeMappam_roundtrip は LemmaStatusPermanens.lean にあるにゃ
+-- インスタンティアと補題は LemmaStatusPermanens.lean にあるにゃ
 -- ─────────────────────────────────────────────────────────────────────────
 
 /-- `(名前, 型タグ, ByteArray)` の三つ組のリストをビーナーリウムにセリアーリザーティオーするにゃん（純粋）♪ -/

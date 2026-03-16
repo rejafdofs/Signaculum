@@ -1,17 +1,24 @@
 -- PuraShiori.Sstp
--- SSTP/1.4 クラエンス（SstpCliens ラッパー）にゃん
--- バックグラウンドタスクから SSP にスクリプトやイヴェントゥムを送信するにゃ
-
-import SstpCliens
+-- ディレクトゥム SSTP — WM_COPYDATA ヴィアー SSP ニ スクリプトゥムヲ ミッテレ スルニャン
+-- ソケットゥムヲ ツカハズニ ウィンドウズ IPC ヲ ツカフニャン
 
 namespace PuraShiori.Sstp
 
-/-- SakuraScript を SSTP/1.4 Execute で SSP（127.0.0.1:9801）に送信するにゃん -/
-def mitteSstpScriptum (scriptum : String) : IO Unit :=
-  SstpCliens.mitteSstpScriptum scriptum
+/-- FFI — sstpDirectum.c ノ sstp_directum_mittere ヲ ヨブニャン -/
+@[extern "sstp_directum_mittere"]
+opaque sstpDirectumMittere (request : @& String) : IO Unit
 
-/-- SHIORI イヴェントゥムを SSTP/1.4 Notify で SSP に送信するにゃん -/
+/-- SakuraScript ヲ SSTP/1.4 Execute デ SSP ニ ソウシン スルニャン -/
+def mitteSstpScriptum (scriptum : String) : IO Unit :=
+  let req := s!"SSTP/1.4\r\nCommand: Execute\r\nCharset: UTF-8\r\nSender: uka-lean\r\nScript: {scriptum}\r\n\r\n"
+  sstpDirectumMittere req
+
+/-- SHIORI イヴェントゥムヲ SSTP/1.4 Notify デ SSP ニ ソウシン スルニャン -/
 def excitaEventum (nomenEventi : String) (citationes : List String := []) : IO Unit :=
-  SstpCliens.notificaEventum nomenEventi citationes.toArray
+  let refs := citationes.mapIdx fun i v =>
+    s!"Reference{i}: {v}\r\n"
+  let req := "SSTP/1.4\r\nCommand: Notify\r\nCharset: UTF-8\r\nSender: uka-lean\r\nEvent: "
+      ++ nomenEventi ++ "\r\n" ++ String.join refs ++ "\r\n"
+  sstpDirectumMittere req
 
 end PuraShiori.Sstp

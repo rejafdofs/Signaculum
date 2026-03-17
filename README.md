@@ -30,7 +30,7 @@ name = "my-ghost"
 version = "0.1.0"
 
 [[require]]
-git = "https://github.com/rejafdofs/uka-lean"
+git = "https://github.com/rejafdofs/Signaculum
 rev = "main"
 name = "Signaculum"
 

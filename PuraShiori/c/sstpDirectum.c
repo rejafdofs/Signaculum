@@ -33,13 +33,6 @@ typedef struct {
 extern HWND    __stdcall FindWindowExA(HWND, HWND, char const*, char const*);
 extern LRESULT __stdcall SendMessageA(HWND, unsigned int, WPARAM, LPARAM);
 
-/* lean_string_byte_size はヌル終端文字を含むので自前で長さを數へるにゃん */
-static DWORD str_len(char const* s) {
-    DWORD n = 0;
-    while (s[n]) n++;
-    return n;
-}
-
 static void sstp_directum_mittere_raw(char const* data, DWORD size) {
     HWND hwnd = FindWindowExA((HWND)0, (HWND)0, "SSP", (char const*)0);
     if (hwnd == (HWND)0) return;
@@ -51,10 +44,15 @@ static void sstp_directum_mittere_raw(char const* data, DWORD size) {
 }
 
 /* request は @& String（借用参照）なので b_lean_obj_arg にゃん
- * lean_obj_arg（所有）を使ふと呼出し後に参照カウントが誤って减算されるにゃ */
+ * lean_obj_arg（所有）を使ふと呼出し後に参照カウントが誤って减算されるにゃ
+ *
+ * lean_string_size は null 終端を含むバイト數を返すにゃん
+ * - 1 で null を除いた正確なバイト數を得るにゃ
+ * str_len ではなくこちらを使ふことで埋込み null 文字があつても切断されにゃいにゃ */
 LEAN_EXPORT lean_obj_res sstp_directum_mittere(b_lean_obj_arg request, lean_obj_arg world) {
-    char const* str = lean_string_cstr(request);
-    sstp_directum_mittere_raw(str, str_len(str));
+    char const* str  = lean_string_cstr(request);
+    DWORD        len = (DWORD)(lean_string_size(request) - 1);
+    sstp_directum_mittere_raw(str, len);
     return lean_io_result_mk_ok(lean_box(0));
 }
 

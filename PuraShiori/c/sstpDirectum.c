@@ -1,23 +1,8 @@
 /* PuraShiori/c/sstpDirectum.c
  * ディレクトゥム SSTP — WM_COPYDATA 経由で SSP にスクリプトゥムを送信するにゃん
- * システムヘッダーを一切 include しないにゃん
- * Lean ランタイム型と Win32 API は手動宣言するにゃ */
-
-/* ═══════════════════════════════════════
- * Lean ランタイム型の手動宣言にゃん
- * lean/lean.h は stddef.h を要求するが
- * Lean 附属 clang は標準ヘッダーを持たないからにゃん
- * ═══════════════════════════════════════ */
-typedef struct lean_object lean_object;
-typedef lean_object* lean_obj_res;
-typedef lean_object* lean_obj_arg;
-
-/* 静的ライブラリなので dllexport 不要にゃん */
-#define LEAN_EXPORT
-
-extern char const*   lean_string_cstr(lean_object* o);
-extern lean_object*  lean_box(unsigned long long n);
-extern lean_object*  lean_io_result_mk_ok(lean_object* v);
+ * lean/lean.h のインライン關數を使ふのでインクルードするにゃん
+ * stddef.h は PuraShiori/c/include/ の自前スタブを使ふにゃん */
+#include <lean/lean.h>
 
 /* ═══════════════════════════════════════
  * Win32 API の手動宣言にゃん（Windows 専用にゃ）
@@ -65,7 +50,7 @@ LEAN_EXPORT lean_obj_res sstp_directum_mittere(lean_obj_arg request, lean_obj_ar
     return lean_io_result_mk_ok(lean_box(0));
 }
 
-#else /* _WIN32 でない環境ではにゃ何もしないスタブにゃん */
+#else /* _WIN32 でない環境向けのスタブにゃん */
 
 LEAN_EXPORT lean_obj_res sstp_directum_mittere(lean_obj_arg request, lean_obj_arg world) {
     (void)request; (void)world;

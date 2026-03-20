@@ -1,12 +1,32 @@
 -- Signaculum.Sstp
--- ディレクトゥム SSTP — WM_COPYDATA ヴィアー SSP にスクリプトゥムをミッテレするにゃん
--- ソケットゥムを使はずにウィンドウズ IPC を使ふにゃん
+-- SSTP/1.4 ヴィアー TCP (port 9801) で SSP にスクリプトゥムをミッテレするにゃん
+-- Pure Lean 實裝（C コード不要にゃ）
+
+import Std.Internal.UV.TCP
+import Std.Net
 
 namespace Signaculum.Sstp
 
-/-- FFI — sstpDirectum.c の sstp_directum_mittere を呼ぶにゃん -/
-@[extern "sstp_directum_mittere"]
-opaque sstpDirectumMittere (request : @& String) : IO Unit
+open Std.Net
+open Std.Internal.UV.TCP
+
+/-- SSTP 標準ポートゥスにゃん -/
+def sstpPortus : UInt16 := 9801
+
+/-- SSTP リクエストゥムを TCP で SSP に送信するにゃん。
+    接續失敗時は靜かに無視するにゃ（Direct SSTP と同じ振舞ひにゃ） -/
+def sstpDirectumMittere (request : String) : IO Unit := do
+  try
+    let sock ← Socket.new
+    let addr : SocketAddress := .v4 ⟨.ofParts 127 0 0 1, sstpPortus⟩
+    let connectPromise ← sock.connect addr
+    IO.ofExcept connectPromise.result!.get
+    let sendPromise ← sock.send #[request.toUTF8]
+    IO.ofExcept sendPromise.result!.get
+    let shutdownPromise ← sock.shutdown
+    IO.ofExcept shutdownPromise.result!.get
+  catch _ =>
+    pure ()  -- SSP 未起動 or 接續拒否: 靜かに無視にゃ
 
 /-- ヘッダー値から CR・LF を除去して SSTP パケットゥムの破損を防ぐにゃん -/
 private def purgaCrlf (s : String) : String :=

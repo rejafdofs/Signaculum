@@ -14,7 +14,7 @@
 ### 前提 (Praemissa)
 
 - [Lean 4 / elan](https://leanprover.github.io/lean4/doc/setup.html)（Lake 附属）
-- Windows 環境（`shiori.dll` を動かすのに必要にゃ）
+- Windows / Linux / macOS（SSTP は TCP `localhost:9801` で通信するため OS 非依存にゃ）
 
 ### ① 新規プロヱクトゥムを作るにゃ
 
@@ -265,6 +265,7 @@ construe
 ### SSTP 直接送信 (`Sstp`)
 
 バックグラウンド外でも `Signaculum.Sstp` を使へるにゃ。
+TCP (`localhost:9801`) で SSP に SSTP/1.4 リクエストを送信するにゃ。Pure Lean 實裝（C コード不要）にゃん♪
 
 ```lean
 -- SakuraScript を SSP に送信にゃ

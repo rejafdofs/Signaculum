@@ -25,8 +25,7 @@ Signaculum.Exporta  ← exportaLoad / exportaUnload / exportaRequest
   │
   ├── Signaculum.Memoria.* ← 永続化・メモリー管理
   │
-  ├── Signaculum.Sstp      ← Direct SSTP 送信（WM_COPYDATA）
-  │     └── Signaculum/c/sstpDirectum.c  ← Win32 FFI
+  ├── Signaculum.Sstp      ← SSTP/1.4 送信（TCP port 9801、Pure Lean）
   │
   ├── Signaculum.Syntaxis  ← コンパイル時 DSL 構文擴張
   └── Signaculum.Loop      ← タイマー・ループ管理
@@ -102,7 +101,7 @@ Value: \h\s[0]やあ。\e\r\n
 
 ```lean
 structure Shiori where
-  tractatores : List (String × Tractator)
+  tractatores : Std.HashMap String Tractator  -- O(1) 探索にゃ
   status      : IO.Ref ShioriStatus
   onOnerare   : Option (String → IO Unit)  -- load フック
   onExire     : Option (IO Unit)           -- unload フック
@@ -110,8 +109,8 @@ structure Shiori where
 def Tractator := Rogatio → SakuraIO Unit
 ```
 
-`tracta` が要求を受け取り `tractatores.lookup` でイベント名に對應する處理器を探して呼ぶ。
-見つからなければ 204、例外が出れば 500。
+`tracta` が要求を受け取り `tractatores[rogatio.nomen]?`（`Std.HashMap` の O(1) 探索）でイベント名に對應する處理器を探して呼ぶ。
+見つからなければ 204、例外が出れば `Responsum.errorInternus.adProtocollum` で正規の SHIORI/3.0 500 應答を返す。
 
 ---
 
@@ -126,7 +125,8 @@ C グルーから呼ばれる `@[export]` 關數群。
 | `exportaRequest (req)` | `request(req)` | 要求文字列を受け取り應答文字列を返す |
 
 `spawnaMunitus` で非同期タスクを GC から保護しながら起動する機構もここにある。
-タスクは最大 256 件保持し、超えたら後半 128 件だけ残して古い前半を捨てる。
+新規タスク追加時に `IO.hasFinished` で完了済みタスクを自動除去し、
+残りが 256 件を超えたら後半 128 件だけ残して古い前半を捨てる。
 
 ---
 
@@ -146,67 +146,52 @@ SakuraScript を Lean で組み立てるためのモナドと DSL。
 
 ---
 
-### Signaculum.Sstp
+### Signaculum.Sstp — Pure Lean TCP SSTP
 
-Direct SSTP で SSP にスクリプトを送信する。
+SSTP/1.4 プロトコルで TCP (`localhost:9801`) 經由で SSP にスクリプトを送信する。
+**C コード不要** — `Std.Internal.UV.TCP.Socket`（Lean 4 組込み libuv バインディング）のみで實裝されてゐる。
 
-`sstpDirectumMittere` は C FFI 越しに `WM_COPYDATA` メッセージを SSP に送る。
-`mitteSstpScriptum` はその上に `SSTP/1.4 Execute` リクエストを組み立てる。
-`excitaEventum` は `SSTP/1.4 Notify` を送る。
+| 關數 | 説明 |
+|---|---|
+| `sstpDirectumMittere` | 生の SSTP リクエスト文字列を TCP で SSP に送信する |
+| `mitteSstpScriptum` | `EXECUTE SSTP/1.4` リクエストを組み立てて送信する |
+| `excitaEventum` | `NOTIFY SSTP/1.4` リクエストを送信する |
+| `purgaCrlf` | ヘッダー値から CR/LF を除去してパケット破損を防ぐ |
 
+#### SSTP/1.4 パケット形式
+
+Execute:
 ```
-SSTP/1.4\r\n
-Command: Execute\r\n
+EXECUTE SSTP/1.4\r\n
 Charset: UTF-8\r\n
 Sender: uka-lean\r\n
 Script: \h\s[0]やあ。\e\r\n
 \r\n
 ```
 
----
-
-### Signaculum/c/sstpDirectum.c — FFI 実装
-
-Win32 API `FindWindowExA` + `SendMessageA(WM_COPYDATA)` で Direct SSTP を実現する。
-
-#### COPYDATASTRUCT レイアウト（64-bit Windows）
-
-| フィールド | 型 | サイズ | オフセット | 内容 |
-|---|---|---|---|---|
-| `dwData` | `ULONG_PTR` | 8 バイト | 0 | 識別子 = `9801` |
-| `cbData` | `DWORD` | 4 バイト | 8 | データバイト數（ヌル終端を含まない） |
-| (padding) | — | 4 バイト | 12 | 自然アライメント |
-| `lpData` | `PVOID` | 8 バイト | 16 | SSTP リクエスト文字列へのポインタ |
-
-合計 24 バイト。
-
-#### 注意点
-
-`lean_string_size` は null 終端を含むバイト数を返すので `- 1` して `cbData` に渡す。
-`str_len`（null 止まりのループ）は使わない — 埋め込み null 文字があると切断されるため。
-
-`request` は `@& String`（借用参照）なので C 側は `b_lean_obj_arg`。
-`lean_obj_arg`（所有）を使うと呼出し後に参照カウントが誤って減算されてメモリ破壊を引き起こす。
-
-`_WIN32` 未定義環境（非 Windows ビルド）ではスタブが代わりに入り、何もせず `IO.ok ()` を返す。
-
-`SendMessageA` は同期呼出しなので、`request` の内部バッファは呼出し中ずっと有効。
-
-#### ビルド
-
-`lakefile.lean` の `extern_lib sstpDirectum` が `lean.cc`（Lean 附属 clang）でコンパイルする。
-フラグは Lean 自身のモジュールコンパイルと同一:
-
+Notify:
 ```
--I {leanIncludeDir}
---sysroot={lean.sysroot}
--nostdinc
--isystem {lean.sysroot}/include/clang
--DNDEBUG
+NOTIFY SSTP/1.4\r\n
+Charset: UTF-8\r\n
+Sender: uka-lean\r\n
+Event: OnSomeEvent\r\n
+Reference0: arg0\r\n
+\r\n
 ```
 
-`include/clang` に `stddef.h`・`stdbool.h`・`stdint.h` 等が含まれる。
-`-luser32` はすでに Lean の実行ファイルリンクコマンドに含まれているので個別指定不要。
+#### TCP 通信フロー
+
+1. `Socket.new` で TCP ソケットを生成
+2. `sock.connect` で `127.0.0.1:9801` に接續（`IO.Promise` を返す非同期 API）
+3. `sock.send` でリクエスト文字列を UTF-8 バイト列として送信
+4. `sock.shutdown` で TCP FIN を送信して切斷
+5. 接續失敗（SSP 未起動等）は `try/catch` で靜かに無視（舊 C 實裝と同一の振舞ひ）
+
+#### 舊實裝（削除濟み）
+
+以前は `Signaculum/c/sstpDirectum.c` で Win32 `WM_COPYDATA` による Direct SSTP を C FFI で實裝してゐたが、
+Windows 專用かつ非 Windows 環境では no-op スタブになる制限があつた。
+TCP SSTP は OS 非依存で動作するため、C コードを完全に排除した。
 
 ---
 
@@ -266,17 +251,17 @@ spawnaScriptum f →
   spawnaMunitus (IO.asTask) →
     Sakura.currere f →
     Sstp.mitteSstpScriptum →
-      sstpDirectumMittere (FFI) →
-        SendMessageA(WM_COPYDATA) → [SSP]
+      sstpDirectumMittere (Pure Lean TCP) →
+        Socket.connect 127.0.0.1:9801 →
+        Socket.send → [SSP]
 ```
 
 ---
 
 ## 不変条件・制約
 
-- `exportaRequest` は必ず應答文字列を返す（例外は catch して文字列に変換）
+- `exportaRequest` は必ず應答文字列を返す（例外は catch して `Responsum.errorInternus.adProtocollum` で正規の SHIORI/3.0 500 應答に変換）
 - `Rogatio.interpreta` が失敗した場合は 400 を返す
-- `tractatores.lookup` が失敗した場合は 204 を返す（ハンドラ未登録は正常）
-- `str_len` の返り値は `DWORD`（32-bit）。SSTP リクエストが 4GB を超えることはない
-- `SendMessageA` は同期呼出し。SSP が応答するまでブロックする
-- `taskusCustodia` の上限は 256 件。超えたら前半を捨てて後半 128 件を残す（GC リーク防止）
+- `tractatores[nomen]?`（HashMap O(1) 探索）が失敗した場合は 204 を返す（ハンドラ未登録は正常）
+- SSTP 送信は Pure Lean TCP（`localhost:9801`）で行ふ。C コード不要
+- `taskusCustodia` は `IO.hasFinished` で完了済みタスクを自動除去し、上限 256 件を超えたら前半を捨てて後半 128 件を残す

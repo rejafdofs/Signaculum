@@ -263,9 +263,8 @@ elab "spawnaScriptum" f:ident args:term* : term => do
 -- construe 構文擴張にゃん
 -- ═══════════════════════════════════════════════════
 
-set_option hygiene false
-
 /-- ゴーストを組み立てて SSP に登錄するにゃん♪ -/
+set_option hygiene false in
 elab "construe" : command => do
   let env ← getEnv
   let acc := ghostAccumulatioExt.getState env

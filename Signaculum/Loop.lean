@@ -2,6 +2,7 @@
 -- ゴースト本體（ghost.exe）として標準入出力で中繼器と通信する小循環（loop）にゃん。
 
 import Signaculum.Exporta
+import Signaculum.Responsum
 
 namespace Signaculum
 
@@ -16,16 +17,16 @@ def egressusU32 (rivusEgressus : IO.FS.Stream) (numerus : UInt32) : IO Unit := d
   rivusEgressus.write series
 
 /-- リトルエンディアン 4バイトを讀信するにゃん。
-    讀めなかつた場合は 0 を返すにゃ -/
-def ingressusU32 (rivusIngressus : IO.FS.Stream) : IO UInt32 := do
+    讀めなかつた場合は none を返すにゃ -/
+def ingressusU32 (rivusIngressus : IO.FS.Stream) : IO (Option UInt32) := do
   let o ← rivusIngressus.read 4
-  if o.size < 4 then return 0
+  if o.size < 4 then return none
   let o0 := o[0]!.toUInt32
   let o1 := o[1]!.toUInt32
   let o2 := o[2]!.toUInt32
   let o3 := o[3]!.toUInt32
   let numerus := o0 ||| (o1 <<< 8) ||| (o2 <<< 16) ||| (o3 <<< 24)
-  return numerus
+  return some numerus
 
 /-- 指定されたバイト數を完全に讀み切る遞歸關數にゃん -/
 partial def ingressusExactus (rivusIngressus : IO.FS.Stream) (magnitudo : Nat) (accumulatum : ByteArray := ByteArray.empty) : IO ByteArray := do
@@ -56,18 +57,26 @@ partial def loopPrincipalis : IO Unit := do
   let m := mandatum[0]!
   if m == 1 then
     -- LOAD 命令にゃん: [1u8] [4bytes:len] [bytes:path] -> [1u8] を返すにゃ
-    let longitudoViae ← ingressusU32 rivusIngressus
-    if longitudoViae == 0 then
-      registrareVestigium "[PERNICIES] longitudoViae est 0"
-      return ()
-    let octetiViae ← ingressusExactus rivusIngressus longitudoViae.toNat
-    let catenaViae := String.fromUTF8! octetiViae
-    registrareVestigium s!"[LOAD] via={catenaViae}, len={longitudoViae}"
-    -- Signaculum 全域側の Load 處理を喚ぶにゃ
-    let resSecunda ← Signaculum.exportaLoad catenaViae
-    rivusEgressus.write ⟨#[resSecunda.toUInt8]⟩
-    rivusEgressus.flush
-    loopPrincipalis
+    match ← ingressusU32 rivusIngressus with
+    | none =>
+      registrareVestigium "[PERNICIES] LOAD: longitudo を讀めなかつたにゃ"
+      loopPrincipalis
+    | some longitudoViae =>
+      if longitudoViae == 0 then
+        registrareVestigium "[PERNICIES] longitudoViae est 0"
+        -- エラーでもループは繼續するにゃん
+        rivusEgressus.write ⟨#[0]⟩
+        rivusEgressus.flush
+        loopPrincipalis
+      else
+        let octetiViae ← ingressusExactus rivusIngressus longitudoViae.toNat
+        let catenaViae := String.fromUTF8! octetiViae
+        registrareVestigium s!"[LOAD] via={catenaViae}, len={longitudoViae}"
+        -- Signaculum 全域側の Load 處理を喚ぶにゃ
+        let resSecunda ← Signaculum.exportaLoad catenaViae
+        rivusEgressus.write ⟨#[resSecunda.toUInt8]⟩
+        rivusEgressus.flush
+        loopPrincipalis
 
   else if m == 2 then
     -- UNLOAD 命令にゃん: [2u8] -> 拔けるにゃ
@@ -78,26 +87,37 @@ partial def loopPrincipalis : IO Unit := do
 
   else if m == 3 then
     -- REQUEST 命令にゃん: [3u8] [4bytes:len] [bytes:req] -> [4bytes:len] [bytes:res] を返すにゃ
-    let longitudoRogationis ← ingressusU32 rivusIngressus
-    if longitudoRogationis == 0 then
-      registrareVestigium "[PERNICIES] longitudoRogationis est 0"
-      return ()
-    registrareVestigium s!"[REQUEST] longitudoRogationis={longitudoRogationis}"
-    let octetiRogationis ← ingressusExactus rivusIngressus longitudoRogationis.toNat
-    if octetiRogationis.size.toUInt32 < longitudoRogationis then
-      registrareVestigium s!"[PERNICIES] parum lectum! expectatum {longitudoRogationis}, obtentum {octetiRogationis.size}"
+    match ← ingressusU32 rivusIngressus with
+    | none =>
+      registrareVestigium "[PERNICIES] REQUEST: longitudo を讀めなかつたにゃ"
+      loopPrincipalis
+    | some longitudoRogationis =>
+      if longitudoRogationis == 0 then
+        registrareVestigium "[PERNICIES] longitudoRogationis est 0"
+        -- 空の應答を返してループ繼續にゃん
+        let vacuumResponsum := Responsum.malaRogatio.adProtocollum
+        let octetiVacuum := vacuumResponsum.toUTF8
+        egressusU32 rivusEgressus octetiVacuum.size.toUInt32
+        rivusEgressus.write octetiVacuum
+        rivusEgressus.flush
+        loopPrincipalis
+      else
+        registrareVestigium s!"[REQUEST] longitudoRogationis={longitudoRogationis}"
+        let octetiRogationis ← ingressusExactus rivusIngressus longitudoRogationis.toNat
+        if octetiRogationis.size.toUInt32 < longitudoRogationis then
+          registrareVestigium s!"[PERNICIES] parum lectum! expectatum {longitudoRogationis}, obtentum {octetiRogationis.size}"
 
-    let catenaRogationis := String.fromUTF8! octetiRogationis
+        let catenaRogationis := String.fromUTF8! octetiRogationis
 
-    -- Signaculum 全域側の Request 處理を喚ぶにゃん♪
-    let catenaResponsi ← Signaculum.exportaRequest catenaRogationis
-    let octetiResponsi := catenaResponsi.toUTF8
-    registrareVestigium s!"[REQUEST] PERFECTUM, magnitudoResponsi={octetiResponsi.size}"
+        -- Signaculum 全域側の Request 處理を喚ぶにゃん♪
+        let catenaResponsi ← Signaculum.exportaRequest catenaRogationis
+        let octetiResponsi := catenaResponsi.toUTF8
+        registrareVestigium s!"[REQUEST] PERFECTUM, magnitudoResponsi={octetiResponsi.size}"
 
-    egressusU32 rivusEgressus octetiResponsi.size.toUInt32
-    rivusEgressus.write octetiResponsi
-    rivusEgressus.flush
-    loopPrincipalis
+        egressusU32 rivusEgressus octetiResponsi.size.toUInt32
+        rivusEgressus.write octetiResponsi
+        rivusEgressus.flush
+        loopPrincipalis
 
   else
     -- 未知のコマンド、ひとまづ無視して繼續するにゃん

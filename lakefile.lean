@@ -39,5 +39,14 @@ extern_lib sstpDirectum pkg := do
 lean_lib Signaculum where globs :=
   #[`Signaculum, `Signaculum.Protocollum, `Signaculum.Sakura.Typi, `Signaculum.Sakura.Fundamentum,
     `Signaculum.Sakura.Textus, `Signaculum.Sakura.Fenestra, `Signaculum.Sakura.Systema, `Signaculum.Sakura.Scriptum,
-    `Signaculum.Rogatio, `Signaculum.Responsum, `Signaculum.Nuculum, `Signaculum.Exporta,
-    `Signaculum.Memoria.StatusPermanens, `Signaculum.Memoria.Lemma, `Signaculum.Sstp, `Signaculum.Syntaxis]
+    `Signaculum.Rogatio, `Signaculum.Responsum, `Signaculum.Nuculum, `Signaculum.Exporta, `Signaculum.Loop,
+    `Signaculum.Memoria.StatusPermanens, `Signaculum.Memoria.Citatio, `Signaculum.Memoria.Citationes,
+    `Signaculum.Memoria.Auxilia, `Signaculum.Memoria.Lemma,
+    `Signaculum.Axiom, `Signaculum.Lemma, `Signaculum.Varia,
+    `Signaculum.Sstp, `Signaculum.Syntaxis]
+
+lean_lib TestGhost where
+  globs := #[`TestGhost]
+
+lean_exe ghost where
+  root := `Main

@@ -5,6 +5,7 @@ import Signaculum.Protocollum
 import Signaculum.Sakura.Scriptum
 import Signaculum.Rogatio
 import Signaculum.Responsum
+import Std.Data.HashMap
 
 namespace Signaculum
 
@@ -21,8 +22,8 @@ structure ShioriStatus where
 
 /-- 栞の本體にゃん。處理器の一覽と可變狀態を持つにゃ -/
 structure Shiori where
-  /-- 事象名と處理器の對應表にゃん -/
-  tractatores : List (String × Tractator)
+  /-- 事象名と處理器の對應表にゃん（HashMap で O(1) 探索にゃ）-/
+  tractatores : Std.HashMap String Tractator
   /-- 栞の可變狀態にゃ -/
   status : IO.Ref ShioriStatus
   /-- 讀込(load)時に呼ばれるフックにゃん。domus（家ディレクトーリウム）を受け取るにゃ -/
@@ -37,7 +38,8 @@ def creare (tractatores : List (String × Tractator))
     (onOnerare : Option (String → IO Unit) := none)
     (onExire   : Option (IO Unit)          := none) : IO Shiori := do
   let status ← IO.mkRef ({} : ShioriStatus)
-  return { tractatores, status, onOnerare, onExire }
+  let mappa := Std.HashMap.ofList tractatores
+  return { tractatores := mappa, status, onOnerare, onExire }
 
 /-- 家ディレクトーリウムを設定するにゃん -/
 def statuereDomus (s : Shiori) (domus : String) : IO Unit := do
@@ -53,7 +55,7 @@ def obtinereDomus (s : Shiori) : IO String := do
 def tracta (s : Shiori) (rogatio : Rogatio) : IO Responsum := do
   -- NOTIFY の場合、Value は無視されるにゃん
   -- でも處理器は呼ぶにゃ（副作用のために）
-  match s.tractatores.lookup rogatio.nomen with
+  match s.tractatores[rogatio.nomen]? with
   | some tractator =>
     try
       -- SakuraScript モナドを實行して文字列を得るにゃん
@@ -77,8 +79,8 @@ def tractaCatenam (s : Shiori) (catenaRogationis : String) : IO String := do
       return responsum.adProtocollum
     | .error _ =>
       return Responsum.malaRogatio.adProtocollum
-  catch e =>
-    return s!"[FATAL in tractaCatenam] {e}"
+  catch _ =>
+    return Responsum.errorInternus.adProtocollum
 
 end Shiori
 

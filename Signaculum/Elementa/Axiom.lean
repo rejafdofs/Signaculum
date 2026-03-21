@@ -1,4 +1,4 @@
--- Signaculum.Axiom
+-- Signaculum.Elementa.Axiom
 -- 理論上証明できない Signaculum 固有の公理置き場にゃん♪
 -- 既存型の公理（String.Internal.append_eq_append 等）は LemmaGeneralis に移動してゐるにゃ
 -- 将来ここに追加する候補:

@@ -14,28 +14,29 @@ SSP (Ukagaka ベースウェア)
 ffi/shiori.c  (ゴースト側の C グルー)
   │  @[export] された Lean 關數を直接呼ぶ
   ▼
-Signaculum.Exporta  ← exportaLoad / exportaUnload / exportaRequest
+Signaculum.Nucleus.Exporta  ← exportaLoad / exportaUnload / exportaRequest
   │
-  ├── Signaculum.Nuculum   ← Shiori 構造體・tracta
-  │     ├── Signaculum.Rogatio     ← SHIORI/3.0 要求の解析
-  │     ├── Signaculum.Responsum   ← SHIORI/3.0 應答の生成
-  │     └── Signaculum.Protocollum ← 共通型・定數
+  ├── Signaculum.Nucleus.Nuculum   ← Shiori 構造體・tracta
+  │     ├── Signaculum.Protocollum.Rogatio     ← SHIORI/3.0 要求の解析
+  │     ├── Signaculum.Protocollum.Responsum   ← SHIORI/3.0 應答の生成
+  │     └── Signaculum.Protocollum.Typi        ← 共通型・定數
   │
-  ├── Signaculum.Sakura.*  ← SakuraScript モナドと DSL
+  ├── Signaculum.Sakura.*    ← SakuraScript モナドと DSL
   │
-  ├── Signaculum.Memoria.* ← 永続化・メモリー管理
+  ├── Signaculum.Memoria.*   ← 永続化・メモリー管理
   │
-  ├── Signaculum.Sstp      ← SSTP/1.4 送信（TCP port 9801、Pure Lean）
+  ├── Signaculum.Sstp        ← SSTP/1.4 送信（TCP port 9801、Pure Lean）
   │
-  ├── Signaculum.Syntaxis  ← コンパイル時 DSL 構文擴張
-  └── Signaculum.Loop      ← タイマー・ループ管理
+  ├── Signaculum.Syntaxis    ← コンパイル時 DSL 構文擴張
+  ├── Signaculum.Nucleus.Loop ← タイマー・ループ管理
+  └── Signaculum.Elementa.*  ← 基礎要素（公理・補題・變數補助）
 ```
 
 ---
 
 ## モジュール別仕様
 
-### Signaculum.Protocollum
+### Signaculum.Protocollum.Typi
 
 SHIORI/3.0 プロトコルの共通型と定數。
 
@@ -48,7 +49,7 @@ SHIORI/3.0 プロトコルの共通型と定數。
 
 ---
 
-### Signaculum.Rogatio
+### Signaculum.Protocollum.Rogatio
 
 SHIORI/3.0 要求文字列を解析して `Rogatio` 構造體に変換する。
 
@@ -75,7 +76,7 @@ Reference0: 0\r\n
 
 ---
 
-### Signaculum.Responsum
+### Signaculum.Protocollum.Responsum
 
 `Responsum` 構造體から SHIORI/3.0 應答文字列を生成する。
 
@@ -95,7 +96,7 @@ Value: \h\s[0]やあ。\e\r\n
 
 ---
 
-### Signaculum.Nuculum
+### Signaculum.Nucleus.Nuculum
 
 栞の核心。`Shiori` 構造體とルーティング。
 
@@ -114,7 +115,7 @@ def Tractator := Rogatio → SakuraIO Unit
 
 ---
 
-### Signaculum.Exporta
+### Signaculum.Nucleus.Exporta
 
 C グルーから呼ばれる `@[export]` 關數群。
 

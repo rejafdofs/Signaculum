@@ -1,9 +1,9 @@
--- Signaculum.Exporta
+-- Signaculum.Nucleus.Exporta
 -- @[export] を用ゐた FFI 輸出關數群にゃん
 -- C 包裝（ffi/shiori.c）からこれらの關數が呼ばれるにゃ
 
-import Signaculum.Nuculum
-import Signaculum.Responsum
+import Signaculum.Nucleus.Nuculum
+import Signaculum.Protocollum.Responsum
 
 namespace Signaculum
 

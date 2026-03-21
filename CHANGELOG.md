@@ -15,7 +15,7 @@
 - Notify リクエスト: `SSTP/1.4` → `NOTIFY SSTP/1.4`（正しい SSTP/1.4 形式に修正）
 - ヘッダー値から CR/LF を除去する `purgaCrlf` 關數を追加（パケット破損防止）
 
-### ハンドラ探索の高速化 (`Nuculum.lean`)
+### ハンドラ探索の高速化 (`Nucleus/Nuculum.lean`)
 
 - `tractatores` の型を `List (String × Tractator)` → `Std.HashMap String Tractator` に變更
 - イベント名による探索が O(n) → O(1) に改善
@@ -23,15 +23,15 @@
 
 ### エラー處理の改善
 
-- `Nuculum.lean`: 致命的例外を文字列ではなく `Responsum.errorInternus.adProtocollum` で正規の SHIORI/3.0 500 應答として返すやうに變更
-- `Exporta.lean`: 同上、`exportaRequest` の `catch` ブロックでも正規の 500 應答を返す
+- `Nucleus/Nuculum.lean`: 致命的例外を文字列ではなく `Responsum.errorInternus.adProtocollum` で正規の SHIORI/3.0 500 應答として返すやうに變更
+- `Nucleus/Exporta.lean`: 同上、`exportaRequest` の `catch` ブロックでも正規の 500 應答を返す
 
-### タスク管理の改善 (`Exporta.lean`)
+### タスク管理の改善 (`Nucleus/Exporta.lean`)
 
 - `spawnaMunitus` で新規タスク追加時に `IO.hasFinished` で完了濟みタスクを自動除去するやうに變更
 - 完了濟みタスクが溜まらないため、タスクリストが効率的に管理される
 
-### ループ處理の改善 (`Loop.lean`)
+### ループ處理の改善 (`Nucleus/Loop.lean`)
 
 - `ingressusU32` の戻り値を `IO UInt32` → `IO (Option UInt32)` に變更
 - 長さ 0 のエラー時にループを繼續するやうに修正（以前は `return ()` で終了してゐた）
@@ -60,5 +60,5 @@ SakuraScriptum の特殊文字遁走處理で、通常文字の追加を `String
 ### `executareScripturam` の O(n²) → O(n) 改善 (`StatusPermanens.lean`)
 永続化の書出處理で、リストの末尾に `++` で追加してゐたのを、先頭に `::` で追加して最後に `.reverse` する方式に變更したにゃ。`++` はリスト全體を毎囘コピーするので O(n²) だったのが、O(n) になったにゃん♪
 
-### `Rogatio.lean` の配列構築簡素化
+### `Protocollum/Rogatio.lean` の配列構築簡素化
 `referentiae` 配列の初期化を手動ループから `(List.replicate maximumIndex "").toArray` に變更したにゃ。すっきりにゃん♪

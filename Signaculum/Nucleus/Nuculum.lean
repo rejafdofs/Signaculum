@@ -1,10 +1,10 @@
 -- Signaculum.Nuculum
 -- 栞の核心骨格にゃん。處理器の登錄と事象のルーティングを擔ふにゃ
 
-import Signaculum.Protocollum
+import Signaculum.Protocollum.Typi
 import Signaculum.Sakura.Scriptum
-import Signaculum.Rogatio
-import Signaculum.Responsum
+import Signaculum.Protocollum.Rogatio
+import Signaculum.Protocollum.Responsum
 import Std.Data.HashMap
 
 namespace Signaculum

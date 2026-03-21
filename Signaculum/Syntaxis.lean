@@ -6,8 +6,8 @@
 import Lean
 import Signaculum.Memoria.Citationes
 import Signaculum.Memoria.StatusPermanens
-import Signaculum.Exporta
-import Signaculum.Loop
+import Signaculum.Nucleus.Exporta
+import Signaculum.Nucleus.Loop
 import Signaculum.Sstp
 
 open Lean Elab Command Term Meta

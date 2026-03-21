@@ -1,7 +1,7 @@
 -- Signaculum.Rogatio
 -- SHIORI/3.0 要求の構文解析にゃん
 
-import Signaculum.Protocollum
+import Signaculum.Protocollum.Typi
 
 namespace Signaculum
 

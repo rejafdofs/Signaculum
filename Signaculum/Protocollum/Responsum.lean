@@ -1,7 +1,7 @@
 -- Signaculum.Responsum
 -- SHIORI/3.0 應答の構築にゃん
 
-import Signaculum.Protocollum
+import Signaculum.Protocollum.Typi
 
 namespace Signaculum
 

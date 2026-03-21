@@ -1,8 +1,8 @@
 -- Signaculum.Loop
 -- ゴースト本體（ghost.exe）として標準入出力で中繼器と通信する小循環（loop）にゃん。
 
-import Signaculum.Exporta
-import Signaculum.Responsum
+import Signaculum.Nucleus.Exporta
+import Signaculum.Protocollum.Responsum
 
 namespace Signaculum
 

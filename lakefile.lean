@@ -23,6 +23,7 @@ lean_lib Signaculum where globs :=
     `Signaculum.Memoria.StatusPermanens, `Signaculum.Memoria.Citatio, `Signaculum.Memoria.Citationes,
     `Signaculum.Memoria.Auxilia, `Signaculum.Memoria.Lemma,
     `Signaculum.Elementa, `Signaculum.Elementa.Axiom, `Signaculum.Elementa.Lemma, `Signaculum.Elementa.Varia,
+    `Signaculum.Sakura.SyntaxisSakuraScripti,
     `Signaculum.Sstp, `Signaculum.Syntaxis]
 
 lean_lib TestGhost where

@@ -107,13 +107,13 @@ elab "eventum" nomenEventi:str body:term : command => do
 -- ═══════════════════════════════════════════════════
 
 /-- Expr の先頭にある明示的 forall の数を数えるにゃん♪ -/
-private partial def countExplicitParams : Lean.Expr → MetaM Nat
+partial def countExplicitParams : Lean.Expr → MetaM Nat
   | .forallE _ _ body .default => return 1 + (← countExplicitParams body)
   | .forallE _ _ body _        => countExplicitParams body
   | _                          => return 0
 
 /-- ident を項として展開して const 名と引數リストを取り出すにゃん♪ -/
-private def resolveToConst (f : Ident) : TermElabM Name := do
+def resolveToConst (f : Ident) : TermElabM Name := do
   let fExpr ← elabTerm f none
   let fExpr ← instantiateMVars fExpr
   match fExpr with
@@ -121,7 +121,7 @@ private def resolveToConst (f : Ident) : TermElabM Name := do
   | _ => throwError "excita/insere: 関数定数の識別子を渡してにゃ: {f}"
 
 /-- def ベース事象を lazyEventa に登録する共通処理にゃん -/
-private def registraLazium (f : Ident) : TermElabM String := do
+def registraLazium (f : Ident) : TermElabM String := do
   let fname ← resolveToConst f
   let env ← getEnv
   let some info := env.find? fname |
@@ -263,8 +263,8 @@ elab "spawnaScriptum" f:ident args:term* : term => do
 -- construe 構文擴張にゃん
 -- ═══════════════════════════════════════════════════
 
-/-- ゴーストを組み立てて SSP に登錄するにゃん♪ -/
 set_option hygiene false in
+/-- ゴーストを組み立てて SSP に登錄するにゃん♪ -/
 elab "construe" : command => do
   let env ← getEnv
   let acc := ghostAccumulatioExt.getState env

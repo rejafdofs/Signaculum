@@ -3,6 +3,7 @@
 
 import Signaculum.Protocollum
 import Signaculum.Sakura.Scriptum
+import Signaculum.Sakura.SyntaxisSakuraScripti
 import Signaculum.Nucleus
 import Signaculum.Sstp
 import Signaculum.Elementa.Varia
@@ -89,5 +90,32 @@ def testPuraSakura : String := Id.run do
     IO.println s!"ref0: {r.referentiam 0}"
     IO.println s!"charset: {r.forma}"
   | .error e => IO.println s!"Parse error: {e}"
+  IO.println ""
+  IO.println s!"=== SakuraScript 構文テスト ==="
+  -- ssTest! 基本タグにゃん
+  let ssResult ← Sakura.currere (ssTest! \h "起動にゃ！" \n \e)
+  IO.println s!"ssTest! result: {ssResult}"
+  assert! ssResult == "\\h起動にゃ！\\n\\e"
+  IO.println "✓ 基本タグ OK"
+
+  -- sakurascriptum! 引数ありタグにゃん
+  let ss2 ← Sakura.currere (sakurascriptum! \h \s[0] "こんにちは" \n \_w[500] \u \s[10] "よろしく" \e)
+  IO.println s!"sakurascriptum! result: {ss2}"
+  assert! ss2 == "\\h\\s[0]こんにちは\\n\\_w[500]\\u\\s[10]よろしく\\e"
+  IO.println "✓ 引数ありタグ OK"
+
+  -- sakurascriptum! 選擇肢にゃん
+  let ss3 ← Sakura.currere (sakurascriptum! \h \s[0] "選べ" \n \q["はい","yes"] \q["いいえ","no"] \e)
+  IO.println s!"選擇肢 result: {ss3}"
+  assert! ss3 == "\\h\\s[0]選べ\\n\\q[はい,yes]\\q[いいえ,no]\\e"
+  IO.println "✓ 選擇肢 OK"
+
+  -- sakurascriptum! 半行・Lean項埋込にゃん
+  let delay := 300
+  let ss4 ← Sakura.currere (sakurascriptum! \h \n[half] #(Sakura.mora delay) \e)
+  IO.println s!"半行+埋込 result: {ss4}"
+  assert! ss4 == "\\h\\n[half]\\_w[300]\\e"
+  IO.println "✓ 半行+Lean項埋込 OK"
+
   IO.println ""
   IO.println s!"=== 全テスト完了 ==="

@@ -9,4 +9,4 @@ import Signaculum.Memoria.Lemma
 import Signaculum.Memoria.Citationes
 import Signaculum.Sstp
 import Signaculum.Syntaxis
-import Signaculum.Varia
+import Signaculum.Elementa

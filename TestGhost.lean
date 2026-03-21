@@ -5,7 +5,7 @@ import Signaculum.Protocollum
 import Signaculum.Sakura.Scriptum
 import Signaculum.Nucleus
 import Signaculum.Sstp
-import Signaculum.Varia
+import Signaculum.Elementa.Varia
 
 open Signaculum
 open Signaculum.Sakura

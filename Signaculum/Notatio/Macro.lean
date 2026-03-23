@@ -140,6 +140,32 @@ def rawTextusSignumParser : Lean.Parser.Parser where
   info := {}
   fn   := rawTextusFn
 
+-- many 後の trailing 空白を讀み飛ばして pos を次の非空白文字の先頭に進めるにゃ
+-- stxStack には何も積まないにゃ（scriptumMacro ノードの構造を變へないにゃ）
+-- many が終はった後 pos が \n（行末・高カラム）に留まるせゐで
+-- doIfThenElse の else カラムチェックが失敗するのを防ぐにゃ
+private def skipTrailingWsFn : Lean.Parser.ParserFn :=
+  fun c s =>
+    let input  := c.fileMap.source
+    let newPos := Id.run do
+      let mut p := s.pos
+      while p.byteIdx < input.utf8ByteSize do
+        let ch := p.get input
+        if ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' then break
+        p := p.next input
+      return p
+    { s with pos := newPos }
+
+def skipTrailingWsParser : Lean.Parser.Parser where
+  info := {}
+  fn   := skipTrailingWsFn
+
+@[combinator_formatter Signaculum.Notatio.skipTrailingWsParser]
+def skipTrailingWsParser.formatter : Lean.PrettyPrinter.Formatter := pure ()
+
+@[combinator_parenthesizer Signaculum.Notatio.skipTrailingWsParser]
+def skipTrailingWsParser.parenthesizer : Lean.PrettyPrinter.Parenthesizer := pure ()
+
 @[combinator_formatter Signaculum.Notatio.rawTextusSignumParser]
 def rawTextusSignumParser.formatter : Lean.PrettyPrinter.Formatter := pure ()
 
@@ -167,7 +193,8 @@ private def scriptumParserCore (kw : String) : Lean.Parser.Parser :=
       Lean.Parser.symbol kw >>
       Lean.Parser.many (Lean.Parser.checkColGt "expected indent" >>
                         (Lean.Parser.categoryParser `sakuraSignum 0 <|>
-                         Signaculum.Notatio.rawTextusSignumParser))
+                         Signaculum.Notatio.rawTextusSignumParser)) >>
+      skipTrailingWsParser
 
 @[term_parser 1001] def scriptumTermParser  : Lean.Parser.Parser := scriptumParserCore "scriptum!"
 @[term_parser 1001] def scriptumTermParser2 : Lean.Parser.Parser := scriptumParserCore "scriptum"

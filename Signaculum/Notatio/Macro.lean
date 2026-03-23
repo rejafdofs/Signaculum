@@ -100,7 +100,9 @@ private def rawTextusFn
     s.mkError "expected text"
   else
     -- ident ノードとして push するにゃ（$i:ident パターンで既存ルールに乗れるにゃ）
-    let identNode := Lean.Syntax.mkIdent (Lean.Name.mkSimple str)
+    -- Syntax.ident で偽 ident ノードを作るにゃ（mkIdent は TSyntax ゆゑ直接 ctor を使ふにゃ）
+    let identNode : Lean.Syntax :=
+      Lean.Syntax.ident Lean.SourceInfo.none str.toSubstring (Lean.Name.mkSimple str) []
     { s with pos := endPos, stxStack := s.stxStack.push identNode }
 
 -- @[combinator_formatter/parenthesizer] で no-op 登録にゃ

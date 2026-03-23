@@ -102,7 +102,7 @@ private def rawTextusFn
     -- ident ノードとして push するにゃ（$i:ident パターンで既存ルールに乗れるにゃ）
     -- Syntax.ident で偽 ident ノードを作るにゃ（mkIdent は TSyntax ゆゑ直接 ctor を使ふにゃ）
     let identNode : Lean.Syntax :=
-      Lean.Syntax.ident Lean.SourceInfo.none str.toSubstring (Lean.Name.mkSimple str) []
+      Lean.Syntax.ident Lean.SourceInfo.none str.toRawSubstring (Lean.Name.mkSimple str) []
     { s with pos := endPos, stxStack := s.stxStack.push identNode }
 
 -- @[combinator_formatter/parenthesizer] で no-op 登録にゃ

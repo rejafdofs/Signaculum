@@ -33,7 +33,9 @@
       "Bash(/tmp/check_prec.lean:*)",
       "Read(//tmp/**)",
       "Bash(xargs cat:*)",
-      "mcp__lean-mcp-server__lean_term_goal"
+      "mcp__lean-mcp-server__lean_term_goal",
+      "Bash(/c/Users/a/.elan/bin/lake.exe build:*)",
+      "Bash(/c/Users/a/.elan/bin/lake.exe update:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

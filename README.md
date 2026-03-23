@@ -74,8 +74,6 @@ eventum "OnClose" fun _ => do
   finis
 
 construe
-
-def main : IO Unit := Signaculum.loopPrincipalis
 ```
 
 ### ④ 構築するにゃ
@@ -283,6 +281,17 @@ aperiInputumIP onIPSelected "IP アドレス" 192 168 1 1
 legeProprietatem onPropResult [.ghostName, .shellName]
 ```
 
+ラムダ形ならその場で書けるにゃ：
+
+```lean
+-- ラムダ形（def を書かずにインラインで）
+aperiInputum .simplex (fun text => scriptum こんにちは\、{text}さん) "名前を入力"
+
+-- scriptum タグ記法でも使えるにゃ
+scriptum
+  \![open,inputbox,(fun text => scriptum ありがとう\、{text}),名前を教えて]
+```
+
 ---
 
 ## 非同期処理 (Actiones Asynchronae)
@@ -401,11 +410,12 @@ Sstp.excitaEventum "OnSomeEvent" ["arg0", "arg1"]
 | `optioEventum "表示名" f args*` | def ベース事象附き選択肢にゃ（識別子形）にゃ |
 | `ancora "signum"` … `fineAncora` | 錨（クリック可能テキスト）にゃ |
 
-### 入力ボックス（def ベース形）
+### 入力ボックス
 
 | 命令 | 意味 |
 |---|---|
 | `aperiInputum modus f titulus textus` | def ベースのテキスト入力ボックスを開くにゃ |
+| `aperiInputum modus (fun text => ...) titulus` | ラムダ形のテキスト入力ボックスを開くにゃ |
 | `aperiInputumDiei f titulus annus mensis dies` | def ベースの日付入力ボックスを開くにゃ（月: 1〜12、日: 閏年考慮） |
 | `aperiInputumTemporis f titulus hora minutum secundum` | def ベースの時刻入力ボックスを開くにゃ（時: 0〜23、分秒: 0〜59） |
 | `aperiInputumGradus f titulus minimum maximum initium` | def ベースのスライダー入力ボックスを開くにゃ（minimum ≤ initium ≤ maximum） |

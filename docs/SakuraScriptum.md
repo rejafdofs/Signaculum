@@ -238,7 +238,7 @@ claudeDialogum "myDialogId"
 
 ### テキスト入力
 
-以下は文字列形（イベント名を文字列で指定）です。def ベース形（`aperiInputum .simplex onTextEntered ...` のように def を直接渡す形式）については README.md の「def 関數と excita / insere」を参照してください。
+以下は文字列形（イベント名を文字列で指定）、def ベース形（識別子形）、ラムダ形の3通りです。
 
 ```lean
 -- 通常（inputbox）— 文字列形
@@ -246,6 +246,14 @@ aperiInputum .simplex "OnInput" "タイトル" "初期テキスト"
 
 -- パスワード（passwordinput）— 文字列形
 aperiInputum .sigillum "OnPassInput" "パスワード" ""
+
+-- def ベース形（識別子形）
+def onTextEntered (text : String) : SakuraIO Unit := do
+  sakura; superficies 0; loqui s!"入力: {text}"; finis
+aperiInputum .simplex onTextEntered "名前を入力" ""
+
+-- ラムダ形（インラインで書けるにゃ）
+aperiInputum .simplex (fun text => scriptum こんにちは\、{text}さん) "名前を入力"
 
 -- オプション付き
 aperiInputum .simplex "OnInput" "タイトル" ""
@@ -657,14 +665,22 @@ def talkScriptum : SakuraPura Unit := scriptum!
 | `\![set,windowstate, s]` | `configuraStatusFenestrae s` | ウィンドウ状態 |
 | `\![raise, "event"]` | `excita "event"` | イベント発生（文字列形） |
 | `\![raise, ident args*]` | `excita ident args*` | イベント発生（def 識別子形） |
+| `\![raise, (fun x => ...)]` | `excita (fun x => ...)` | イベント発生（ラムダ形） |
 | `\![embed, "event"]` | `insere "event"` | イベント埋込（文字列形） |
 | `\![embed, ident args*]` | `insere ident args*` | イベント埋込（def 識別子形） |
+| `\![embed, (fun x => ...)]` | `insere (fun x => ...)` | イベント埋込（ラムダ形） |
 | `\![notify, "event"]` | `notifica "event"` | 通知（文字列形） |
 | `\![notify, ident args*]` | `notifica ident args*` | 通知（def 識別子形） |
+| `\![notify, (fun x => ...)]` | `notifica (fun x => ...)` | 通知（ラムダ形） |
 | `\![timerraise, t, r, "event"]` | `excitaPostTempus t r "event"` | 遅延発火（文字列形） |
 | `\![timerraise, t, r, ident args*]` | `excitaPostTempus t r ident args*` | 遅延発火（def 識別子形） |
+| `\![timerraise, t, r, (fun x => ...)]` | `excitaPostTempus t r (fun x => ...)` | 遅延発火（ラムダ形） |
 | `\![timernotify, t, r, "event"]` | `notificaPostTempus t r "event"` | 遅延通知（文字列形） |
 | `\![timernotify, t, r, ident args*]` | `notificaPostTempus t r ident args*` | 遅延通知（def 識別子形） |
+| `\![timernotify, t, r, (fun x => ...)]` | `notificaPostTempus t r (fun x => ...)` | 遅延通知（ラムダ形） |
+| `\![open,inputbox, (fun x => ...), t, title]` | `aperiInputum .simplex (fun x => ...) title` | テキスト入力（ラムダ形） |
+| `\![open,inputbox, ident, t, title]` | `aperiInputum .simplex ident title ""` | テキスト入力（識別子形） |
+| `\![open,passwordinput, (fun x => ...), t, title]` | `aperiInputum .sigillum (fun x => ...) title` | パスワード入力（ラムダ形） |
 | `\![async, ident args*]` | `spawnaScriptum ident args*` | 非同期 SSTP 送信 |
 | `\![anim,start, s, i]` | `animaIncepit s i` | アニメーション開始 |
 | `\![change,ghost, "name"]` | `mutaGhostNomen "name"` | ゴースト変更 |

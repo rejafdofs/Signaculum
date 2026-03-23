@@ -200,4 +200,60 @@ macro_rules | `(expandSignum \![biff, $a]) => `(Signaculum.Sakura.exploraPostam 
 syntax "\\!" "[set,property," term "," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![set,property, $p, $v]) => `(Signaculum.Sakura.configuraProprietatem $p $v)
 
+-- 入力ボックスにゃん（\![open,inputbox,callback,timeout,title]）
+-- ラムダ形・タイムアウトあり
+syntax "\\!" "[open,inputbox," "(" term ")" "," term "," str "]" : sakuraSignum
+macro_rules
+| `(expandSignum \![open,inputbox, ($lam:term), $_t:term,$title:str]) =>
+  `(aperiInputum .simplex ($lam) $title)
+
+syntax "\\!" "[open,inputbox," "(" term ")" "," term "," ident "]" : sakuraSignum
+macro_rules
+| `(expandSignum \![open,inputbox, ($lam:term), $_t:term,$title:ident]) =>
+  `(aperiInputum .simplex ($lam) $(Lean.Syntax.mkStrLit title.getId.toString))
+
+-- ラムダ形・タイムアウトなし
+syntax "\\!" "[open,inputbox," "(" term ")" "," str "]" : sakuraSignum
+macro_rules
+| `(expandSignum \![open,inputbox, ($lam:term), $title:str]) =>
+  `(aperiInputum .simplex ($lam) $title)
+
+syntax "\\!" "[open,inputbox," "(" term ")" "," ident "]" : sakuraSignum
+macro_rules
+| `(expandSignum \![open,inputbox, ($lam:term), $title:ident]) =>
+  `(aperiInputum .simplex ($lam) $(Lean.Syntax.mkStrLit title.getId.toString))
+
+-- ident形・タイムアウトあり
+syntax "\\!" "[open,inputbox," ident "," term "," str "]" : sakuraSignum
+macro_rules
+| `(expandSignum \![open,inputbox, $f:ident, $_t:term,$title:str]) =>
+  `(aperiInputum .simplex $f $title "")
+
+syntax "\\!" "[open,inputbox," ident "," term "," ident "]" : sakuraSignum
+macro_rules
+| `(expandSignum \![open,inputbox, $f:ident, $_t:term,$title:ident]) =>
+  `(aperiInputum .simplex $f $(Lean.Syntax.mkStrLit title.getId.toString) "")
+
+-- ident形・タイムアウトなし
+syntax "\\!" "[open,inputbox," ident "," str "]" : sakuraSignum
+macro_rules
+| `(expandSignum \![open,inputbox, $f:ident, $title:str]) =>
+  `(aperiInputum .simplex $f $title "")
+
+syntax "\\!" "[open,inputbox," ident "," ident "]" : sakuraSignum
+macro_rules
+| `(expandSignum \![open,inputbox, $f:ident, $title:ident]) =>
+  `(aperiInputum .simplex $f $(Lean.Syntax.mkStrLit title.getId.toString) "")
+
+-- パスワード入力にゃん
+syntax "\\!" "[open,passwordinput," "(" term ")" "," term "," str "]" : sakuraSignum
+macro_rules
+| `(expandSignum \![open,passwordinput, ($lam:term), $_t:term,$title:str]) =>
+  `(aperiInputum .sigillum ($lam) $title)
+
+syntax "\\!" "[open,passwordinput," ident "," term "," str "]" : sakuraSignum
+macro_rules
+| `(expandSignum \![open,passwordinput, $f:ident, $_t:term,$title:str]) =>
+  `(aperiInputum .sigillum $f $title "")
+
 end Signaculum.Notatio

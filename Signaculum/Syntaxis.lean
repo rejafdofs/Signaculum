@@ -395,6 +395,15 @@ elab "aperiInputum" modus:term f:ident titulus:term textus:term : term => do
     (← `(Signaculum.Sakura.aperiInputum $modus $(Syntax.mkStrLit nomenEventi) $titulus $textus))
     none
 
+/-- `aperiInputum modus ( lam ) titulus` — ラムダ式を直接渡すにゃん♪
+    lam は `String → SakuraM m Unit` 型にゃ -/
+elab "aperiInputum" modus:term "(" lam:term ")" titulus:term : term => do
+  let posIdx := (lam.raw.getPos?.getD ⟨0⟩).byteIdx
+  let nomenEventi ← registraLaziumLambda lam.raw posIdx
+  elabTerm
+    (← `(Signaculum.Sakura.aperiInputum $modus $(Syntax.mkStrLit nomenEventi) $titulus ""))
+    none
+
 /-- `aperiInputumDiei f titulus annus mensis dies` — def ベースの日付入力ボックスを開くにゃん♪
     annus/mensis(1〜12)/dies(1〜31) にゃ -/
 elab "aperiInputumDiei" f:ident titulus:term annus:term mensis:term dies:term : term => do

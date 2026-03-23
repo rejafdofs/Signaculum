@@ -21,7 +21,7 @@ private def toRefIdTerm : TSyntax `term :=
   ⟨(mkIdent `Signaculum.Memoria.Citatio.toRef).raw⟩
 
 -- MacroM では [$arr,*] が null ノードになるため List.cons/List.nil で明示構築にゃん
-private def makeListTerm (elems : Array (TSyntax `term)) : MacroM (TSyntax `term) :=
+private def makeListTerm (elems : Array (TSyntax `term)) : MacroM (TSyntax `term) := do
   elems.foldrM (fun hd tl => `(List.cons $hd $tl)) (← `(List.nil))
 
 syntax "\\!" "[raise," term "]" : sakuraSignum

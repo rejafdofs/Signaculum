@@ -19,13 +19,23 @@ open Lean
 syntax (priority := 50) str : sakuraSignum
 macro_rules | `(expandSignum $s:str) => `(Signaculum.Sakura.loqui $s)
 
+-- クォートなし識別子をテクストゥスとして表示にゃん（例: scriptum! こんにちは）
+syntax (priority := 40) ident : sakuraSignum
+macro_rules | `(expandSignum $i:ident) => `(Signaculum.Sakura.loqui $(Lean.Syntax.mkStrLit i.getId.toString))
+
 -- ════════════════════════════════════════════════════
 --  式埋込 (Expressio Inserta) — (expr)
 -- ════════════════════════════════════════════════════
 
--- 括弧で圍んだ Lean の式を直接埋め込むにゃん
-syntax (priority := 50) "(" term ")" : sakuraSignum
-macro_rules | `(expandSignum ($e)) => `($e)
+-- 中括弧で圍んだ Lean の式を直接埋め込むにゃん
+syntax (priority := 50) "{" term "}" : sakuraSignum
+macro_rules | `(expandSignum {$e}) => `($e)
+
+-- \{ \} で中括弧文字をエスケープにゃん
+syntax (priority := 60) "\\{" : sakuraSignum
+macro_rules | `(expandSignum \{) => `(Signaculum.Sakura.loqui "{")
+syntax (priority := 60) "\\}" : sakuraSignum
+macro_rules | `(expandSignum \}) => `(Signaculum.Sakura.loqui "}")
 
 -- ════════════════════════════════════════════════════
 --  scriptum! マクロ本體 (Corpus Macri)

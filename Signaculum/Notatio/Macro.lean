@@ -27,6 +27,14 @@ macro_rules | `(expandSignum $i:ident) => `(Signaculum.Sakura.loqui $(Lean.Synta
 --  式埋込 (Expressio Inserta) — (expr)
 -- ════════════════════════════════════════════════════
 
+-- ════════════════════════════════════════════════════
+--  String → SakuraM 强制型變換 (Coercio)
+-- ════════════════════════════════════════════════════
+
+-- String を SakuraM に強制型変換にゃん。{}の中が String 型なら自動で loqui にくるむにゃん
+instance (m : Type → Type) [Monad m] : Coe String (Signaculum.Sakura.SakuraM m Unit) where
+  coe := Signaculum.Sakura.loqui
+
 -- 中括弧で圍んだ Lean の式を直接埋め込むにゃん
 syntax (priority := 50) "{" term "}" : sakuraSignum
 macro_rules | `(expandSignum {$e}) => `($e)

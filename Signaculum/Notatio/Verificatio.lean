@@ -41,8 +41,11 @@ example : Id.run (currere (scriptum! \f[bold, true])) = "\\f[bold,true]" := by n
 
 example : Id.run (currere (scriptum! \f[default])) = "\\f[default]" := by native_decide
 
--- 式埋込の検證にゃん
+-- 式埋込の検證にゃん（SakuraM Unit）
 example : Id.run (currere (scriptum! {Signaculum.Sakura.sakura})) = "\\h" := by native_decide
+
+-- 式埋込の檢證にゃん（String 自動 loqui）
+example : Id.run (currere (scriptum! {"こんにちは"})) = "こんにちは" := by native_decide
 
 -- ════════════════════════════════════════════════════
 --  colorisLiteral の検證にゃん

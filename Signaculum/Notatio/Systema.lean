@@ -24,7 +24,7 @@ private def mkSignalNode (kind : SyntaxNodeKind) (kw : String)
 syntax "\\!" "[raise," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![raise, $e:str]) => `(Signaculum.Sakura.excita $e)
 
-syntax "\\!" "[raise," ident term* "]" : sakuraSignum
+syntax "\\!" "[raise," ident (term:max)* "]" : sakuraSignum
 macro_rules
 | `(expandSignum \![raise, $f:ident $args:term*]) =>
   return mkSignalNode `excitaSyntax "excita" #[] f.raw (args.map (·.raw))
@@ -32,7 +32,7 @@ macro_rules
 syntax "\\!" "[embed," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![embed, $e:str]) => `(Signaculum.Sakura.insere $e)
 
-syntax "\\!" "[embed," ident term* "]" : sakuraSignum
+syntax "\\!" "[embed," ident (term:max)* "]" : sakuraSignum
 macro_rules
 | `(expandSignum \![embed, $f:ident $args:term*]) =>
   return mkSignalNode `insereSyntax "insere" #[] f.raw (args.map (·.raw))
@@ -40,7 +40,7 @@ macro_rules
 syntax "\\!" "[notify," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![notify, $e:str]) => `(Signaculum.Sakura.notifica $e)
 
-syntax "\\!" "[notify," ident term* "]" : sakuraSignum
+syntax "\\!" "[notify," ident (term:max)* "]" : sakuraSignum
 macro_rules
 | `(expandSignum \![notify, $f:ident $args:term*]) =>
   return mkSignalNode `notificaSyntax "notifica" #[] f.raw (args.map (·.raw))
@@ -50,7 +50,7 @@ syntax "\\!" "[timerraise," term "," term "," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![timerraise, $ms, $rep, $e:str]) =>
   `(Signaculum.Sakura.excitaPostTempus $ms $rep $e)
 
-syntax "\\!" "[timerraise," term "," term "," ident term* "]" : sakuraSignum
+syntax "\\!" "[timerraise," term "," term "," ident (term:max)* "]" : sakuraSignum
 macro_rules
 | `(expandSignum \![timerraise, $ms, $rep, $f:ident $args:term*]) =>
   return mkSignalNode `excitaPostTempusSyntax "excitaPostTempus"
@@ -60,7 +60,7 @@ syntax "\\!" "[timernotify," term "," term "," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![timernotify, $ms, $rep, $e:str]) =>
   `(Signaculum.Sakura.notificaPostTempus $ms $rep $e)
 
-syntax "\\!" "[timernotify," term "," term "," ident term* "]" : sakuraSignum
+syntax "\\!" "[timernotify," term "," term "," ident (term:max)* "]" : sakuraSignum
 macro_rules
 | `(expandSignum \![timernotify, $ms, $rep, $f:ident $args:term*]) =>
   return mkSignalNode `notificaPostTempusSyntax "notificaPostTempus"

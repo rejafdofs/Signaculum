@@ -99,8 +99,9 @@ private def rawTextusFn
   if endPos == startPos then
     s.mkError "expected text"
   else
-    let atom := Lean.Syntax.mkStrLit str
-    { s with pos := endPos, stxStack := s.stxStack.push atom }
+    -- ident ノードとして push するにゃ（$i:ident パターンで既存ルールに乗れるにゃ）
+    let identNode := Lean.Syntax.mkIdent (Lean.Name.mkSimple str)
+    { s with pos := endPos, stxStack := s.stxStack.push identNode }
 
 -- @[combinator_formatter/parenthesizer] で no-op 登録にゃ
 -- （@[term_parser] がフォーマッタ生成を要求するゆゑ必要にゃ）

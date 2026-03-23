@@ -31,22 +31,38 @@ macro_rules | `(expandSignum $i:ident) => `(Signaculum.Sakura.loqui $(Lean.Synta
 --  String → SakuraM 强制型變換 (Coercio)
 -- ════════════════════════════════════════════════════
 
--- String を SakuraM に強制型変換にゃん。{}の中が String 型なら自動で loqui にくるむにゃん
+-- String を SakuraM に強制型変換にゃん。{}の中が String 型なら直接 loqui にくるむにゃん
 instance (m : Type → Type) [Monad m] : Coe String (Signaculum.Sakura.SakuraM m Unit) where
   coe := Signaculum.Sakura.loqui
 
 -- m String（String を返すモナド値）を SakuraM m Unit に強制型変換にゃん
--- m が兩辺に出現するから合成順序問題なしにゃ。ToString α のもの全て対應するにゃ
+-- m が兩辺に出現するから合成順序問題なしにゃ
 instance {m : Type → Type} [Monad m] :
     Coe (m String) (Signaculum.Sakura.SakuraM m Unit) where
   coe action := do
     let v ← liftM action
     Signaculum.Sakura.loqui v
 
--- IO.Ref String を IO String に強制型変換にゃん
+-- ToString α をもつ型 α を SakuraM m Unit に強制型変換にゃん（CoeDep にゃ）
+-- Coe では synthesis order エラーになるため CoeDep を使ふにゃん
+-- {numerus} のやうに値を直接表示できるにゃ
+instance {α : Type} {m : Type → Type} [Monad m] [ToString α] (a : α) :
+    CoeDep α a (Signaculum.Sakura.SakuraM m Unit) where
+  coe := Signaculum.Sakura.loqui (toString a)
+
+-- ToString α をもつ型を返すモナド値 m α を SakuraM m Unit に強制型変換にゃん（CoeDep にゃ）
+-- {numerusSalutationum.obtinere} のやうにモナド値を直接表示できるにゃ
+instance {α : Type} {m : Type → Type} [Monad m] [ToString α] (action : m α) :
+    CoeDep (m α) action (Signaculum.Sakura.SakuraM m Unit) where
+  coe := do
+    let v ← liftM action
+    Signaculum.Sakura.loqui (toString v)
+
+-- IO.Ref α（ToString α をもつ型）を IO String に強制型変換にゃん（CoeDep にゃ）
 -- chain: {ref} → IO String → SakuraM IO Unit と繋がるにゃ
-instance : Coe (IO.Ref String) (IO String) where
-  coe ref := ref.get
+instance {α : Type} [ToString α] (ref : IO.Ref α) :
+    CoeDep (IO.Ref α) ref (IO String) where
+  coe := toString <$> ref.get
 
 -- 中括弧で圍んだ Lean の式を直接埋め込むにゃん
 syntax (priority := 50) "{" term "}" : sakuraSignum

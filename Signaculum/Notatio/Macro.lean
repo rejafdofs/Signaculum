@@ -24,6 +24,35 @@ syntax (priority := 40) ident : sakuraSignum
 macro_rules | `(expandSignum $i:ident) => `(Signaculum.Sakura.loqui $(Lean.Syntax.mkStrLit i.getId.toString))
 
 -- ════════════════════════════════════════════════════
+--  非 ASCII テクストゥス (Textus non ASCII)
+-- ════════════════════════════════════════════════════
+
+-- ひらがな・漢字等 Lean 識別子に成らぬ Unicode テクストゥスを受け取るにゃん
+-- Char.isAlpha は ASCII 専用ゆゑ日本語は ident パーサに弾かれるにゃ
+-- 停止條件：空白・バックスラッシュ・波括弧・ダブルクォート
+-- ident パーサ（優先度40）より低い優先度30で登録にゃ
+private def rawTextusFn : Lean.Parser.ParseFn := fun c s =>
+  let startPos := s.pos
+  let input    := c.fileMap.source
+  let mut pos  := startPos
+  while pos.byteIdx < input.endPos.byteIdx do
+    let ch := pos.get input
+    if ch == '\\' || ch == '{' || ch == '}' || ch == '"' || ch.isWhitespace then
+      break
+    pos := pos.next input
+  if pos == startPos then
+    s.mkError "expected text"
+  else
+    let str  := input.extract startPos pos
+    let atom := Lean.Syntax.mkStrLit str (.synthetic startPos pos)
+    { s with pos := pos, stxStack := s.stxStack.push atom }
+
+@[sakuraSignum_parser 30]
+def rawTextusParser : Lean.Parser.Parser where
+  info := {}
+  fn   := rawTextusFn
+
+-- ════════════════════════════════════════════════════
 --  式埋込 (Expressio Inserta) — (expr)
 -- ════════════════════════════════════════════════════
 

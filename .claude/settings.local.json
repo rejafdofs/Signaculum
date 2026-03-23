@@ -25,7 +25,13 @@
       "Bash(curl:*)",
       "Bash(c:/Users/a/.elan/toolchains/leanprover--lean4---v4.29.0-rc6/bin/clang.exe \\\\\n  -x c /dev/null -dM -E \\\\\n  --sysroot=\"C:/Users/a/.elan/toolchains/leanprover--lean4---v4.29.0-rc6\" \\\\\n  -nostdinc \\\\\n  -isystem \"C:/Users/a/.elan/toolchains/leanprover--lean4---v4.29.0-rc6/include/clang\" \\\\\n  -DNDEBUG 2>/dev/null | grep \"_WIN32\\\\|__MINGW\")",
       "Bash(cp -r PuraShiori Signaculum)",
-      "Bash(cp PuraShiori.lean Signaculum.lean)"
+      "Bash(cp PuraShiori.lean Signaculum.lean)",
+      "Bash(xargs grep:*)",
+      "mcp__lean-mcp-server__lean_check",
+      "mcp__lean-mcp-server__lean_build",
+      "Read(//d/anything/リリフェエ伺󠄀かプロジェクト/ghost/master/**)",
+      "Bash(/tmp/check_prec.lean:*)",
+      "Read(//tmp/**)"
     ]
   },
   "enableAllProjectMcpServers": true,

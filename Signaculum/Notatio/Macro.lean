@@ -9,7 +9,7 @@ import Signaculum.Notatio.Systema
 
 namespace Signaculum.Notatio
 
-open Lean
+open Lean Elab Term
 
 -- ════════════════════════════════════════════════════
 --  文字列リテラルス → loqui (Textus Citatus)
@@ -46,22 +46,68 @@ syntax (priority := 60) "\\}" : sakuraSignum
 macro_rules | `(expandSignum \}) => `(Signaculum.Sakura.loqui "}")
 
 -- ════════════════════════════════════════════════════
+--  行先頭位置コンビナートル (Combinatrix Initii Lineae)
+-- ════════════════════════════════════════════════════
+
+-- withPosition と同じ構造で、行先頭位置を savedPos? に入れるにゃん
+-- 型注釋を避けて s.pos から型推論させるにゃ
+def withInitioLineae : Lean.Parser.Parser → Lean.Parser.Parser :=
+  Lean.Parser.withFn fun f c s =>
+    let leadPos := Id.run do
+      let input := c.fileMap.source
+      let pos   := s.pos
+      -- fileMap から行頭位置を取得にゃ（後退スキャン不要にゃ）
+      let lineNum  := (c.fileMap.toPosition pos).line
+      let lineStart :=
+        if h : lineNum - 1 < c.fileMap.positions.size
+        then c.fileMap.positions[lineNum - 1]
+        else pos
+      -- 行頭から最初の非空白文字まで進むにゃ
+      let mut p := lineStart
+      while p.byteIdx < pos.byteIdx do
+        let ch := p.get input
+        if ch != ' ' && ch != '\t' then break
+        p := p.next input
+      return p
+    Lean.Parser.adaptCacheableContextFn
+      ({ · with savedPos? := leadPos }) f c s
+
+-- ════════════════════════════════════════════════════
 --  scriptum! マクロ本體 (Corpus Macri)
 -- ════════════════════════════════════════════════════
 
-/-- SakuraScript を原形タグ記法で書けるマクロにゃん。
-    `scriptum! \h \s[0] "こんにちは" \e` のやうに使ふにゃ♪
-    型チェッカが引數の妥當性を自動檢證してくれるにゃん -/
-syntax (name := scriptumMacro) withPosition("scriptum!" (colGt sakuraSignum)*) : term
-
-macro_rules
-  | `(scriptum! $[$ss:sakuraSignum]*) => do
-    if h : 0 < ss.size then
-      let mut body ← `(expandSignum $(ss[0]'h))
-      for s in ss[1:] do
-        body ← `(Bind.bind $body fun () => expandSignum $s)
-      return body
-    else
-      `(pure ())
-
 end Signaculum.Notatio
+
+-- ════════════════════════════════════════════════════
+--  scriptum! パーサー + エラボレーター (ネームスペース外で宣言にゃん)
+-- ════════════════════════════════════════════════════
+
+open Lean Elab Term Signaculum.Notatio
+
+/-- SakuraScript を原形タグ記法で書けるパーサにゃん。
+    行の先頭列より深いトークンだけ取り込むにゃ♪
+    感嘆符あり・なし両方受け付けるにゃ（scriptum! / scriptum）-/
+private def scriptumParserCore (kw : String) : Lean.Parser.Parser :=
+  withInitioLineae <|
+    Lean.Parser.leadingNode `scriptumMacro Lean.Parser.maxPrec <|
+      Lean.Parser.symbol kw >>
+      Lean.Parser.many (Lean.Parser.checkColGt "expected indent" >>
+                        Lean.Parser.categoryParser `sakuraSignum 0)
+
+@[term_parser 1001] def scriptumTermParser  : Lean.Parser.Parser := scriptumParserCore "scriptum!"
+@[term_parser 1001] def scriptumTermParser2 : Lean.Parser.Parser := scriptumParserCore "scriptum"
+
+-- scriptumMacro ノードを展開するエラボレーターにゃん（カインドは flat `scriptumMacro にゃ）
+-- stx[1] が sakuraSignum* の null ノードにゃ
+@[term_elab scriptumMacro]
+def elabScriptum : TermElab := fun stx expectedType? => do
+  let ss := stx[1].getArgs
+  if h : 0 < ss.size then
+    let s0 : TSyntax `sakuraSignum := ⟨ss[0]'h⟩
+    let mut body ← `(expandSignum $s0)
+    for s in ss[1:] do
+      let ts : TSyntax `sakuraSignum := ⟨s⟩
+      body ← `(Bind.bind $body fun () => expandSignum $ts)
+    elabTerm body expectedType?
+  else
+    elabTerm (← `(pure ())) expectedType?

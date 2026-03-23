@@ -16,4 +16,9 @@ declare_syntax_cat fontisClavis
 -- 構文カテゴリアから term への橋渡しにゃん
 syntax "expandSignum " sakuraSignum : term
 
+-- 展開ルールのないシグナムが來たらその位置でエラーにゃん（最低優先度フォールバック）
+elab_rules : term
+  | `(expandSignum $s:sakuraSignum) =>
+    Lean.throwErrorAt s "未知のサクラスクリプトシグナムにゃ"
+
 end Signaculum.Notatio

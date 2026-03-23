@@ -5,7 +5,7 @@
 - **型安全な永続化** — 保存→読込の往復を Lean 4 の定理として証明済みにゃ
 - **型安全な Reference 変換** — `Citatio` クラッシスが `fromRef (toRef a) = a` を保証するにゃ
 - **`do` 記法** — SakuraScriptum を直感的に組み立てられるにゃ
-- **`scriptum!` マクロ記法** — `Signaculum.Notatio` モジュールで原形タグ記法（`\h \s[0] "テキスト" \e`）も使へるにゃ
+- **`scriptum` 記法** — `Signaculum.Notatio` モジュールでサクラスクリプトを原形タグ記法（`\h \s[0] "テキスト" \e`）で書けるにゃ
 - 識別子は全てラテン語で統一されてゐるにゃ
 
 ---
@@ -47,10 +47,14 @@ root = "Main"
 
 ```lean
 import Signaculum
-open Signaculum Sakura
+open Signaculum Signaculum.Sakura Signaculum.Notatio
 
 varia perpetua   numerusSalutationum : Nat := 0
 varia temporaria nomina              : String := ""
+
+eventum "OnFirstBoot" fun _ => scriptum
+  \h \s[0] はじめましてにゃん！ \n
+  \u \s[10] よろしくお願ひします。 \e
 
 eventum "OnBoot" fun _ => do
   numerusSalutationum.renovare (· + 1)
@@ -146,6 +150,77 @@ construe
 ```
 
 主ファスキクルスの末尾に一度書くにゃ。`eventum` と `excita`/`insere` 識別子形で宣言した全ての処理器を、コンパイル時に環境拡張を介して収集し登録するにゃ♪
+
+---
+
+## `scriptum` 記法 (Notatio Scripti)
+
+`Signaculum.Notatio` をインポートすると、サクラスクリプトのタグを直接書けるにゃ。
+感嘆符あり（`scriptum!`）でも感嘆符なし（`scriptum`）でも同じにゃん♪
+
+```lean
+import Signaculum
+open Signaculum Signaculum.Sakura Signaculum.Notatio
+```
+
+### 基本の書き方
+
+インデントで囲んだ範囲がひとつの `scriptum` ブロックになるにゃ：
+
+```lean
+eventum "OnBoot" fun _ => scriptum
+  \h \s[0] こんにちは！ \e
+```
+
+`do` ブロック内では `scriptum!` の列が深いインデントにゃ：
+
+```lean
+eventum "OnBoot" fun _ => do
+  numerusSalutationum.renovare (· + 1)
+  let numerus <- numerusSalutationum.obtinere
+  scriptum
+    \h \s[0] {s!"起動 {numerus} 囘目にゃん♪"} \e
+```
+
+### 使へる要素
+
+| 記法 | 意味 |
+|---|---|
+| `\h` `\u` `\e` `\n` `\c` `\x` | 基本タグにゃ |
+| `\s[0]` `\s[-1]` | 表情にゃ |
+| `\w 500` | 待機（ミリ秒）にゃ |
+| `\b[0]` `\b[-1]` | 吹き出しにゃ |
+| `\f[bold, true]` `\f[default]` | 書体にゃ |
+| `\f[color, 255,0,0]` `\f[color, red]` `\f[color, none]` | 文字色にゃ |
+| `\f[align, left]` `\f[align, center]` | 横揃へにゃ |
+| `\f[valign, top]` `\f[valign, bottom]` | 縦揃へにゃ |
+| `"文字列"` | テキストを表示にゃ |
+| `識別子` | 識別子をそのままテキストにゃ（スペース区切りで複数可）にゃ |
+| `{式}` | Lean の式を埋め込むにゃ（`String` は自動で `loqui` にゃ） |
+| `\{` `\}` | `{` `}` をエスケープにゃ |
+
+### 複数タグの連結
+
+```lean
+eventum "OnGreet" fun _ => scriptum
+  \h \s[0] やあ！ \w 500 \n どこから来たの？ \e
+```
+
+### Lean 式の埋め込み
+
+```lean
+let nomen := "シロ"
+scriptum
+  \h \s[0] {s!"こんにちは、{nomen}さん！"} \e
+```
+
+`{}` の中に `String` 型の式を入れると `loqui` で表示されるにゃ。
+`SakuraM m Unit` 型の式は直接つながるにゃ：
+
+```lean
+scriptum
+  \h {superficies 3} さようなら！ \e
+```
 
 ---
 

@@ -114,17 +114,17 @@ def DirectioDesktop.toString : DirectioDesktop → String
     - `nomen n`    : "red" "white" など名前付き色にゃ
     - `nullus`     : "none"（影色を無效化するときに使ふにゃ）-/
 inductive Coloris where
-  | rgb   (r g b : Nat)
+  | rgb   (r g b : Nat) (hr : r ≤ 255 := by omega) (hg : g ≤ 255 := by omega) (hb : b ≤ 255 := by omega)
   | hex   (s : String)
   | nomen (n : String)
   | nullus
   deriving Repr
 
 def Coloris.toString : Coloris → String
-  | .rgb r g b => s!"{r},{g},{b}"
-  | .hex s     => s
-  | .nomen n   => n
-  | .nullus    => "none"
+  | .rgb r g b .. => s!"{r},{g},{b}"
+  | .hex s        => s
+  | .nomen n      => n
+  | .nullus       => "none"
 
 /-- 音聲コマンドのオプション群にゃん。
     指定したフィールドだけが出力されるにゃ。
@@ -151,15 +151,15 @@ def OptionesSoni.toString (o : OptionesSoni) : String :=
   ",".intercalate ps
 
 /-- 音量を設定するにゃん（0〜100）。ドット記法でチェーンできるにゃ♪ -/
-def OptionesSoni.cumVolumine (o : OptionesSoni) (n : Nat) : OptionesSoni :=
+def OptionesSoni.cumVolumine (o : OptionesSoni) (n : Nat) (_h : n ≤ 100 := by omega) : OptionesSoni :=
   { o with volumen := some n }
 
 /-- 左右バランスを設定するにゃん（−100〜100、0 が中央）にゃ -/
-def OptionesSoni.cumLibramento (o : OptionesSoni) (n : Int) : OptionesSoni :=
+def OptionesSoni.cumLibramento (o : OptionesSoni) (n : Int) (_h : -100 ≤ n ∧ n ≤ 100 := by omega) : OptionesSoni :=
   { o with libramentum := some n }
 
 /-- 再生速度を設定するにゃん（1〜10000、100 が等速）にゃ -/
-def OptionesSoni.cumCursu (o : OptionesSoni) (n : Nat) : OptionesSoni :=
+def OptionesSoni.cumCursu (o : OptionesSoni) (n : Nat) (_h : 1 ≤ n ∧ n ≤ 10000 := by omega) : OptionesSoni :=
   { o with cursus := some n }
 
 /-- シークバー窓の表示を設定するにゃん -/
@@ -743,6 +743,18 @@ def ModusInputiNumeralis.toString : ModusInputiNumeralis → String
   | .dies   => "dateinput"
   | .tempus => "timeinput"
   | .gradus => "sliderinput"
+
+/-- 閏年かどうかにゃん。4で割り切れて、100で割り切れないか、400で割り切れるにゃ -/
+def estBissextilis (annus : Nat) : Bool :=
+  annus % 4 == 0 && (annus % 100 != 0 || annus % 400 == 0)
+
+/-- その年のその月が何日まであるかにゃん -/
+def diesInMense (annus mensis : Nat) : Nat :=
+  match mensis with
+  | 1 => 31 | 2 => if estBissextilis annus then 29 else 28
+  | 3 => 31 | 4 => 30 | 5 => 31 | 6 => 30
+  | 7 => 31 | 8 => 31 | 9 => 30 | 10 => 31
+  | 11 => 30 | 12 => 31 | _ => 0
 
 end Sakura
 

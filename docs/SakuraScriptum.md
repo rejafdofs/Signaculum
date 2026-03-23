@@ -123,7 +123,7 @@ superscriptus true   -- \f[sup,true]
 formaInhabilis       -- \f[disable]
 formaPraefinita      -- \f[default]  書式リセット
 
--- 文字色
+-- 文字色（r, g, b はそれぞれ 0〜255、コンパイル時検証）
 color (.rgb 255 0 0)      -- RGB
 color (.hex "#FF0000")    -- 16進
 color (.nomen "red")      -- 名前
@@ -164,9 +164,10 @@ sonusOneratur "bgm.mp3"                        -- 事前読み込み
 expectaSonumPulsus                             -- \![sound,wait]
 ```
 
-`OptionesSoni` のチェーン例：
+`OptionesSoni` のチェーン例（各パラメータにコンパイル時境界検証あり）：
 
 ```lean
+-- cumVolumine: 0〜100、cumLibramento: -100〜100、cumCursu: 1〜10000
 sonusPulsus "bgm.mp3"
   ({ } |>.cumVolumine 70 |>.cumLibramento (-20) |>.cumCursu 150)
 ```
@@ -251,15 +252,20 @@ aperiInputum .simplex "OnInput" "タイトル" ""
 
 ### 数値系入力
 
+数値入力は用途別に3つの関数に分かれています。それぞれコンパイル時に境界が検証されます。
+
 ```lean
 -- 日付入力（年・月・日）
-aperiInputumNumerale .dies "OnDate" "日付を選択" 2026 3 14
+-- mensis: 1〜12、dies: 1〜diesInMense（閏年考慮）
+aperiInputumDiei "OnDate" "日付を選択" 2026 3 14
 
 -- 時刻入力（時・分・秒）
-aperiInputumNumerale .tempus "OnTime" "時刻を選択" 12 0 0
+-- hora: 0〜23、minutum: 0〜59、secundum: 0〜59
+aperiInputumTemporis "OnTime" "時刻を選択" 12 0 0
 
--- スライダー入力（値・最小・最大）
-aperiInputumNumerale .gradus "OnSlider" "音量" 50 0 100
+-- スライダー入力（最小・最大・初期値）
+-- minimum ≤ initium ∧ initium ≤ maximum
+aperiInputumGradus "OnSlider" "音量" 0 100 50
 ```
 
 ### IP アドレス入力
@@ -306,7 +312,7 @@ optioEventum "詳しく" onChosen "topic1"     -- \q[...]
 
 -- B 形式: コールバック登録のみ（SSP がランタイムで refs を渡す）
 aperiInputum .simplex onTextEntered "名前を入力" ""
-aperiInputumNumerale .gradus onAgeSelected "年齢" 25 0 100
+aperiInputumGradus onAgeSelected "年齢" 0 100 25
 aperiInputumIP onIPSelected "IP アドレス" 192 168 1 1
 legeProprietatem onPropResult [.ghostName, .shellName]
 
@@ -361,7 +367,7 @@ configuraStatusFenestrae .semperSupra   -- 最前面固定
 configuraStatusFenestrae .minime        -- 最小化
 allineatioDesktop .imum                 -- 下部吸着
 configuratioScalae 150                  -- 拡大率 150%
-configuratioAlphae 80                   -- 透明度 80
+configuratioAlphae 80                   -- 透明度 80（0〜100、コンパイル時検証）
 configuraPositionem 0 0 0               -- 位置固定
 reseraPositionem                        -- 位置固定解除
 ordoFenestrarum [0, 1, 2]              -- Z順序
@@ -507,7 +513,7 @@ imagoBullae "img.png" 10 20
 imagoBullaeOpaca "img.png" 10 20
 imagoBullaeInlineata "img.png"
 imagoBullaeInlineataOpaca "img.png"
-lineaProportionalis 50    -- \n[percent,50]
+lineaProportionalis 50    -- \n[percent,50]（Int 型: 負値・100超も指定可能）
 linearisAbrogatur         -- \_n（自動改行禁止）
 allineatioBullae 1        -- \![set,balloonalign,1]
 tempusBullae 3000         -- 3秒で消える
@@ -572,3 +578,94 @@ def myTalk : SakuraPura Unit := do
 -- スクリプト文字列を取得してSHIORIから返す
 def getValue : String := Id.run (currere myTalk)
 ```
+
+---
+
+## scriptum! マクロ記法
+
+`Signaculum.Notatio` モジュールは `scriptum!` マクロを提供します。SakuraScript を原形タグ記法で書けるようにする DSL です。
+
+### 基本的な使い方
+
+```lean
+import Signaculum.Notatio
+
+open Signaculum.Notatio
+
+def myTalk : SakuraPura Unit := scriptum!
+  \h \s[0] "こんにちは" \n
+  \u \s[10] "やっほー"
+  \e
+```
+
+### do 記法との比較
+
+```lean
+-- do 記法
+def talkDo : SakuraPura Unit := do
+  sakura; superficies 0; loqui "こんにちは"; linea
+  kero; superficies 10; loqui "やっほー"
+  finis
+
+-- scriptum! 記法（同じ出力）
+def talkScriptum : SakuraPura Unit := scriptum!
+  \h \s[0] "こんにちは" \n
+  \u \s[10] "やっほー"
+  \e
+```
+
+### 対応タグ一覧
+
+| 記法 | 対応する do 記法 | 説明 |
+|---|---|---|
+| `\h` | `sakura` | 主人格 |
+| `\u` | `kero` | 副人格 |
+| `\p[n]` | `persona n` | 第n人格 |
+| `\s[n]` / `\s[-1]` | `superficies n` / `superficiesAbsconde` | 表面 |
+| `\i[n]` / `\i[n, wait]` | `animatio n` / `animatioExpecta n` | アニメーション |
+| `\n` / `\n[half]` / `\n[percent,n]` | `linea` / `dimidiaLinea` / `lineaProportionalis n` | 改行 |
+| `\w n` | `moraCeler n` | 簡易待機 |
+| `\_w[n]` / `\__w[n]` | `mora n` / `moraAbsoluta n` | 待機 |
+| `\x` / `\x[noclear]` | `expecta` / `expectaSine` | クリック待ち |
+| `\e` | `finis` | 終了 |
+| `\_q` | `celer` | 即時表示 |
+| `\-` | `exitus` | 退出 |
+| `\+` | `adscribe` | 追記 |
+| `\*` | `prohibeTempus` | タイムアウト防止 |
+| `\_+` | `inhibeTagas` | タグ実行禁止 |
+| `\v` | `expectaSonum` | 音声再生待ち |
+| `\b[n]` / `\b[-1]` | `bulla n` / `bullaAbsconde` | 吹出し |
+| `\f[bold, b]` | `audax b` | 太字 |
+| `\f[color, c]` | `color c` | 色 |
+| `\f[height, n]` | `altitudoLitterarum n` | 文字サイズ |
+| `\f[default]` | `formaPraefinita` | 書式リセット |
+| `\_v["file"]` | `sonus "file"` | 音声 |
+| `\8["file"]` | `sonus8 "file"` | 簡易音声 |
+| `\![sound,play,"file"]` | `sonusPulsus "file"` | 音再生 |
+| `\![move, sx, sy, kx, ky]` | `movere sx sy kx ky` | 移動 |
+| `\![moveasync, sx, sy, kx, ky]` | `movereAsync sx sy kx ky` | 非同期移動 |
+| `\![enter,passivemode]` | `ingredereModumPassivum` | パッシブモード |
+| `\![leave,passivemode]` | `egrediereModumPassivum` | パッシブモード解除 |
+| `\![set,autoscroll, b]` | `configuraAutoScroll b` | 自動スクロール |
+| `\![set,windowstate, s]` | `configuraStatusFenestrae s` | ウィンドウ状態 |
+| `\![raise, "event"]` | `excita "event"` | イベント発生 |
+| `\![notify, "event"]` | `notifica "event"` | 通知 |
+| `\![anim,start, s, i]` | `animaIncepit s i` | アニメーション開始 |
+| `\![change,ghost, "name"]` | `mutaGhostNomen "name"` | ゴースト変更 |
+| `\q["text","id"]` | `optio "text" "id"` | 選択肢 |
+| `\_a["id"]` ... `\_a` | `ancora "id"` ... `fineAncora` | 錨 |
+| `"テキスト"` | `loqui "テキスト"` | 文字列表示 |
+| `(expr)` | （任意の Lean 式） | 式埋込 |
+
+### モジュール構成
+
+| ファイル | 内容 |
+|---|---|
+| `Signaculum/Notatio.lean` | アグレガートル |
+| `Signaculum/Notatio/Categoria.lean` | 構文カテゴリア宣言 |
+| `Signaculum/Notatio/Textus.lean` | テキスト・範囲・待機・選択肢・制御タグ |
+| `Signaculum/Notatio/Fons.lean` | 書体タグ |
+| `Signaculum/Notatio/Fenestra.lean` | 窓制御・UI・モード・設定タグ |
+| `Signaculum/Notatio/Systema.lean` | イベント・音響・動画・呼出・変更タグ |
+| `Signaculum/Notatio/Macro.lean` | scriptum! マクロ本体・文字列リテラル・式埋込 |
+| `Signaculum/Notatio/Verificatio.lean` | rfl 検証テスト |

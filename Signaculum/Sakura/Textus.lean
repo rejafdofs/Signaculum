@@ -63,7 +63,7 @@ def mora {m : Type → Type} [Monad m] (ms : Nat) : SakuraM m Unit :=
   emitte s!"\\_w[{ms}]"
 
 /-- 簡易待機（\\w[1-9]、50ms × n）にゃん -/
-def moraCeler {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
+def moraCeler {m : Type → Type} [Monad m] (n : Nat) (_h : 1 ≤ n ∧ n ≤ 9 := by omega) : SakuraM m Unit :=
   emitte s!"\\w{n}"
 
 /-- 絕對時間待機（\\__w[ms]）にゃん -/

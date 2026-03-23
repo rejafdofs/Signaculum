@@ -1,5 +1,44 @@
 # 變更記錄 (Mutationum Registrum)
 
+## v0.3.0 — パラメータ境界検証 & scriptum! マクロ DSL
+
+### コンパイル時パラメータ境界検証
+
+SakuraScript DSL の各関数に証明パラメータを追加し、不正な値をコンパイル時に検出できるようにした。
+
+- `Coloris.rgb` の r/g/b に `≤ 255` の証明パラメータ追加
+- `OptionesSoni.cumVolumine` に `≤ 100` の証明追加
+- `OptionesSoni.cumLibramento` に `-100 ≤ n ∧ n ≤ 100` の証明追加
+- `OptionesSoni.cumCursu` に `1 ≤ n ∧ n ≤ 10000` の証明追加
+- `moraCeler` に `1 ≤ n ∧ n ≤ 9` の証明追加
+- `configuratioAlphae` に `≤ 100` の証明追加
+- `aperiInputumIP` の各オクテットに `≤ 255` の証明追加
+- `lineaProportionalis` を `Nat` から `Int` に変更（負値・100超も指定可能に）
+- Typi.lean に `estBissextilis`（閏年判定）と `diesInMense`（月の日数）関数を追加
+
+### 数値入力の3関数分割
+
+`aperiInputumNumerale` を用途別の3関数に分割し、それぞれにコンパイル時境界検証を追加した。
+
+- `aperiInputumDiei` — 日付入力。mensis に `1 ≤ m ∧ m ≤ 12`、dies に `1 ≤ d ∧ d ≤ diesInMense annus mensis`（閏年考慮）
+- `aperiInputumTemporis` — 時刻入力。hora `≤ 23`、minutum `≤ 59`、secundum `≤ 59`
+- `aperiInputumGradus` — スライダー入力。`minimum ≤ initium ∧ initium ≤ maximum`
+- Syntaxis.lean のエラボレータも3関数に対応
+
+### Signaculum.Notatio — scriptum! マクロ DSL
+
+SakuraScript を原形タグ記法で書ける `scriptum!` マクロを追加。do 記法の代替として使える。
+
+- `Notatio.Categoria` — 構文カテゴリア宣言（`sakuraSignum`, `fontisClavis`）
+- `Notatio.Textus` — テキスト・範囲・待機・選択肢・制御タグ
+- `Notatio.Fons` — 書体タグ `\f[...]`
+- `Notatio.Fenestra` — 窓制御・UI・モード・設定タグ
+- `Notatio.Systema` — イベント・音響・動画・呼出・変更タグ
+- `Notatio.Macro` — scriptum! マクロ本体、文字列リテラル→loqui 変換、式埋込
+- `Notatio.Verificatio` — native_decide による rfl 検証テスト
+
+---
+
 ## v0.2.0 — Pure Lean TCP SSTP & 品質改善
 
 ### C コード排除 — Pure Lean TCP SSTP

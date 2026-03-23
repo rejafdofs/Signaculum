@@ -211,12 +211,28 @@ elab "aperiInputum" modus:term f:ident titulus:term textus:term : term => do
     (← `(Signaculum.Sakura.aperiInputum $modus $(Syntax.mkStrLit nomenEventi) $titulus $textus))
     none
 
-/-- `aperiInputumNumerale modus f titulus a b c` — def ベースの數値入力ボックスを開くにゃん♪
-    a/b/c は年月日・時分秒・值最小最大に對應するにゃ -/
-elab "aperiInputumNumerale" modus:term f:ident titulus:term a:term b:term c:term : term => do
+/-- `aperiInputumDiei f titulus annus mensis dies` — def ベースの日付入力ボックスを開くにゃん♪
+    annus/mensis(1〜12)/dies(1〜31) にゃ -/
+elab "aperiInputumDiei" f:ident titulus:term annus:term mensis:term dies:term : term => do
   let nomenEventi ← registraLazium f
   elabTerm
-    (← `(Signaculum.Sakura.aperiInputumNumerale $modus $(Syntax.mkStrLit nomenEventi) $titulus $a $b $c))
+    (← `(Signaculum.Sakura.aperiInputumDiei $(Syntax.mkStrLit nomenEventi) $titulus $annus $mensis $dies))
+    none
+
+/-- `aperiInputumTemporis f titulus hora minutum secundum` — def ベースの時刻入力ボックスを開くにゃん♪
+    hora(0〜23)/minutum(0〜59)/secundum(0〜59) にゃ -/
+elab "aperiInputumTemporis" f:ident titulus:term hora:term minutum:term secundum:term : term => do
+  let nomenEventi ← registraLazium f
+  elabTerm
+    (← `(Signaculum.Sakura.aperiInputumTemporis $(Syntax.mkStrLit nomenEventi) $titulus $hora $minutum $secundum))
+    none
+
+/-- `aperiInputumGradus f titulus minimum maximum initium` — def ベースのスライダー入力ボックスを開くにゃん♪
+    minimum ≤ initium ≤ maximum の制約があるにゃ -/
+elab "aperiInputumGradus" f:ident titulus:term minimum:term maximum:term initium:term : term => do
+  let nomenEventi ← registraLazium f
+  elabTerm
+    (← `(Signaculum.Sakura.aperiInputumGradus $(Syntax.mkStrLit nomenEventi) $titulus $minimum $maximum $initium))
     none
 
 /-- `aperiInputumIP f titulus ip1 ip2 ip3 ip4` — def ベースの IP アドレス入力ボックスを開くにゃん♪ -/
@@ -263,8 +279,8 @@ elab "spawnaScriptum" f:ident args:term* : term => do
 -- construe 構文擴張にゃん
 -- ═══════════════════════════════════════════════════
 
-/-- ゴーストを組み立てて SSP に登錄するにゃん♪ -/
 set_option hygiene false in
+/-- ゴーストを組み立てて SSP に登錄するにゃん♪ -/
 elab "construe" : command => do
   let env ← getEnv
   let acc := ghostAccumulatioExt.getState env

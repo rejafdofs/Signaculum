@@ -93,15 +93,39 @@ def aperiInputum {m : Type → Type} [Monad m]
   let opt := if opt.isEmpty then "" else s!",{opt}"
   emitte s!"\\![open,{modus.toString},{evadeArgumentum eventum},{evadeArgumentum titulus},{evadeArgumentum textus}{opt}]"
 
-/-- 數値系入力ボックスを開くにゃん（dateinput / timeinput / sliderinput）。
-    modus で種類を選ぶにゃ。a/b/c は年月日・時分秒・値最小最大に對應するにゃ -/
-def aperiInputumNumerale {m : Type → Type} [Monad m]
-    (modus : ModusInputiNumeralis)
-    (eventum titulus : String) (a b c : Nat)
+/-- 日付入力ボックスを開くにゃん（\\![open,dateinput,...]）。
+    annus/mensis/dies は年/月(1〜12)/日(1〜月の日数) にゃ。
+    閏年も考慮するにゃん♪ -/
+def aperiInputumDiei {m : Type → Type} [Monad m]
+    (eventum titulus : String) (annus mensis dies : Nat)
+    (_hm : 1 ≤ mensis ∧ mensis ≤ 12 := by omega)
+    (_hd : 1 ≤ dies ∧ dies ≤ diesInMense annus mensis := by omega)
     (optiones : OptionesInputi := {}) : SakuraM m Unit :=
   let opt := optiones.toString
   let opt := if opt.isEmpty then "" else s!",{opt}"
-  emitte s!"\\![open,{modus.toString},{evadeArgumentum eventum},{evadeArgumentum titulus},{a},{b},{c}{opt}]"
+  emitte s!"\\![open,dateinput,{evadeArgumentum eventum},{evadeArgumentum titulus},{annus},{mensis},{dies}{opt}]"
+
+/-- 時刻入力ボックスを開くにゃん（\\![open,timeinput,...]）。
+    hora(0〜23)/minutum(0〜59)/secundum(0〜59) にゃ -/
+def aperiInputumTemporis {m : Type → Type} [Monad m]
+    (eventum titulus : String) (hora minutum secundum : Nat)
+    (_hh : hora ≤ 23 := by omega)
+    (_hmin : minutum ≤ 59 := by omega)
+    (_hs : secundum ≤ 59 := by omega)
+    (optiones : OptionesInputi := {}) : SakuraM m Unit :=
+  let opt := optiones.toString
+  let opt := if opt.isEmpty then "" else s!",{opt}"
+  emitte s!"\\![open,timeinput,{evadeArgumentum eventum},{evadeArgumentum titulus},{hora},{minutum},{secundum}{opt}]"
+
+/-- スライダー入力ボックスを開くにゃん（\\![open,sliderinput,...]）。
+    minimum ≤ initium ≤ maximum の制約があるにゃ -/
+def aperiInputumGradus {m : Type → Type} [Monad m]
+    (eventum titulus : String) (minimum maximum initium : Nat)
+    (_h : minimum ≤ initium ∧ initium ≤ maximum := by omega)
+    (optiones : OptionesInputi := {}) : SakuraM m Unit :=
+  let opt := optiones.toString
+  let opt := if opt.isEmpty then "" else s!",{opt}"
+  emitte s!"\\![open,sliderinput,{evadeArgumentum eventum},{evadeArgumentum titulus},{minimum},{maximum},{initium}{opt}]"
 
 -- ════════════════════════════════════════════════════
 --  擴張 (Extensio) — SSP 固有
@@ -120,8 +144,8 @@ def zoom {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
 def bullaAbsconde {m : Type → Type} [Monad m] : SakuraM m Unit :=
   emitte "\\b[-1]"
 
-/-- パーセント指定改行にゃん（\\n[percent,n]）-/
-def lineaProportionalis {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
+/-- パーセント指定改行にゃん（\\n[percent,n]）。負値や100超も指定可にゃ -/
+def lineaProportionalis {m : Type → Type} [Monad m] (n : Int) : SakuraM m Unit :=
   emitte s!"\\n[percent,{n}]"
 
 /-- 自動改行を禁止するにゃん（\\_n）-/
@@ -273,7 +297,7 @@ def configuratioScalae {m : Type → Type} [Monad m] (proportio : Nat) : SakuraM
   emitte s!"\\![set,scaling,{proportio}]"
 
 /-- 透明度を設定するにゃん（\\![set,alpha,值]）。0=完全透明、100=不透明にゃ -/
-def configuratioAlphae {m : Type → Type} [Monad m] (valor : Nat) : SakuraM m Unit :=
+def configuratioAlphae {m : Type → Type} [Monad m] (valor : Nat) (_h : valor ≤ 100 := by omega) : SakuraM m Unit :=
   emitte s!"\\![set,alpha,{valor}]"
 
 /-- ゴーストの位置を固定するにゃん（\\![set,position,x,y,scopeId]）-/
@@ -321,6 +345,8 @@ def aperiEditorem {m : Type → Type} [Monad m]
 /-- IP アドレス入力ボックスを開くにゃん（\\![open,ipinput,event,caption,ip1,ip2,ip3,ip4,options]）-/
 def aperiInputumIP {m : Type → Type} [Monad m]
     (eventum titulus : String) (ip1 ip2 ip3 ip4 : Nat)
+    (_h1 : ip1 ≤ 255 := by omega) (_h2 : ip2 ≤ 255 := by omega)
+    (_h3 : ip3 ≤ 255 := by omega) (_h4 : ip4 ≤ 255 := by omega)
     (optiones : OptionesInputi := {}) : SakuraM m Unit :=
   let opt := optiones.toString
   let opt := if opt.isEmpty then "" else s!",{opt}"

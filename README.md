@@ -5,6 +5,7 @@
 - **型安全な永続化** — 保存→読込の往復を Lean 4 の定理として証明済みにゃ
 - **型安全な Reference 変換** — `Citatio` クラッシスが `fromRef (toRef a) = a` を保証するにゃ
 - **`do` 記法** — SakuraScriptum を直感的に組み立てられるにゃ
+- **`scriptum!` マクロ記法** — `Signaculum.Notatio` モジュールで原形タグ記法（`\h \s[0] "テキスト" \e`）も使へるにゃ
 - 識別子は全てラテン語で統一されてゐるにゃ
 
 ---
@@ -202,7 +203,7 @@ def onTextEntered (text : String) : SakuraIO Unit := do
 
 -- 入力ボックスを開く（def 形式）
 aperiInputum .simplex onTextEntered "名前を入力" ""
-aperiInputumNumerale .gradus onAgeSelected "年齢" 25 0 100
+aperiInputumGradus onAgeSelected "年齢" 0 100 25
 aperiInputumIP onIPSelected "IP アドレス" 192 168 1 1
 legeProprietatem onPropResult [.ghostName, .shellName]
 ```
@@ -330,8 +331,10 @@ Sstp.excitaEventum "OnSomeEvent" ["arg0", "arg1"]
 | 命令 | 意味 |
 |---|---|
 | `aperiInputum modus f titulus textus` | def ベースのテキスト入力ボックスを開くにゃ |
-| `aperiInputumNumerale modus f titulus a b c` | def ベースの数値入力ボックスを開くにゃ |
-| `aperiInputumIP f titulus ip1 ip2 ip3 ip4` | def ベースの IP アドレス入力ボックスを開くにゃ |
+| `aperiInputumDiei f titulus annus mensis dies` | def ベースの日付入力ボックスを開くにゃ（月: 1〜12、日: 閏年考慮） |
+| `aperiInputumTemporis f titulus hora minutum secundum` | def ベースの時刻入力ボックスを開くにゃ（時: 0〜23、分秒: 0〜59） |
+| `aperiInputumGradus f titulus minimum maximum initium` | def ベースのスライダー入力ボックスを開くにゃ（minimum ≤ initium ≤ maximum） |
+| `aperiInputumIP f titulus ip1 ip2 ip3 ip4` | def ベースの IP アドレス入力ボックスを開くにゃ（各オクテット ≤ 255） |
 | `legeProprietatem f proprietates` | def ベースのプロパティ取得にゃ |
 
 ### 書体

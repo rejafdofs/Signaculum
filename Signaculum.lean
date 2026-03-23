@@ -10,3 +10,4 @@ import Signaculum.Memoria.Citationes
 import Signaculum.Sstp
 import Signaculum.Syntaxis
 import Signaculum.Elementa
+import Signaculum.Notatio

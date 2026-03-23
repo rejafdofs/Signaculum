@@ -30,6 +30,9 @@ macro_rules
 | `(expandSignum \![raise, $f:ident $args:term*]) =>
   return mkSignalNode `excitaSyntax "excita" #[] f.raw (args.map (·.raw))
 
+syntax "\\!" "[raise," "(" term ")" "]" : sakuraSignum
+macro_rules | `(expandSignum \![raise, ($lam:term)]) => `(excita ($lam))
+
 syntax "\\!" "[embed," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![embed, $e:str]) => `(Signaculum.Sakura.insere $e)
 
@@ -38,6 +41,9 @@ macro_rules
 | `(expandSignum \![embed, $f:ident $args:term*]) =>
   return mkSignalNode `insereSyntax "insere" #[] f.raw (args.map (·.raw))
 
+syntax "\\!" "[embed," "(" term ")" "]" : sakuraSignum
+macro_rules | `(expandSignum \![embed, ($lam:term)]) => `(insere ($lam))
+
 syntax "\\!" "[notify," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![notify, $e:str]) => `(Signaculum.Sakura.notifica $e)
 
@@ -45,6 +51,9 @@ syntax "\\!" "[notify," ident (term:max)* "]" : sakuraSignum
 macro_rules
 | `(expandSignum \![notify, $f:ident $args:term*]) =>
   return mkSignalNode `notificaSyntax "notifica" #[] f.raw (args.map (·.raw))
+
+syntax "\\!" "[notify," "(" term ")" "]" : sakuraSignum
+macro_rules | `(expandSignum \![notify, ($lam:term)]) => `(notifica ($lam))
 
 -- タイマーにゃん
 syntax "\\!" "[timerraise," term "," term "," str "]" : sakuraSignum
@@ -58,6 +67,11 @@ macro_rules
   return mkSignalNode `excitaPostTempusSyntax "excitaPostTempus"
     #[ms.raw, rep.raw] f.raw (args.map (·.raw))
 
+syntax "\\!" "[timerraise," term "," term "," "(" term ")" "]" : sakuraSignum
+macro_rules
+| `(expandSignum \![timerraise, $ms, $rep, ($lam:term)]) =>
+  `(excitaPostTempus $ms $rep ($lam))
+
 syntax "\\!" "[timernotify," term "," term "," str "]" : sakuraSignum
 macro_rules
 | `(expandSignum \![timernotify, $ms, $rep, $e:str]) =>
@@ -68,6 +82,11 @@ macro_rules
 | `(expandSignum \![timernotify, $ms, $rep, $f:ident $args:term*]) =>
   return mkSignalNode `notificaPostTempusSyntax "notificaPostTempus"
     #[ms.raw, rep.raw] f.raw (args.map (·.raw))
+
+syntax "\\!" "[timernotify," term "," term "," "(" term ")" "]" : sakuraSignum
+macro_rules
+| `(expandSignum \![timernotify, $ms, $rep, ($lam:term)]) =>
+  `(notificaPostTempus $ms $rep ($lam))
 
 
 

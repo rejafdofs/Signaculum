@@ -42,6 +42,8 @@ structure LazyEventDecl where
   nomenEventi : String
   /-- 明示的パラメータ数にゃ（Reference 抽出数に使ふにゃ）-/
   paramCount  : Nat
+  /-- Some ならラムダ形にゃ。construe がここから def を生成するにゃ -/
+  lambdaStx?  : Option Syntax := none
 
 /-- ゴーストの累積宣言にゃん。construe 時に全部參照するにゃ -/
 structure GhostAccumulatio where
@@ -57,7 +59,7 @@ instance : Inhabited GhostEventDecl :=
   ⟨{ nomen := "", tractatorNomen := .anonymous }⟩
 
 instance : Inhabited LazyEventDecl :=
-  ⟨{ declNomen := .anonymous, nomenEventi := "", paramCount := 0 }⟩
+  ⟨{ declNomen := .anonymous, nomenEventi := "", paramCount := 0, lambdaStx? := none }⟩
 
 instance : Inhabited GhostAccumulatio := ⟨{}⟩
 
@@ -134,6 +136,18 @@ private def registraLazium (f : Ident) : TermElabM String := do
           declNomen := fname, nomenEventi, paramCount } })
   return nomenEventi
 
+/-- ラムダ式（Tractator 型の term）を lazyEventa にソース位置ベースの新鮮な名前で登録するにゃ -/
+private def registraLaziumLambda (lamStx : Syntax) (posIdx : Nat) : TermElabM String := do
+  let freshName := Name.mkSimple s!"_excitaLambda_{posIdx}"
+  let nomenEventi := freshName.toString
+  modifyEnv (ghostAccumulatioExt.modifyState · fun a =>
+    { a with lazyEventa := a.lazyEventa.push {
+        declNomen := freshName
+        nomenEventi
+        paramCount := 0
+        lambdaStx?  := some lamStx } })
+  return nomenEventi
+
 -- ═══════════════════════════════════════════════════
 -- excita / insere の識別子形 elab にゃん
 -- ═══════════════════════════════════════════════════
@@ -171,6 +185,23 @@ def elabExcitaTerm : TermElab := fun stx _ => do
     (← `(Signaculum.Sakura.excita $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
     none
 
+/-- `excita ( term )` — ラムダ式（Tractator 型）を直接渡すにゃ♪
+    term は `Rogatio → SakuraIO Unit` 型にゃ -/
+@[term_parser]
+def excitaTermParserLambda : Lean.Parser.Parser :=
+  Lean.Parser.leadingNode `excitaLambdaSyntax Lean.Parser.maxPrec
+    (Lean.Parser.symbol "excita" >>
+     Lean.Parser.symbol "(" >>
+     Lean.Parser.termParser 0 >>
+     Lean.Parser.symbol ")")
+
+@[term_elab excitaLambdaSyntax]
+def elabExcitaTermLambda : TermElab := fun stx _ => do
+  let lamStx := stx[2]
+  let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
+  let nomenEventi ← registraLaziumLambda lamStx posIdx
+  elabTerm (← `(Signaculum.Sakura.excita $(Syntax.mkStrLit nomenEventi))) none
+
 /-- `insere f arg1 arg2 ...` — def ベース事象を embed するにゃん♪
     f は `def f (p1 : T1) ... : SakuraIO Unit` の形で定義された關數にゃ。
     引數は Citatio.toRef で文字列に変換されて Reference に渡されるにゃ -/
@@ -190,6 +221,22 @@ def elabInsereTerm : TermElab := fun stx _ => do
   elabTerm
     (← `(Signaculum.Sakura.insere $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
     none
+
+/-- `insere ( term )` — ラムダ式（Tractator 型）を直接渡すにゃ♪ -/
+@[term_parser]
+def insereTermParserLambda : Lean.Parser.Parser :=
+  Lean.Parser.leadingNode `insereLambdaSyntax Lean.Parser.maxPrec
+    (Lean.Parser.symbol "insere" >>
+     Lean.Parser.symbol "(" >>
+     Lean.Parser.termParser 0 >>
+     Lean.Parser.symbol ")")
+
+@[term_elab insereLambdaSyntax]
+def elabInsereTermLambda : TermElab := fun stx _ => do
+  let lamStx := stx[2]
+  let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
+  let nomenEventi ← registraLaziumLambda lamStx posIdx
+  elabTerm (← `(Signaculum.Sakura.insere $(Syntax.mkStrLit nomenEventi))) none
 
 -- ═══════════════════════════════════════════════════
 -- A: 事象発火拡張形 elab にゃん
@@ -215,6 +262,22 @@ def elabNotificaTerm : TermElab := fun stx _ => do
     (← `(Signaculum.Sakura.notifica $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
     none
 
+/-- `notifica ( term )` — ラムダ式（Tractator 型）を直接渡すにゃ♪ -/
+@[term_parser]
+def notificaTermParserLambda : Lean.Parser.Parser :=
+  Lean.Parser.leadingNode `notificaLambdaSyntax Lean.Parser.maxPrec
+    (Lean.Parser.symbol "notifica" >>
+     Lean.Parser.symbol "(" >>
+     Lean.Parser.termParser 0 >>
+     Lean.Parser.symbol ")")
+
+@[term_elab notificaLambdaSyntax]
+def elabNotificaTermLambda : TermElab := fun stx _ => do
+  let lamStx := stx[2]
+  let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
+  let nomenEventi ← registraLaziumLambda lamStx posIdx
+  elabTerm (← `(Signaculum.Sakura.notifica $(Syntax.mkStrLit nomenEventi))) none
+
 /-- `excitaPostTempus ms repeat f arg1 arg2 ...` — def ベース事象を遅延発火させるにゃん♪
     ms はミリ秒、repeat は繰返し回數（0=無限）にゃ -/
 @[term_parser]
@@ -239,6 +302,24 @@ def elabExcitaPostTempusTerm : TermElab := fun stx _ => do
     (← `(Signaculum.Sakura.excitaPostTempus $ms $repetitio $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
     none
 
+/-- `excitaPostTempus ms rep ( term )` — ラムダ式（Tractator 型）を遅延発火させるにゃ♪ -/
+@[term_parser]
+def excitaPostTempusTermParserLambda : Lean.Parser.Parser :=
+  Lean.Parser.leadingNode `excitaPostTempusLambdaSyntax Lean.Parser.maxPrec
+    (Lean.Parser.symbol "excitaPostTempus" >>
+     Lean.Parser.termParser Lean.Parser.maxPrec >>
+     Lean.Parser.termParser Lean.Parser.maxPrec >>
+     Lean.Parser.symbol "(" >> Lean.Parser.termParser 0 >> Lean.Parser.symbol ")")
+
+@[term_elab excitaPostTempusLambdaSyntax]
+def elabExcitaPostTempusTermLambda : TermElab := fun stx _ => do
+  let ms : TSyntax `term := ⟨stx[1]⟩
+  let rep : TSyntax `term := ⟨stx[2]⟩
+  let lamStx := stx[4]
+  let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
+  let nomenEventi ← registraLaziumLambda lamStx posIdx
+  elabTerm (← `(Signaculum.Sakura.excitaPostTempus $ms $rep $(Syntax.mkStrLit nomenEventi))) none
+
 /-- `notificaPostTempus ms repetitio f arg1 arg2 ...` — def ベース通知事象を遅延発火させるにゃん♪ -/
 @[term_parser]
 def notificaPostTempusTermParser : Lean.Parser.Parser :=
@@ -261,6 +342,24 @@ def elabNotificaPostTempusTerm : TermElab := fun stx _ => do
   elabTerm
     (← `(Signaculum.Sakura.notificaPostTempus $ms $repetitio $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
     none
+
+/-- `notificaPostTempus ms rep ( term )` — ラムダ式（Tractator 型）を遅延通知するにゃ♪ -/
+@[term_parser]
+def notificaPostTempusTermParserLambda : Lean.Parser.Parser :=
+  Lean.Parser.leadingNode `notificaPostTempusLambdaSyntax Lean.Parser.maxPrec
+    (Lean.Parser.symbol "notificaPostTempus" >>
+     Lean.Parser.termParser Lean.Parser.maxPrec >>
+     Lean.Parser.termParser Lean.Parser.maxPrec >>
+     Lean.Parser.symbol "(" >> Lean.Parser.termParser 0 >> Lean.Parser.symbol ")")
+
+@[term_elab notificaPostTempusLambdaSyntax]
+def elabNotificaPostTempusTermLambda : TermElab := fun stx _ => do
+  let ms : TSyntax `term := ⟨stx[1]⟩
+  let rep : TSyntax `term := ⟨stx[2]⟩
+  let lamStx := stx[4]
+  let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
+  let nomenEventi ← registraLaziumLambda lamStx posIdx
+  elabTerm (← `(Signaculum.Sakura.notificaPostTempus $ms $rep $(Syntax.mkStrLit nomenEventi))) none
 
 /-- `optioEventum titulus f arg1 arg2 ...` — def ベース事象附き選擇肢にゃん♪
     titulus は表示文字列にゃ。f は def で定義されたコールバックにゃ -/
@@ -386,16 +485,21 @@ elab "construe" : command => do
       ("_tractator_lazy_" ++ e.nomenEventi.map (fun c => if c == '.' then '_' else c))
     let tractorIdent := mkIdent tractorNome
 
-    -- 各 Reference を FromRef で抽出して直接引數に渡すにゃ
-    -- def _tractator_lazy_... : Tractator := fun req =>
-    --   onGreet (FromRef.fromRef ((req.referentiam 0).getD ""))
-    --           (FromRef.fromRef ((req.referentiam 1).getD ""))
-    let argExprs : Array (TSyntax `term) ← (Array.range e.paramCount).mapM fun i => do
-      let idx := Syntax.mkNumLit (toString i)
-      `(Signaculum.Memoria.Citatio.fromRef ((req.referentiam $idx).getD ""))
-
-    elabCommand (← `(
-      def $tractorIdent : Signaculum.Tractator := fun req => $declIdent $argExprs*))
+    match e.lambdaStx? with
+    | some lamStx =>
+      -- ラムダ形にゃ: 直接 Tractator として定義するにゃ
+      let lamTerm : TSyntax `term := ⟨lamStx⟩
+      elabCommand (← `(def $tractorIdent : Signaculum.Tractator := $lamTerm))
+    | none =>
+      -- ident 形にゃ: Reference 抽出ラッパーを生成するにゃ
+      -- def _tractator_lazy_... : Tractator := fun req =>
+      --   onGreet (FromRef.fromRef ((req.referentiam 0).getD ""))
+      --           (FromRef.fromRef ((req.referentiam 1).getD ""))
+      let argExprs : Array (TSyntax `term) ← (Array.range e.paramCount).mapM fun i => do
+        let idx := Syntax.mkNumLit (toString i)
+        `(Signaculum.Memoria.Citatio.fromRef ((req.referentiam $idx).getD ""))
+      elabCommand (← `(
+        def $tractorIdent : Signaculum.Tractator := fun req => $declIdent $argExprs*))
 
     let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit e.nomenEventi⟩
     pariaTractatorum := pariaTractatorum.push (← `(($signumNominis, $tractorIdent)))

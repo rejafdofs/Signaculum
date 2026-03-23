@@ -35,12 +35,18 @@ macro_rules | `(expandSignum $i:ident) => `(Signaculum.Sakura.loqui $(Lean.Synta
 instance (m : Type → Type) [Monad m] : Coe String (Signaculum.Sakura.SakuraM m Unit) where
   coe := Signaculum.Sakura.loqui
 
--- IO.Ref α （ToString α をもつ全型）を SakuraM に強制型変換にゃん。{ref} でレフェレンティア値を直接表示できるにゃん
-instance {α : Type} {m : Type → Type} [Monad m] [MonadLiftT IO m] [ToString α] :
-    Coe (IO.Ref α) (Signaculum.Sakura.SakuraM m Unit) where
-  coe ref := do
-    let v ← liftM (ref.get : IO α)
-    Signaculum.Sakura.loqui (toString v)
+-- m String（String を返すモナド値）を SakuraM m Unit に強制型変換にゃん
+-- m が兩辺に出現するから合成順序問題なしにゃ。ToString α のもの全て対應するにゃ
+instance {m : Type → Type} [Monad m] :
+    Coe (m String) (Signaculum.Sakura.SakuraM m Unit) where
+  coe action := do
+    let v ← liftM action
+    Signaculum.Sakura.loqui v
+
+-- IO.Ref String を IO String に強制型変換にゃん
+-- chain: {ref} → IO String → SakuraM IO Unit と繋がるにゃ
+instance : Coe (IO.Ref String) (IO String) where
+  coe ref := ref.get
 
 -- 中括弧で圍んだ Lean の式を直接埋め込むにゃん
 syntax (priority := 50) "{" term "}" : sakuraSignum

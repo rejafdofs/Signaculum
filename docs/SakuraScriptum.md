@@ -671,7 +671,30 @@ def talkScriptum : SakuraPura Unit := scriptum!
 | `\q["text","id"]` | `optio "text" "id"` | 選択肢 |
 | `\_a["id"]` ... `\_a` | `ancora "id"` ... `fineAncora` | 錨 |
 | `"テキスト"` | `loqui "テキスト"` | 文字列表示 |
-| `(expr)` | （任意の Lean 式） | 式埋込 |
+| `{expr}` | （任意の Lean 式） | 式埋込 |
+
+### 式埋込と型強制
+
+`{expr}` には任意の Lean 式を書けます。以下の型は自動的に `SakuraM` に変換されます。
+
+| 型 | 変換内容 |
+|---|---|
+| `String` | `loqui s` として表示 |
+| `IO.Ref String` | 値を読み取って `loqui` で表示（`SakuraIO` 文脈のみ） |
+| `IO String` | IO アクションを実行して `loqui` で表示（`SakuraIO` 文脈のみ） |
+
+```lean
+varia perpetua nomenMeum : String := ""
+
+-- IO.Ref String は {ref} でそのまま展開できる
+eventum "OnBoot" fun _ => scriptum
+  \h \s[0] こんにちは、{nomenMeum}！
+
+-- IO.Ref Nat など ToString α をもつ型は toString <$> ref.get と書く
+varia perpetua numerus : Nat := 0
+eventum "OnBoot" fun _ => scriptum
+  \h 起動 {toString <$> numerus.obtinere} 回目にゃん
+```
 
 ### モジュール構成
 

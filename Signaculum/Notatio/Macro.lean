@@ -67,7 +67,7 @@ instance {α : Type} [ToString α] (ref : IO.Ref α) :
 -- 中括弧で圍んだ Lean の式を直接埋め込むにゃん
 -- show で期待型を明示することで IO α 等のモナド値の CoeDep 強制変換を起動するにゃ
 syntax (priority := 50) "{" term "}" : sakuraSignum
-macro_rules | `(expandSignum {$e}) => `(show Signaculum.Sakura.SakuraM _ Unit from $e)
+macro_rules | `(expandSignum {$e}) => `(($e : Signaculum.Sakura.SakuraM _ Unit))
 
 -- \{ \} で中括弧文字をエスケープにゃん
 syntax (priority := 60) "\\{" : sakuraSignum

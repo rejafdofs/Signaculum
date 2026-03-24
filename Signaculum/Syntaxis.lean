@@ -137,14 +137,14 @@ private def registraLazium (f : Ident) : TermElabM String := do
   return nomenEventi
 
 /-- ラムダ式（Tractator 型の term）を lazyEventa にソース位置ベースの新鮮な名前で登録するにゃ -/
-private def registraLaziumLambda (lamStx : Syntax) (posIdx : Nat) : TermElabM String := do
+private def registraLaziumLambda (lamStx : Syntax) (posIdx : Nat) (pc : Nat := 0) : TermElabM String := do
   let freshName := Name.mkSimple s!"_excitaLambda_{posIdx}"
   let nomenEventi := freshName.toString
   modifyEnv (ghostAccumulatioExt.modifyState · fun a =>
     { a with lazyEventa := a.lazyEventa.push {
         declNomen := freshName
         nomenEventi
-        paramCount := 0
+        paramCount := pc
         lambdaStx?  := some lamStx } })
   return nomenEventi
 
@@ -202,7 +202,7 @@ def elabExcitaTermLambda : TermElab := fun stx _ => do
   let lamStx := stx[2]
   let args := stx[4].getArgs
   let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
-  let nomenEventi ← registraLaziumLambda lamStx posIdx
+  let nomenEventi ← registraLaziumLambda lamStx posIdx args.size
   let argTerms ← args.mapM fun a => do
     let t : TSyntax `term := ⟨a⟩
     `(Signaculum.Memoria.Citatio.toRef $t)
@@ -243,7 +243,7 @@ def elabInsereTermLambda : TermElab := fun stx _ => do
   let lamStx := stx[2]
   let args := stx[4].getArgs
   let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
-  let nomenEventi ← registraLaziumLambda lamStx posIdx
+  let nomenEventi ← registraLaziumLambda lamStx posIdx args.size
   let argTerms ← args.mapM fun a => do
     let t : TSyntax `term := ⟨a⟩
     `(Signaculum.Memoria.Citatio.toRef $t)
@@ -288,7 +288,7 @@ def elabNotificaTermLambda : TermElab := fun stx _ => do
   let lamStx := stx[2]
   let args := stx[4].getArgs
   let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
-  let nomenEventi ← registraLaziumLambda lamStx posIdx
+  let nomenEventi ← registraLaziumLambda lamStx posIdx args.size
   let argTerms ← args.mapM fun a => do
     let t : TSyntax `term := ⟨a⟩
     `(Signaculum.Memoria.Citatio.toRef $t)
@@ -335,7 +335,7 @@ def elabExcitaPostTempusTermLambda : TermElab := fun stx _ => do
   let lamStx := stx[4]
   let args := stx[6].getArgs
   let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
-  let nomenEventi ← registraLaziumLambda lamStx posIdx
+  let nomenEventi ← registraLaziumLambda lamStx posIdx args.size
   let argTerms ← args.mapM fun a => do
     let t : TSyntax `term := ⟨a⟩
     `(Signaculum.Memoria.Citatio.toRef $t)
@@ -381,7 +381,7 @@ def elabNotificaPostTempusTermLambda : TermElab := fun stx _ => do
   let lamStx := stx[4]
   let args := stx[6].getArgs
   let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
-  let nomenEventi ← registraLaziumLambda lamStx posIdx
+  let nomenEventi ← registraLaziumLambda lamStx posIdx args.size
   let argTerms ← args.mapM fun a => do
     let t : TSyntax `term := ⟨a⟩
     `(Signaculum.Memoria.Citatio.toRef $t)
@@ -425,7 +425,7 @@ elab "aperiInputum" modus:term f:ident titulus:term textus:term : term => do
     lam は `String → SakuraM m Unit` 型にゃ -/
 elab "aperiInputum" modus:term "(" lam:term ")" titulus:term : term => do
   let posIdx := (lam.raw.getPos?.getD ⟨0⟩).byteIdx
-  let nomenEventi ← registraLaziumLambda lam.raw posIdx
+  let nomenEventi ← registraLaziumLambda lam.raw posIdx 1
   elabTerm
     (← `(Signaculum.Sakura.aperiInputum $modus $(Syntax.mkStrLit nomenEventi) $titulus ""))
     none
@@ -522,9 +522,18 @@ elab "construe" : command => do
 
     match e.lambdaStx? with
     | some lamStx =>
-      -- ラムダ形にゃ: 直接 Tractator として定義するにゃ
       let lamTerm : TSyntax `term := ⟨lamStx⟩
-      elabCommand (← `(def $tractorIdent : Signaculum.Tractator := $lamTerm))
+      if e.paramCount == 0 then
+        -- 引數なしにゃ: ラムダを Tractator として直接定義するにゃ
+        elabCommand (← `(def $tractorIdent : Signaculum.Tractator := $lamTerm))
+      else
+        -- 引數ありにゃ: Reference 抽出ラッパーを生成するにゃ
+        -- fun req => $lamTerm (fromRef (req.referentiam 0)) ...
+        let argExprs : Array (TSyntax `term) ← (Array.range e.paramCount).mapM fun i => do
+          let idx := Syntax.mkNumLit (toString i)
+          `(Signaculum.Memoria.Citatio.fromRef ((req.referentiam $idx).getD ""))
+        elabCommand (← `(
+          def $tractorIdent : Signaculum.Tractator := fun req => $lamTerm $argExprs*))
     | none =>
       -- ident 形にゃ: Reference 抽出ラッパーを生成するにゃ
       -- def _tractator_lazy_... : Tractator := fun req =>

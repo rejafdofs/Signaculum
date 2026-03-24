@@ -175,38 +175,30 @@ def excitaTermParser : Lean.Parser.Parser :=
 
 @[term_elab excitaSyntax]
 def elabExcitaTerm : TermElab := fun stx _ => do
-  let f : Ident := ⟨stx[1]⟩
-  let args := stx[2].getArgs
-  let nomenEventi ← registraLazium f
+  -- ident 形: stx[1]=ident, stx[2]=null(args)
+  -- lambda 形: stx[1]="(", stx[2]=lambda, stx[3]=")", stx[4]=null(args)
+  let (fStx, args) :=
+    if stx[1].isIdent then (stx[1], stx[2].getArgs)
+    else (stx[2], stx[4].getArgs)
+  let nomenEventi ←
+    if stx[1].isIdent
+    then registraLazium ⟨fStx⟩
+    else registraLaziumLambda fStx (stx.getPos?.getD ⟨0⟩).byteIdx args.size
   let argTerms ← args.mapM fun a => do
     let t : TSyntax `term := ⟨a⟩
     `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm
-    (← `(Signaculum.Sakura.excita $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
-    none
+  elabTerm (← `(Signaculum.Sakura.excita $(Syntax.mkStrLit nomenEventi) [$argTerms,*])) none
 
 /-- `excita ( term ) args*` — ラムダ式（Tractator 型）を直接渡しにゃ♪
     args は Reference 経由でイベントに渡されるにゃ -/
 @[term_parser]
 def excitaTermParserLambda : Lean.Parser.Parser :=
-  Lean.Parser.leadingNode `excitaLambdaSyntax Lean.Parser.maxPrec
+  Lean.Parser.leadingNode `excitaSyntax Lean.Parser.maxPrec
     (Lean.Parser.symbol "excita" >>
      Lean.Parser.symbol "(" >>
      Lean.Parser.termParser 0 >>
      Lean.Parser.symbol ")" >>
      excitaArgParser)
-
-@[term_elab excitaLambdaSyntax]
-def elabExcitaTermLambda : TermElab := fun stx _ => do
-  -- stx[0]="excita" stx[1]="(" stx[2]=lambda stx[3]=")" stx[4]=args
-  let lamStx := stx[2]
-  let args := stx[4].getArgs
-  let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
-  let nomenEventi ← registraLaziumLambda lamStx posIdx args.size
-  let argTerms ← args.mapM fun a => do
-    let t : TSyntax `term := ⟨a⟩
-    `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm (← `(Signaculum.Sakura.excita $(Syntax.mkStrLit nomenEventi) [$argTerms,*])) none
 
 /-- `insere f arg1 arg2 ...` — def ベース事象を embed するにゃん♪
     f は `def f (p1 : T1) ... : SakuraIO Unit` の形で定義された關數にゃ。
@@ -218,36 +210,29 @@ def insereTermParser : Lean.Parser.Parser :=
 
 @[term_elab insereSyntax]
 def elabInsereTerm : TermElab := fun stx _ => do
-  let f : Ident := ⟨stx[1]⟩
-  let args := stx[2].getArgs
-  let nomenEventi ← registraLazium f
+  -- ident 形: stx[1]=ident, stx[2]=null(args)
+  -- lambda 形: stx[1]="(", stx[2]=lambda, stx[3]=")", stx[4]=null(args)
+  let (fStx, args) :=
+    if stx[1].isIdent then (stx[1], stx[2].getArgs)
+    else (stx[2], stx[4].getArgs)
+  let nomenEventi ←
+    if stx[1].isIdent
+    then registraLazium ⟨fStx⟩
+    else registraLaziumLambda fStx (stx.getPos?.getD ⟨0⟩).byteIdx args.size
   let argTerms ← args.mapM fun a => do
     let t : TSyntax `term := ⟨a⟩
     `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm
-    (← `(Signaculum.Sakura.insere $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
-    none
+  elabTerm (← `(Signaculum.Sakura.insere $(Syntax.mkStrLit nomenEventi) [$argTerms,*])) none
 
 /-- `insere ( term ) args*` — ラムダ式（Tractator 型）を直接渡しにゃ♪ -/
 @[term_parser]
 def insereTermParserLambda : Lean.Parser.Parser :=
-  Lean.Parser.leadingNode `insereLambdaSyntax Lean.Parser.maxPrec
+  Lean.Parser.leadingNode `insereSyntax Lean.Parser.maxPrec
     (Lean.Parser.symbol "insere" >>
      Lean.Parser.symbol "(" >>
      Lean.Parser.termParser 0 >>
      Lean.Parser.symbol ")" >>
      excitaArgParser)
-
-@[term_elab insereLambdaSyntax]
-def elabInsereTermLambda : TermElab := fun stx _ => do
-  let lamStx := stx[2]
-  let args := stx[4].getArgs
-  let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
-  let nomenEventi ← registraLaziumLambda lamStx posIdx args.size
-  let argTerms ← args.mapM fun a => do
-    let t : TSyntax `term := ⟨a⟩
-    `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm (← `(Signaculum.Sakura.insere $(Syntax.mkStrLit nomenEventi) [$argTerms,*])) none
 
 -- ═══════════════════════════════════════════════════
 -- A: 事象発火拡張形 elab にゃん
@@ -263,36 +248,29 @@ def notificaTermParser : Lean.Parser.Parser :=
 
 @[term_elab notificaSyntax]
 def elabNotificaTerm : TermElab := fun stx _ => do
-  let f : Ident := ⟨stx[1]⟩
-  let args := stx[2].getArgs
-  let nomenEventi ← registraLazium f
+  -- ident 形: stx[1]=ident, stx[2]=null(args)
+  -- lambda 形: stx[1]="(", stx[2]=lambda, stx[3]=")", stx[4]=null(args)
+  let (fStx, args) :=
+    if stx[1].isIdent then (stx[1], stx[2].getArgs)
+    else (stx[2], stx[4].getArgs)
+  let nomenEventi ←
+    if stx[1].isIdent
+    then registraLazium ⟨fStx⟩
+    else registraLaziumLambda fStx (stx.getPos?.getD ⟨0⟩).byteIdx args.size
   let argTerms ← args.mapM fun a => do
     let t : TSyntax `term := ⟨a⟩
     `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm
-    (← `(Signaculum.Sakura.notifica $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
-    none
+  elabTerm (← `(Signaculum.Sakura.notifica $(Syntax.mkStrLit nomenEventi) [$argTerms,*])) none
 
 /-- `notifica ( term ) args*` — ラムダ式（Tractator 型）を直接渡しにゃ♪ -/
 @[term_parser]
 def notificaTermParserLambda : Lean.Parser.Parser :=
-  Lean.Parser.leadingNode `notificaLambdaSyntax Lean.Parser.maxPrec
+  Lean.Parser.leadingNode `notificaSyntax Lean.Parser.maxPrec
     (Lean.Parser.symbol "notifica" >>
      Lean.Parser.symbol "(" >>
      Lean.Parser.termParser 0 >>
      Lean.Parser.symbol ")" >>
      excitaArgParser)
-
-@[term_elab notificaLambdaSyntax]
-def elabNotificaTermLambda : TermElab := fun stx _ => do
-  let lamStx := stx[2]
-  let args := stx[4].getArgs
-  let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
-  let nomenEventi ← registraLaziumLambda lamStx posIdx args.size
-  let argTerms ← args.mapM fun a => do
-    let t : TSyntax `term := ⟨a⟩
-    `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm (← `(Signaculum.Sakura.notifica $(Syntax.mkStrLit nomenEventi) [$argTerms,*])) none
 
 /-- `excitaPostTempus ms repeat f arg1 arg2 ...` — def ベース事象を遅延発火させるにゃん♪
     ms はミリ秒、repeat は繰返し回數（0=無限）にゃ -/
@@ -306,40 +284,33 @@ def excitaPostTempusTermParser : Lean.Parser.Parser :=
 
 @[term_elab excitaPostTempusSyntax]
 def elabExcitaPostTempusTerm : TermElab := fun stx _ => do
+  -- ident 形: stx[1]=ms, stx[2]=rep, stx[3]=ident, stx[4]=null(args)
+  -- lambda 形: stx[1]=ms, stx[2]=rep, stx[3]="(", stx[4]=lambda, stx[5]=")", stx[6]=null(args)
   let ms : TSyntax `term := ⟨stx[1]⟩
-  let repetitio : TSyntax `term := ⟨stx[2]⟩
-  let f : Ident := ⟨stx[3]⟩
-  let args := stx[4].getArgs
-  let nomenEventi ← registraLazium f
+  let rep : TSyntax `term := ⟨stx[2]⟩
+  let (fStx, args) :=
+    if stx[3].isIdent then (stx[3], stx[4].getArgs)
+    else (stx[4], stx[6].getArgs)
+  let nomenEventi ←
+    if stx[3].isIdent
+    then registraLazium ⟨fStx⟩
+    else registraLaziumLambda fStx (stx.getPos?.getD ⟨0⟩).byteIdx args.size
   let argTerms ← args.mapM fun a => do
     let t : TSyntax `term := ⟨a⟩
     `(Signaculum.Memoria.Citatio.toRef $t)
   elabTerm
-    (← `(Signaculum.Sakura.excitaPostTempus $ms $repetitio $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
+    (← `(Signaculum.Sakura.excitaPostTempus $ms $rep $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
     none
 
-/-- `excitaPostTempus ms rep ( term )` — ラムダ式（Tractator 型）を遅延発火させるにゃ♪ -/
+/-- `excitaPostTempus ms rep ( term ) args*` — ラムダ式（Tractator 型）を遅延発火させるにゃ♪ -/
 @[term_parser]
 def excitaPostTempusTermParserLambda : Lean.Parser.Parser :=
-  Lean.Parser.leadingNode `excitaPostTempusLambdaSyntax Lean.Parser.maxPrec
+  Lean.Parser.leadingNode `excitaPostTempusSyntax Lean.Parser.maxPrec
     (Lean.Parser.symbol "excitaPostTempus" >>
      Lean.Parser.termParser Lean.Parser.maxPrec >>
      Lean.Parser.termParser Lean.Parser.maxPrec >>
      Lean.Parser.symbol "(" >> Lean.Parser.termParser 0 >> Lean.Parser.symbol ")" >>
      excitaArgParser)
-
-@[term_elab excitaPostTempusLambdaSyntax]
-def elabExcitaPostTempusTermLambda : TermElab := fun stx _ => do
-  let ms : TSyntax `term := ⟨stx[1]⟩
-  let rep : TSyntax `term := ⟨stx[2]⟩
-  let lamStx := stx[4]
-  let args := stx[6].getArgs
-  let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
-  let nomenEventi ← registraLaziumLambda lamStx posIdx args.size
-  let argTerms ← args.mapM fun a => do
-    let t : TSyntax `term := ⟨a⟩
-    `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm (← `(Signaculum.Sakura.excitaPostTempus $ms $rep $(Syntax.mkStrLit nomenEventi) [$argTerms,*])) none
 
 /-- `notificaPostTempus ms repetitio f arg1 arg2 ...` — def ベース通知事象を遅延発火させるにゃん♪ -/
 @[term_parser]
@@ -352,40 +323,33 @@ def notificaPostTempusTermParser : Lean.Parser.Parser :=
 
 @[term_elab notificaPostTempusSyntax]
 def elabNotificaPostTempusTerm : TermElab := fun stx _ => do
+  -- ident 形: stx[1]=ms, stx[2]=rep, stx[3]=ident, stx[4]=null(args)
+  -- lambda 形: stx[1]=ms, stx[2]=rep, stx[3]="(", stx[4]=lambda, stx[5]=")", stx[6]=null(args)
   let ms : TSyntax `term := ⟨stx[1]⟩
-  let repetitio : TSyntax `term := ⟨stx[2]⟩
-  let f : Ident := ⟨stx[3]⟩
-  let args := stx[4].getArgs
-  let nomenEventi ← registraLazium f
+  let rep : TSyntax `term := ⟨stx[2]⟩
+  let (fStx, args) :=
+    if stx[3].isIdent then (stx[3], stx[4].getArgs)
+    else (stx[4], stx[6].getArgs)
+  let nomenEventi ←
+    if stx[3].isIdent
+    then registraLazium ⟨fStx⟩
+    else registraLaziumLambda fStx (stx.getPos?.getD ⟨0⟩).byteIdx args.size
   let argTerms ← args.mapM fun a => do
     let t : TSyntax `term := ⟨a⟩
     `(Signaculum.Memoria.Citatio.toRef $t)
   elabTerm
-    (← `(Signaculum.Sakura.notificaPostTempus $ms $repetitio $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
+    (← `(Signaculum.Sakura.notificaPostTempus $ms $rep $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
     none
 
-/-- `notificaPostTempus ms rep ( term )` — ラムダ式（Tractator 型）を遅延通知するにゃ♪ -/
+/-- `notificaPostTempus ms rep ( term ) args*` — ラムダ式（Tractator 型）を遅延通知するにゃ♪ -/
 @[term_parser]
 def notificaPostTempusTermParserLambda : Lean.Parser.Parser :=
-  Lean.Parser.leadingNode `notificaPostTempusLambdaSyntax Lean.Parser.maxPrec
+  Lean.Parser.leadingNode `notificaPostTempusSyntax Lean.Parser.maxPrec
     (Lean.Parser.symbol "notificaPostTempus" >>
      Lean.Parser.termParser Lean.Parser.maxPrec >>
      Lean.Parser.termParser Lean.Parser.maxPrec >>
      Lean.Parser.symbol "(" >> Lean.Parser.termParser 0 >> Lean.Parser.symbol ")" >>
      excitaArgParser)
-
-@[term_elab notificaPostTempusLambdaSyntax]
-def elabNotificaPostTempusTermLambda : TermElab := fun stx _ => do
-  let ms : TSyntax `term := ⟨stx[1]⟩
-  let rep : TSyntax `term := ⟨stx[2]⟩
-  let lamStx := stx[4]
-  let args := stx[6].getArgs
-  let posIdx := (stx.getPos?.getD ⟨0⟩).byteIdx
-  let nomenEventi ← registraLaziumLambda lamStx posIdx args.size
-  let argTerms ← args.mapM fun a => do
-    let t : TSyntax `term := ⟨a⟩
-    `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm (← `(Signaculum.Sakura.notificaPostTempus $ms $rep $(Syntax.mkStrLit nomenEventi) [$argTerms,*])) none
 
 /-- `optioEventum titulus f arg1 arg2 ...` — def ベース事象附き選擇肢にゃん♪
     titulus は表示文字列にゃ。f は def で定義されたコールバックにゃ -/

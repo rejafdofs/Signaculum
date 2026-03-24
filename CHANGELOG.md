@@ -1,5 +1,50 @@
 # 變更記錄 (Mutationum Registrum)
 
+## v0.3.2 (2026-03-24) — ident/lambda 形統合エラボレーター & タグ構文簡素化
+
+### Syntaxis.lean — ident 形と lambda 形を単一 elab に統合
+
+`excita`/`insere`/`notifica`/`excitaPostTempus`/`notificaPostTempus` のそれぞれで、
+ident 形と lambda 形が別々の syntax kind・elab 関数に分かれていたのを統合した。
+
+- lambda パーサーの syntax kind を ident パーサーと同一に変更（例: `excitaLambdaSyntax` → `excitaSyntax`）
+- 統合 elab で `stx[1].isIdent`（PostTempus は `stx[3].isIdent`）により分岐
+- elab 関数を各コマンド 2 → 1 に削減（5 関数削除: `elabExcitaTermLambda` 等）
+- `excitaLambdaSyntax`/`insereLambdaSyntax` 等の不要になった syntax kind 5 つを削除
+
+### Notatio/Systema.lean — コールバックタグ構文簡素化
+
+`\![raise,...]` 等のラムダ形に `(term:max)*` を追加し、引数渡しに対応。
+`\![open,inputbox,...]` / `\![open,passwordinput,...]` の 8+2 形式を 2+2 形式に統合。
+
+- `\![raise, (fun s => ...) "arg"]` — ラムダに引数を渡せるようになったにゃ
+- `\![embed, (fun s => ...)]` / `\![notify, ...]` / `\![timerraise, ...]` / `\![timernotify, ...]` も同様
+- `\![open,inputbox, callback, title]` — ident/lambda/str/ident タイトルを `term:max`/`term` で統一（8形式 → 2形式）
+- `\![open,passwordinput, callback, title]` — 同様に 2形式に統合
+
+---
+
+## v0.3.1 (2026-03-24) — ラムダ形 Reference 引数渡し & {expr} 強制変換修正
+
+### ラムダ形に Reference 引数渡しを追加
+
+`excita`/`insere`/`notifica`/`excitaPostTempus`/`notificaPostTempus` のラムダ形で、
+引数ありの場合に Reference 抽出ラッパーを `construe` が自動生成するようになった。
+
+- `excita (fun s:String => ...) "arg"` — Reference[0] が String として `s` に渡される
+- `excita (fun _ => ...)` — 引数なしは従来通り Tractator として直接登録
+- `aperiInputum .simplex (fun text => ...) title` — Reference[0] を `text` に自動渡し
+- `registraLaziumLambda` に `pc : Nat` パラメータ追加（Reference 数を記録）
+- `construe` の lambda ブランチで `paramCount > 0` 時にラッパーを生成
+
+### {expr} 強制変換を type ascription 形式に修正
+
+`scriptum {expr}` マクロ内で `IO String` 等のモナド値を確実に `SakuraM _ Unit` に変換するよう修正。
+
+- `show SakuraM _ Unit from $e` → `($e : SakuraM _ Unit)` に変更（`ensureHasType` が呼ばれ coercion が確実に挿入される）
+
+---
+
 ## v0.3.0 (2026-03-23) — パラメータ境界検証 & scriptum! マクロ DSL
 
 ### コンパイル時パラメータ境界検証

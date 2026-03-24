@@ -30,8 +30,8 @@ macro_rules
 | `(expandSignum \![raise, $f:ident $args:term*]) =>
   return mkSignalNode `excitaSyntax "excita" #[] f.raw (args.map (·.raw))
 
-syntax "\\!" "[raise," "(" term ")" "]" : sakuraSignum
-macro_rules | `(expandSignum \![raise, ($lam:term)]) => `(excita ($lam))
+syntax "\\!" "[raise," "(" term ")" (term:max)* "]" : sakuraSignum
+macro_rules | `(expandSignum \![raise, ($lam:term) $args:term*]) => `(excita ($lam) $args*)
 
 syntax "\\!" "[embed," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![embed, $e:str]) => `(Signaculum.Sakura.insere $e)
@@ -41,8 +41,8 @@ macro_rules
 | `(expandSignum \![embed, $f:ident $args:term*]) =>
   return mkSignalNode `insereSyntax "insere" #[] f.raw (args.map (·.raw))
 
-syntax "\\!" "[embed," "(" term ")" "]" : sakuraSignum
-macro_rules | `(expandSignum \![embed, ($lam:term)]) => `(insere ($lam))
+syntax "\\!" "[embed," "(" term ")" (term:max)* "]" : sakuraSignum
+macro_rules | `(expandSignum \![embed, ($lam:term) $args:term*]) => `(insere ($lam) $args*)
 
 syntax "\\!" "[notify," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![notify, $e:str]) => `(Signaculum.Sakura.notifica $e)
@@ -52,8 +52,8 @@ macro_rules
 | `(expandSignum \![notify, $f:ident $args:term*]) =>
   return mkSignalNode `notificaSyntax "notifica" #[] f.raw (args.map (·.raw))
 
-syntax "\\!" "[notify," "(" term ")" "]" : sakuraSignum
-macro_rules | `(expandSignum \![notify, ($lam:term)]) => `(notifica ($lam))
+syntax "\\!" "[notify," "(" term ")" (term:max)* "]" : sakuraSignum
+macro_rules | `(expandSignum \![notify, ($lam:term) $args:term*]) => `(notifica ($lam) $args*)
 
 -- タイマーにゃん
 syntax "\\!" "[timerraise," term "," term "," str "]" : sakuraSignum
@@ -67,10 +67,10 @@ macro_rules
   return mkSignalNode `excitaPostTempusSyntax "excitaPostTempus"
     #[ms.raw, rep.raw] f.raw (args.map (·.raw))
 
-syntax "\\!" "[timerraise," term "," term "," "(" term ")" "]" : sakuraSignum
+syntax "\\!" "[timerraise," term "," term "," "(" term ")" (term:max)* "]" : sakuraSignum
 macro_rules
-| `(expandSignum \![timerraise, $ms, $rep, ($lam:term)]) =>
-  `(excitaPostTempus $ms $rep ($lam))
+| `(expandSignum \![timerraise, $ms, $rep, ($lam:term) $args:term*]) =>
+  `(excitaPostTempus $ms $rep ($lam) $args*)
 
 syntax "\\!" "[timernotify," term "," term "," str "]" : sakuraSignum
 macro_rules
@@ -83,10 +83,10 @@ macro_rules
   return mkSignalNode `notificaPostTempusSyntax "notificaPostTempus"
     #[ms.raw, rep.raw] f.raw (args.map (·.raw))
 
-syntax "\\!" "[timernotify," term "," term "," "(" term ")" "]" : sakuraSignum
+syntax "\\!" "[timernotify," term "," term "," "(" term ")" (term:max)* "]" : sakuraSignum
 macro_rules
-| `(expandSignum \![timernotify, $ms, $rep, ($lam:term)]) =>
-  `(notificaPostTempus $ms $rep ($lam))
+| `(expandSignum \![timernotify, $ms, $rep, ($lam:term) $args:term*]) =>
+  `(notificaPostTempus $ms $rep ($lam) $args*)
 
 
 
@@ -200,60 +200,40 @@ macro_rules | `(expandSignum \![biff, $a]) => `(Signaculum.Sakura.exploraPostam 
 syntax "\\!" "[set,property," term "," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![set,property, $p, $v]) => `(Signaculum.Sakura.configuraProprietatem $p $v)
 
--- 入力ボックスにゃん（\![open,inputbox,callback,timeout,title]）
--- ラムダ形・タイムアウトあり
-syntax "\\!" "[open,inputbox," "(" term ")" "," term "," str "]" : sakuraSignum
+-- 入力ボックスにゃん（\![open,inputbox,callback,timeout,title] / \![open,inputbox,callback,title]）
+-- コールバックは ident 形・ラムダ形どちらも受け付けるにゃん。タイトルは str/ident/任意 term でよいにゃ
+
+-- タイムアウトあり
+syntax "\\!" "[open,inputbox," term:max "," term "," term "]" : sakuraSignum
 macro_rules
-| `(expandSignum \![open,inputbox, ($lam:term), $_t:term,$title:str]) =>
+| `(expandSignum \![open,inputbox, ($lam:term), $_t, $title]) =>
   `(aperiInputum .simplex ($lam) $title)
-
-syntax "\\!" "[open,inputbox," "(" term ")" "," term "," ident "]" : sakuraSignum
-macro_rules
-| `(expandSignum \![open,inputbox, ($lam:term), $_t:term,$title:ident]) =>
-  `(aperiInputum .simplex ($lam) $(Lean.Syntax.mkStrLit title.getId.toString))
-
--- ラムダ形・タイムアウトなし
-syntax "\\!" "[open,inputbox," "(" term ")" "," str "]" : sakuraSignum
-macro_rules
-| `(expandSignum \![open,inputbox, ($lam:term), $title:str]) =>
-  `(aperiInputum .simplex ($lam) $title)
-
-syntax "\\!" "[open,inputbox," "(" term ")" "," ident "]" : sakuraSignum
-macro_rules
-| `(expandSignum \![open,inputbox, ($lam:term), $title:ident]) =>
-  `(aperiInputum .simplex ($lam) $(Lean.Syntax.mkStrLit title.getId.toString))
-
--- ident形・タイムアウトあり
-syntax "\\!" "[open,inputbox," ident "," term "," str "]" : sakuraSignum
-macro_rules
-| `(expandSignum \![open,inputbox, $f:ident, $_t:term,$title:str]) =>
+| `(expandSignum \![open,inputbox, $f:ident, $_t, $title]) =>
   `(aperiInputum .simplex $f $title "")
 
-syntax "\\!" "[open,inputbox," ident "," term "," ident "]" : sakuraSignum
+-- タイムアウトなし
+syntax "\\!" "[open,inputbox," term:max "," term "]" : sakuraSignum
 macro_rules
-| `(expandSignum \![open,inputbox, $f:ident, $_t:term,$title:ident]) =>
-  `(aperiInputum .simplex $f $(Lean.Syntax.mkStrLit title.getId.toString) "")
-
--- ident形・タイムアウトなし
-syntax "\\!" "[open,inputbox," ident "," str "]" : sakuraSignum
-macro_rules
-| `(expandSignum \![open,inputbox, $f:ident, $title:str]) =>
+| `(expandSignum \![open,inputbox, ($lam:term), $title]) =>
+  `(aperiInputum .simplex ($lam) $title)
+| `(expandSignum \![open,inputbox, $f:ident, $title]) =>
   `(aperiInputum .simplex $f $title "")
 
-syntax "\\!" "[open,inputbox," ident "," ident "]" : sakuraSignum
+-- パスワード入力にゃん（ラムダ形・ident 形どちらも受け付けるにゃ）
+-- タイムアウトあり
+syntax "\\!" "[open,passwordinput," term:max "," term "," term "]" : sakuraSignum
 macro_rules
-| `(expandSignum \![open,inputbox, $f:ident, $title:ident]) =>
-  `(aperiInputum .simplex $f $(Lean.Syntax.mkStrLit title.getId.toString) "")
-
--- パスワード入力にゃん
-syntax "\\!" "[open,passwordinput," "(" term ")" "," term "," str "]" : sakuraSignum
-macro_rules
-| `(expandSignum \![open,passwordinput, ($lam:term), $_t:term,$title:str]) =>
+| `(expandSignum \![open,passwordinput, ($lam:term), $_t, $title]) =>
   `(aperiInputum .sigillum ($lam) $title)
+| `(expandSignum \![open,passwordinput, $f:ident, $_t, $title]) =>
+  `(aperiInputum .sigillum $f $title "")
 
-syntax "\\!" "[open,passwordinput," ident "," term "," str "]" : sakuraSignum
+-- タイムアウトなし
+syntax "\\!" "[open,passwordinput," term:max "," term "]" : sakuraSignum
 macro_rules
-| `(expandSignum \![open,passwordinput, $f:ident, $_t:term,$title:str]) =>
+| `(expandSignum \![open,passwordinput, ($lam:term), $title]) =>
+  `(aperiInputum .sigillum ($lam) $title)
+| `(expandSignum \![open,passwordinput, $f:ident, $title]) =>
   `(aperiInputum .sigillum $f $title "")
 
 end Signaculum.Notatio

@@ -235,19 +235,37 @@ private def scriptumParserCore (kw : String) : Lean.Parser.Parser :=
 @[term_elab scriptumMacro]
 def elabScriptum : TermElab := fun stx expectedType? => do
   let ss := stx[1].getArgs
-  -- 各シグナムノードを term に変換するにゃ
+  -- 各シグナムノードを term に變換するにゃ
   let genTerm (s : Lean.Syntax) : Lean.Elab.Term.TermElabM (TSyntax `term) := do
     if s.isIdent then
-      -- rawTextusFn 由来の裸 ident にゃ → 識別子名をテクストゥスとして直接 loqui にくるむにゃ
+      -- rawTextusFn 由來の裸 ident にゃ → 識別子名をテクストゥスとして直接 loqui にくるむにゃ
       `(Signaculum.Sakura.loqui $(Lean.Syntax.mkStrLit s.getId.toString))
     else
       let ts : TSyntax `sakuraSignum := ⟨s⟩
       `(expandSignum $ts)
   if h : 0 < ss.size then
+    -- フォンティスのタブラから行番號を得るにゃん♪
+    -- 異なる行のシグナム間に自動で linea（\n）を挿入するにゃ
+    let tabulaFontis ← getFileMap
+    let lineamSigni (s : Lean.Syntax) : Option Nat :=
+      let pos? := match s.getHeadInfo with
+        | .original (pos := p) .. => some p
+        | .synthetic (pos := p) .. => some p
+        | .none => none
+      pos?.map fun pos => (tabulaFontis.toPosition pos).line
     let mut body ← genTerm (ss[0]'h)
+    let mut lineaPrior := lineamSigni (ss[0]'h)
     for s in ss[1:] do
+      -- 前のシグナムと行が違ったら \n を挾むにゃ
+      let lineaCurrens := lineamSigni s
+      match lineaPrior, lineaCurrens with
+      | some lp, some lc =>
+        if lc > lp then
+          body ← `(Bind.bind $body fun () => Signaculum.Sakura.linea)
+      | _, _ => pure ()
       let next ← genTerm s
       body ← `(Bind.bind $body fun () => $next)
+      lineaPrior := lineaCurrens
     elabTerm body expectedType?
   else
     elabTerm (← `(pure ())) expectedType?

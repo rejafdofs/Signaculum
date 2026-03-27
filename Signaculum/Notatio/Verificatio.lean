@@ -87,4 +87,22 @@ example : Id.run (currere (scriptum! \f[valign, top]))
 example : Id.run (currere (scriptum! \f[valign, bottom]))
         = "\\f[valign,bottom]" := by native_decide
 
+-- ════════════════════════════════════════════════════
+--  行跨ぎ改行自動挿入の検證にゃん
+-- ════════════════════════════════════════════════════
+
+-- 條件1: 同一行不變性 — 單行なら \n は入らにゃいにゃん
+example : Id.run (currere (scriptum! \h \s[0] "hello" \e)) = "\\h\\s[0]hello\\e" := by native_decide
+
+-- 條件2: 行跨ぎ改行 — 異なる行の要素間に \n が插入されるにゃん
+example : Id.run (currere (scriptum!
+  \h \s[0]
+  "hello"
+  \e)) = "\\h\\s[0]\\nhello\\n\\e" := by native_decide
+
+-- 條件3: 先頭不挿入 — 最初の要素の前には \n が入らにゃいにゃん
+example : Id.run (currere (scriptum!
+  \h
+  \e)) = "\\h\\n\\e" := by native_decide
+
 end Signaculum.Notatio.Verificatio

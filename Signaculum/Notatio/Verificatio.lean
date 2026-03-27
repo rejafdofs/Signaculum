@@ -37,7 +37,7 @@ example : Id.run (currereScriptum (scriptum! \b[0])) = "\\b[0]" := by native_dec
 example : Id.run (currereScriptum (scriptum! \b[-1])) = "\\b[-1]" := by native_decide
 
 -- 書體の検證にゃん
-example : Id.run (currereScriptum (scriptum! \f[bold, true])) = "\\f[bold,true]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \f[bold, Bool.true])) = "\\f[bold,true]" := by native_decide
 
 example : Id.run (currereScriptum (scriptum! \f[default])) = "\\f[default]" := by native_decide
 
@@ -277,21 +277,21 @@ example : Id.run (currereScriptum (scriptum! \f[height, default]))
 --  directioAllineatioBullaeLiteral の検證にゃん
 -- ════════════════════════════════════════════════════
 
-example : Id.run (currereScriptum (scriptum! \![set,balloonalign, left]))
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, .sinistrum]))
         = "\\![set,balloonalign,left]" := by native_decide
 
-example : Id.run (currereScriptum (scriptum! \![set,balloonalign, center]))
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, .centrum]))
         = "\\![set,balloonalign,center]" := by native_decide
 
-example : Id.run (currereScriptum (scriptum! \![set,balloonalign, none]))
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, .nullus]))
         = "\\![set,balloonalign,none]" := by native_decide
 
 -- ════════════════════════════════════════════════════
 --  selectmode の検證にゃん
 -- ════════════════════════════════════════════════════
 
-example : Id.run (currereScriptum (scriptum! \![enter,selectmode, rect, "0,0,100,100"]))
-        = "\\![enter,selectmode,rect,0\\,0\\,100\\,100]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![enter,selectmode, rect, "collision_area"]))
+        = "\\![enter,selectmode,rect,collision_area]" := by native_decide
 
 -- ════════════════════════════════════════════════════
 --  methodusMarciLiteral 擴張の検證にゃん（ROP2 モード）

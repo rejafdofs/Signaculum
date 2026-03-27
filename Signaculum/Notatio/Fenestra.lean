@@ -2,7 +2,6 @@
 -- 窓制御・UI・モード・設定・開閉の構文規則にゃん♪
 
 import Signaculum.Notatio.Categoria
-import Signaculum.Notatio.Literalia
 import Signaculum.Sakura.Scriptum
 
 namespace Signaculum.Notatio
@@ -101,8 +100,8 @@ macro_rules | `(expandSignum \![set,windowstate, $s]) => `(Signaculum.Sakura.con
 syntax "\\!" "[set,alignmentondesktop," term "]" : sakuraSignum
 macro_rules | `(expandSignum \![set,alignmentondesktop, $d]) => `(Signaculum.Sakura.allineatioDesktop $d)
 
-syntax "\\!" "[set,balloonalign," directioAllineatioBullaeLiteral "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,balloonalign, $d:directioAllineatioBullaeLiteral]) => `(Signaculum.Sakura.allineatioBullae (directioAllineatioBullaeL $d))
+syntax "\\!" "[set,balloonalign," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,balloonalign, $d]) => `(Signaculum.Sakura.allineatioBullae $d)
 
 syntax "\\!" "[set,balloontimeout," term "]" : sakuraSignum
 macro_rules | `(expandSignum \![set,balloontimeout, $n]) => `(Signaculum.Sakura.tempusBullae $n)

@@ -303,7 +303,7 @@ macro_rules
 -- ════════════════════════════════════════════════════
 
 /-- 文字の大きさリテラルカテゴリアにゃん。
-    數值=絕對px、+n/-n=相對、n%=百分率、default=既定にゃ -/
+    數值=絕對px、+n/−n=相對、n%=百分率、default=既定にゃ -/
 declare_syntax_cat magnitudoLitterarumLiteral
 
 syntax "default" : magnitudoLitterarumLiteral

@@ -159,7 +159,7 @@ def color {m : Type → Type} [Monad m] (c : Coloris) : SakuraM m Unit :=
   emitte s!"\\f[color,{c.toString}]"
 
 /-- 文字の大きさ（\\f[height,...]）にゃん。
-    絕對ピクセル、相對（+/-）、百分率、default が指定できるにゃ -/
+    絕對ピクセル、相對（+/−）、百分率、default が指定できるにゃ -/
 def altitudoLitterarum {m : Type → Type} [Monad m] (mag : MagnitudoLitterarum) : SakuraM m Unit :=
   emitte s!"\\f[height,{mag.toString}]"
 

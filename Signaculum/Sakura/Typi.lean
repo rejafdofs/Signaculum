@@ -273,7 +273,7 @@ def ModusSelectionis.toString : ModusSelectionis → String
     - `praefinita`   : 既定に戾す -/
 inductive MagnitudoLitterarum where
   | absoluta  (n : Nat)  -- 絕對ピクセルにゃ
-  | relativa  (n : Int)  -- 相對ピクセル（+/-）にゃ
+  | relativa  (n : Int)  -- 相對ピクセル（+/−）にゃ
   | proportio (n : Int)  -- 百分率にゃ
   | praefinita           -- default にゃ
   deriving Repr

@@ -527,6 +527,20 @@ def talkRandom : SakuraIO Unit := do
 let s ← elige #["A", "B", "C"]
 ```
 
+scriptum! 記法では `{expr}` に `Array α` / `List α` を渡すだけでランダム表示できます（`Exhibibilis` 型クラス経由）：
+
+```lean
+-- {配列} で自動ランダム選択（SakuraIO 文脈）
+def talkRandom2 : SakuraIO Unit := scriptum!
+  \h \s[0] {#["やっほー！", "こんにちは！", "おはよう！"]}
+  \e
+
+-- List でも同様
+def talkRandom3 : SakuraIO Unit := scriptum!
+  \h \s[0] {["A", "B", "C"]}
+  \e
+```
+
 ---
 
 ## 特殊文字・低レベル
@@ -712,17 +726,22 @@ def talkScriptum : SakuraPura Unit := scriptum!
 | `\q["text","id"]` | `optio "text" "id"` | 選択肢 |
 | `\_a["id"]` ... `\_a` | `ancora "id"` ... `fineAncora` | 錨 |
 | `"テキスト"` | `loqui "テキスト"` | 文字列表示 |
-| `{expr}` | （任意の Lean 式） | 式埋込 |
+| `{expr}` | （任意の Lean 式） | 式埋込（`Exhibibilis` 型クラス経由） |
 
-### 式埋込と型強制
+### 式埋込と型強制（Exhibibilis 型クラス）
 
-`{expr}` には任意の Lean 式を書けます。以下の型は自動的に `SakuraM` に変換されます。
+`{expr}` には任意の Lean 式を書けます。`Exhibibilis` 型クラスのインスタンスを持つ型は自動的に `SakuraM` に変換されます。
 
-| 型 | 変換内容 |
-|---|---|
-| `String` | `loqui s` として表示 |
-| `IO.Ref String` | 値を読み取って `loqui` で表示（`SakuraIO` 文脈のみ） |
-| `IO String` | IO アクションを実行して `loqui` で表示（`SakuraIO` 文脈のみ） |
+| 型 | 変換内容 | 優先度 |
+|---|---|---|
+| `String` | `loqui s` として表示 | 100 |
+| `Array α` / `List α` | ランダムに1要素選んで `exhibe` で表示（`SakuraIO` 文脈のみ） | 95 |
+| `m String` | モナドを実行して `loqui` で表示 | 90 |
+| `IO.Ref α` | 値を読み取って `toString` + `loqui`（`SakuraIO` 文脈のみ） | 85 |
+| `m α` (`ToString α`) | モナドを実行して `toString` + `loqui` | 80 |
+| `α` (`ToString α`) | `toString` + `loqui`（最汎用） | 70 |
+
+`Array α` / `List α` の要素型 `α` 自体も `Exhibibilis` であればよいため、`Array String`、`Array (IO String)`、`List Nat` なども対応します。
 
 ```lean
 varia perpetua nomenMeum : String := ""
@@ -735,6 +754,11 @@ eventum "OnBoot" fun _ => scriptum
 varia perpetua numerus : Nat := 0
 eventum "OnBoot" fun _ => scriptum
   \h 起動 {toString <$> numerus.obtinere} 回目にゃん
+
+-- Array / List はランダムに1要素が表示される（SakuraIO 文脈）
+eventum "OnBoot" fun _ => scriptum
+  \h \s[0] {#["おはよう！", "こんにちは！", "やっほー！"]}
+  \e
 ```
 
 ### モジュール構成

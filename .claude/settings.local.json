@@ -38,7 +38,9 @@
       "Bash(/c/Users/a/.elan/bin/lake.exe update:*)",
       "Bash(cmd.exe /c \"cd /d D:\\\\anything && for /d %d in \\(*リリ*\\) do echo %d\")",
       "Bash(cmd.exe /c \"cd /d \\\\\"D:\\\\anything\\\\リリフェエ伺かプロジェクト\\\\ghost\\\\master\\\\\" && lake build ghost 2>&1\")",
-      "Bash(powershell.exe -Command \"Set-Location 'D:\\\\anything\\\\リリフェエ伺かプロジェクト\\\\ghost\\\\master'; lake build ghost 2>&1\")"
+      "Bash(powershell.exe -Command \"Set-Location 'D:\\\\anything\\\\リリフェエ伺かプロジェクト\\\\ghost\\\\master'; lake build ghost 2>&1\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\a\\\\AppData\\\\Local\\\\Temp\\\\analyze:?\" 2>&1)",
+      "Bash(gh search:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

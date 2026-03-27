@@ -3,11 +3,37 @@
 
 namespace Signaculum.Sakura
 
+/-- サクラスクリプト構築モナドの狀態にゃん。
+    スクリプトゥム文字列に加へて SHIORI/3.0 レスポンスムの附加ヘッダーも蓄積するにゃ。
+    Value（スクリプトゥム）以外のレスポンスムヘッダーをイヴェントゥム處理器から設定できるにゃん♪ -/
+structure StatusSakurae where
+  /-- 蓄積中のサクラスクリプトゥム文字列にゃ -/
+  scriptum         : String := ""
+  /-- Marker ヘッダー: バルーン下部の附加情報文字列にゃ -/
+  marker           : Option String := none
+  /-- BalloonOffset ヘッダー: バルーン位置の補正 (X, Y) にゃ -/
+  balloonOffset    : Option (Int × Int) := none
+  /-- ErrorLevel ヘッダー: "info"|"notice"|"warning"|"error"|"critical" にゃ -/
+  errorLevel       : Option String := none
+  /-- ErrorDescription ヘッダー: エラーの詳細にゃ -/
+  errorDescription : Option String := none
+  /-- MarkerSend ヘッダー: SSTP 送信先へのマーカーにゃ -/
+  markerSend       : Option String := none
+  /-- ValueNotify ヘッダー: NOTIFY でもスクリプトゥムを實行するにゃ -/
+  valorNotifica    : Option String := none
+  /-- Age ヘッダー: 通信世代カウンタにゃ -/
+  age              : Option Nat := none
+  /-- SecurityLevel ヘッダー: "local"|"external" にゃ -/
+  securitas        : Option String := none
+  /-- 其の他の任意ヘッダー（X-SSTP-PassThru-* 等）にゃ -/
+  cappitta         : List (String × String) := []
+  deriving Repr, Inhabited
+
 /-- サクラスクリプト構築モナドにゃん。
-    文字列を蓄積する StateT で、基底モナド m を自由に選べるにゃ。
+    StatusSakurae を蓄積する StateT で、基底モナド m を自由に選べるにゃ。
     純粹な構築には `SakuraPura`、IO が要る時は `SakuraIO` を使ふにゃん -/
 abbrev SakuraM (m : Type → Type) [Monad m] (α : Type) :=
-  StateT String m α
+  StateT StatusSakurae m α
 
 /-- IO 附きサクラスクリプト・モナドにゃん。お嬢樣の處理器はこれを使ふにゃ -/
 abbrev SakuraIO (α : Type) := SakuraM IO α

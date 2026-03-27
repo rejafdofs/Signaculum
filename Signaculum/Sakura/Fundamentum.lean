@@ -8,7 +8,7 @@ namespace Signaculum.Sakura
 /-- サクラスクリプトの斷片を發出するにゃん。
     これが全ての土臺にゃ -/
 def emitte {m : Type → Type} [Monad m] (s : String) : SakuraM m Unit :=
-  modify (· ++ s)
+  modify fun st => { st with scriptum := st.scriptum ++ s }
 
 /-- 文字列中の特殊文字（\\、%、]）を全て遁走して表示用に安全な形にするにゃん。
     loqui 等の表示系關數はこれを通すから、お嬢樣は氣にしにゃくていいにゃ♪ -/

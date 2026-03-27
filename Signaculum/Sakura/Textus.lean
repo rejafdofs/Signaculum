@@ -415,10 +415,58 @@ def fortuito (optiones : Array String) : SakuraIO Unit := do
 --  實行 (Executio)
 -- ════════════════════════════════════════════════════
 
-/-- サクラスクリプト・モナドを實行し、蓄積されたサクラスクリプト文字列を得るにゃん -/
+/-- サクラスクリプト・モナドを實行し、蓄積された StatusSakurae を得るにゃん。
+    スクリプトゥム文字列だけでなく Marker 等の附加ヘッダーも含むにゃ -/
 def currere {m : Type → Type} [Monad m]
-    (scriptum : SakuraM m Unit) (initium : String := "") : m String := do
+    (scriptum : SakuraM m Unit) (initium : StatusSakurae := {}) : m StatusSakurae := do
   let (_, resultatum) ← StateT.run scriptum initium
   return resultatum
+
+/-- サクラスクリプト・モナドを實行し、蓄積されたスクリプトゥム文字列だけを得るにゃん。
+    附加ヘッダーが不要な時はこちらを使ふにゃ -/
+def currereScriptum {m : Type → Type} [Monad m]
+    (scriptum : SakuraM m Unit) (initium : String := "") : m String := do
+  let (_, resultatum) ← StateT.run scriptum { scriptum := initium }
+  return resultatum.scriptum
+
+-- ════════════════════════════════════════════════════
+--  レスポンスムヘッダー設定 (Configuratio Responsi)
+-- ════════════════════════════════════════════════════
+
+/-- Marker ヘッダーを設定するにゃん。バルーン下部に附加情報を表示するにゃ -/
+def configuraMarker {m : Type → Type} [Monad m] (s : String) : SakuraM m Unit :=
+  modify fun st => { st with marker := some s }
+
+/-- BalloonOffset ヘッダーを設定するにゃん。バルーン位置を補正するにゃ -/
+def configuraBalloonOffset {m : Type → Type} [Monad m] (x y : Int) : SakuraM m Unit :=
+  modify fun st => { st with balloonOffset := some (x, y) }
+
+/-- ErrorLevel ヘッダーを設定するにゃん。SSP のデヴェロッパーパレットで確認できるにゃ -/
+def configuraErrorLevel {m : Type → Type} [Monad m] (s : String) : SakuraM m Unit :=
+  modify fun st => { st with errorLevel := some s }
+
+/-- ErrorDescription ヘッダーを設定するにゃん。エラーの詳細を記すにゃ -/
+def configuraErrorDescription {m : Type → Type} [Monad m] (s : String) : SakuraM m Unit :=
+  modify fun st => { st with errorDescription := some s }
+
+/-- MarkerSend ヘッダーを設定するにゃん。SSTP 送信先へのマーカーにゃ -/
+def configuraMarkerSend {m : Type → Type} [Monad m] (s : String) : SakuraM m Unit :=
+  modify fun st => { st with markerSend := some s }
+
+/-- ValueNotify ヘッダーを設定するにゃん。NOTIFY でもスクリプトゥムを實行するにゃ -/
+def configuraValorNotifica {m : Type → Type} [Monad m] (s : String) : SakuraM m Unit :=
+  modify fun st => { st with valorNotifica := some s }
+
+/-- Age ヘッダーを設定するにゃん。通信世代カウンタにゃ -/
+def configuraAge {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
+  modify fun st => { st with age := some n }
+
+/-- SecurityLevel ヘッダーを設定するにゃん。"local" か "external" にゃ -/
+def configuraSecuritas {m : Type → Type} [Monad m] (s : String) : SakuraM m Unit :=
+  modify fun st => { st with securitas := some s }
+
+/-- 任意のカスタムヘッダーを追加するにゃん。X-SSTP-PassThru-* 等に使ふにゃ -/
+def addeCastellum {m : Type → Type} [Monad m] (clavis valor : String) : SakuraM m Unit :=
+  modify fun st => { st with cappitta := st.cappitta ++ [(clavis, valor)] }
 
 end Signaculum.Sakura

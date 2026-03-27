@@ -5,14 +5,33 @@ import Signaculum.Protocollum.Typi
 
 namespace Signaculum
 
-/-- SHIORI/3.0 應答を表す構造體にゃん -/
+/-- SHIORI/3.0 應答を表す構造體にゃん。
+    Value 以外のレスポンスムヘッダーも型安全に設定できるにゃ♪ -/
 structure Responsum where
   /-- 狀態符號 -/
-  status   : StatusCodis
+  status           : StatusCodis
   /-- Value 頭部（SakuraScript）にゃん。pete の應答に入れるにゃ -/
-  valor    : Option String := none
-  /-- 追加の頭部にゃん -/
-  cappitta : List (String × String) := []
+  valor            : Option String := none
+  /-- Sender 頭部: SHIORI 名を返すにゃ -/
+  sender           : Option String := none
+  /-- ErrorLevel 頭部: "info"|"notice"|"warning"|"error"|"critical" にゃ -/
+  errorLevel       : Option String := none
+  /-- ErrorDescription 頭部: エラーの詳細にゃ -/
+  errorDescription : Option String := none
+  /-- Marker 頭部: バルーン下部の附加情報文字列にゃ -/
+  marker           : Option String := none
+  /-- BalloonOffset 頭部: バルーン位置の補正 (X, Y) にゃ -/
+  balloonOffset    : Option (Int × Int) := none
+  /-- Age 頭部: 通信世代カウンタにゃ -/
+  age              : Option Nat := none
+  /-- SecurityLevel 頭部: "local"|"external" にゃ -/
+  securitas        : Option String := none
+  /-- MarkerSend 頭部: SSTP 送信先へのマーカーにゃ -/
+  markerSend       : Option String := none
+  /-- ValueNotify 頭部: NOTIFY でもスクリプトゥムを實行するにゃ -/
+  valorNotifica    : Option String := none
+  /-- 其の他の任意頭部（X-SSTP-PassThru-* 等）にゃん -/
+  cappitta         : List (String × String) := []
   deriving Repr
 
 namespace Responsum
@@ -38,12 +57,32 @@ def errorInternus : Responsum :=
 def adProtocollum (r : Responsum) : String :=
   let lineaStatus := r.status.lineaStatus ++ crlf
   let forma       := "Charset: UTF-8" ++ crlf
+  let senderStr   := match r.sender with
+    | some s => s!"Sender: {s}" ++ crlf | none => ""
   let valorStr    := match r.valor with
-    | some v => s!"Value: {v}" ++ crlf
-    | none   => ""
+    | some v => s!"Value: {v}" ++ crlf | none => ""
+  let errorLvl    := match r.errorLevel with
+    | some l => s!"ErrorLevel: {l}" ++ crlf | none => ""
+  let errorDesc   := match r.errorDescription with
+    | some d => s!"ErrorDescription: {d}" ++ crlf | none => ""
+  let markerStr   := match r.marker with
+    | some m => s!"Marker: {m}" ++ crlf | none => ""
+  let offsetStr   := match r.balloonOffset with
+    | some (x, y) => s!"BalloonOffset: {x},{y}" ++ crlf | none => ""
+  let ageStr      := match r.age with
+    | some a => s!"Age: {a}" ++ crlf | none => ""
+  let secStr      := match r.securitas with
+    | some s => s!"SecurityLevel: {s}" ++ crlf | none => ""
+  let mSendStr    := match r.markerSend with
+    | some m => s!"MarkerSend: {m}" ++ crlf | none => ""
+  let vNotifStr   := match r.valorNotifica with
+    | some v => s!"ValueNotify: {v}" ++ crlf | none => ""
   let extra := r.cappitta.foldl
     (fun acc (k, v) => acc ++ s!"{k}: {v}" ++ crlf) ""
-  lineaStatus ++ forma ++ valorStr ++ extra ++ crlf
+  lineaStatus ++ forma ++ senderStr ++ valorStr
+    ++ errorLvl ++ errorDesc ++ markerStr ++ offsetStr
+    ++ ageStr ++ secStr ++ mSendStr ++ vNotifStr
+    ++ extra ++ crlf
 
 end Responsum
 

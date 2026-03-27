@@ -454,8 +454,8 @@ elab "spawnaScriptum" f:ident args:term* : term => do
   let callTerm ← `($f $args*)
   elabTerm
     (← `(liftM (Signaculum.spawnaMunitus do
-      let _s ← Signaculum.Sakura.currere $callTerm
-      Signaculum.Sstp.mitteSstpScriptum _s)))
+      let _st ← Signaculum.Sakura.currere $callTerm
+      Signaculum.Sstp.mitteSstpScriptum _st.scriptum)))
     none
 
 -- ═══════════════════════════════════════════════════

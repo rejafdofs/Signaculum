@@ -88,9 +88,13 @@ def exportaRequest (catenaRogationis : @& String) : IO String := do
     | some shiori =>
       shiori.tractaCatenam catenaRogationis
     | none =>
-      return Responsum.errorInternus.adProtocollum
-  catch _ =>
-    return Responsum.errorInternus.adProtocollum
+      return ({ Responsum.errorInternus with
+        errorLevel := some "critical"
+        errorDescription := some "SHIORI non est registrata" }).adProtocollum
+  catch e =>
+    return ({ Responsum.errorInternus with
+      errorLevel := some "critical"
+      errorDescription := some (toString e) }).adProtocollum
 
 -- ═══════════════════════════════════════════════════
 -- 非同期タスク管理（GC 對策）にゃん

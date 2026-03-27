@@ -61,7 +61,7 @@ initialize (Signaculum.registraShiori [
 
 /-- 純粹な SakuraScript 生成のテストにゃん -/
 def testPuraSakura : String := Id.run do
-  Sakura.currere do
+  Sakura.currereScriptum do
     sakura
     superficies 0
     loqui "テストにゃ！"

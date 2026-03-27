@@ -136,8 +136,8 @@ syntax "\\!" "[async," term "]" : sakuraSignum
 macro_rules
 | `(expandSignum \![async, $app:term]) => do
   `(liftM (Signaculum.spawnaMunitus do
-      let _s ← Signaculum.Sakura.currere $app
-      Signaculum.Sstp.mitteSstpScriptum _s))
+      let _st ← Signaculum.Sakura.currere $app
+      Signaculum.Sstp.mitteSstpScriptum _st.scriptum))
 
 -- 呼出にゃん
 syntax "\\!" "[call,shiori," str "]" : sakuraSignum

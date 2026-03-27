@@ -59,14 +59,28 @@ def tracta (s : Shiori) (rogatio : Rogatio) : IO Responsum := do
   match s.tractatores[rogatio.nomen]? with
   | some tractator =>
     try
-      -- SakuraScript モナドを實行して文字列を得るにゃん
-      let scriptum ← Sakura.currere (tractator rogatio)
+      -- SakuraScript モナドを實行して StatusSakurae を得るにゃん
+      let status ← Sakura.currere (tractator rogatio)
       match rogatio.methodus with
-      | .pete     => return Responsum.ok scriptum
+      | .pete     => return {
+          status           := .ok
+          valor            := some status.scriptum
+          marker           := status.marker
+          balloonOffset    := status.balloonOffset
+          errorLevel       := status.errorLevel
+          errorDescription := status.errorDescription
+          markerSend       := status.markerSend
+          valorNotifica    := status.valorNotifica
+          age              := status.age
+          securitas        := status.securitas
+          cappitta         := status.cappitta
+        }
       | .notifica => return Responsum.nihil  -- NOTIFY は Value を返さにゃいにゃ
-    catch _ =>
-      -- 處理器内で例外が發生した場合は 500 を返すにゃ
-      return Responsum.errorInternus
+    catch e =>
+      -- 處理器内で例外が發生した場合は 500 + ErrorLevel/ErrorDescription を返すにゃ
+      return { Responsum.errorInternus with
+        errorLevel := some "error"
+        errorDescription := some (toString e) }
   | none =>
     -- 處理器が見つからにゃかった場合は 204 にゃ
     return Responsum.nihil
@@ -78,10 +92,14 @@ def tractaCatenam (s : Shiori) (catenaRogationis : String) : IO String := do
     | .ok rogatio =>
       let responsum ← s.tracta rogatio
       return responsum.adProtocollum
-    | .error _ =>
-      return Responsum.malaRogatio.adProtocollum
-  catch _ =>
-    return Responsum.errorInternus.adProtocollum
+    | .error nuntius =>
+      return ({ Responsum.malaRogatio with
+        errorLevel := some "warning"
+        errorDescription := some nuntius }).adProtocollum
+  catch e =>
+    return ({ Responsum.errorInternus with
+      errorLevel := some "error"
+      errorDescription := some (toString e) }).adProtocollum
 
 end Shiori
 

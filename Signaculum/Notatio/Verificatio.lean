@@ -105,4 +105,117 @@ example : Id.run (currereScriptum (scriptum!
   \h
   \e)) = "\\h\\n\\e" := by native_decide
 
+-- ════════════════════════════════════════════════════
+--  舊形式スコープの検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \0)) = "\\h" := by native_decide
+example : Id.run (currereScriptum (scriptum! \1)) = "\\u" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  文字・行淸掃拡張の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \c[char, 3])) = "\\c[char,3]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \c[char, 5, 2])) = "\\c[char,5,2]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \c[line, 1])) = "\\c[line,1]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \c[line, 2, 0])) = "\\c[line,2,0]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  選擇肢拡張の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \q["hello", script: "\\h"])) = "\\q[hello,script:\\\\h]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \__q["sel1"])) = "\\__q[sel1]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \__q)) = "\\__q" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  同期拡張の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \_s[0])) = "\\_s[0]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \_s[0, 1])) = "\\_s[0,1]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \_s[0, 1, 2])) = "\\_s[0,1,2]" := by native_decide
+
+-- イヴェントゥム附き選擇肢の可變長引數にゃん
+example : Id.run (currereScriptum (scriptum! \q["hello", "OnYes", "r0"])) = "\\q[hello,OnYes,r0]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \q["hello", "OnYes", "r0", "r1"])) = "\\q[hello,OnYes,r0,r1]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  移動・ロック拡張の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \![moveasync,cancel])) = "\\![moveasync,cancel]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![lock,repaint,manual])) = "\\![lock,repaint,manual]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![lock,balloonrepaint,manual])) = "\\![lock,balloonrepaint,manual]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  ウィンドウ開閉の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \![open,ghostexplorer])) = "\\![open,ghostexplorer]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![open,browser, "https://example.com"])) = "\\![open,browser,https://example.com]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![close,console])) = "\\![close,console]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  他ゴースト・プラグイン事象の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \![raiseother, "Ghost", "OnEvent"])) = "\\![raiseother,Ghost,OnEvent]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![notifyother, "Ghost", "OnEvent"])) = "\\![notifyother,Ghost,OnEvent]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![raiseplugin, "Plugin", "OnEvent"])) = "\\![raiseplugin,Plugin,OnEvent]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  音響・動畫拡張の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \![sound,load, "bgm.mp3"])) = "\\![sound,load,bgm.mp3]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![filter])) = "\\![filter]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  實行系の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \![execute,createupdatedata])) = "\\![execute,createupdatedata]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![execute,emptyrecyclebin])) = "\\![execute,emptyrecyclebin]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![execute,createnar])) = "\\![execute,createnar]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![execute,resetballoonpos])) = "\\![execute,resetballoonpos]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![execute,resetwindowpos])) = "\\![execute,resetwindowpos]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  設定系の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \![set,shioridebugmode])) = "\\![set,shioridebugmode]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \![set,balloonmarker, "test"])) = "\\![set,balloonmarker,test]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  バルーン畫像の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \_b["img.png", 0, 0])) = "\\_b[img.png,0,0]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \_b["img.png", 0, 0, opaque])) = "\\_b[img.png,0,0,opaque]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \_b["img.png", inline])) = "\\_b[img.png,inline]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \_b["img.png", inline, opaque])) = "\\_b[img.png,inline,opaque]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  環境變數の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! %month)) = "%month" := by native_decide
+example : Id.run (currereScriptum (scriptum! %username)) = "%username" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  Windows メッセージ・音聲合成の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \m["0x0400", "0", "0"])) = "\\m[0x0400,0,0]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \__v["speed=100"])) = "\\__v[speed=100]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  フォント拡張の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \f[anchor.font.color, red])) = "\\f[anchor.font.color,red]" := by native_decide
+
 end Signaculum.Notatio.Verificatio

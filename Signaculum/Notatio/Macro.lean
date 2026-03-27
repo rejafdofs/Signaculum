@@ -120,6 +120,11 @@ macro_rules | `(expandSignum \{) => `(Signaculum.Sakura.loqui "{")
 syntax (priority := 60) "\\}" : sakuraSignum
 macro_rules | `(expandSignum \}) => `(Signaculum.Sakura.loqui "}")
 
+-- % 環境變數參照にゃん（SSP が展開する %month 等）
+-- `loqui` は `%` をエスケープしてしまふから專用構文が要るにゃ
+syntax (priority := 60) "%" ident : sakuraSignum
+macro_rules | `(expandSignum %$i:ident) => `(Signaculum.Sakura.variabilisAmbientis $(Lean.Syntax.mkStrLit i.getId.toString))
+
 -- ════════════════════════════════════════════════════
 --  行先頭位置コンビナートル (Combinatrix Initii Lineae)
 -- ════════════════════════════════════════════════════

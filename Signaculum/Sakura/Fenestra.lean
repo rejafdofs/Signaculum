@@ -412,4 +412,52 @@ def imagoBullaeInlineata {m : Type → Type} [Monad m] (via : String) : SakuraM 
 def imagoBullaeInlineataOpaca {m : Type → Type} [Monad m] (via : String) : SakuraM m Unit :=
   emitte s!"\\_b[{evadeArgumentum via},inline,opaque]"
 
+-- ════════════════════════════════════════════════════
+--  移動拡張 (Extensio Motus)
+-- ════════════════════════════════════════════════════
+
+/-- 非同期移動をキャンセルするにゃん（\\![moveasync,cancel]）-/
+def cancellaMotumAsync {m : Type → Type} [Monad m] : SakuraM m Unit :=
+  emitte "\\![moveasync,cancel]"
+
+-- ════════════════════════════════════════════════════
+--  ロック拡張 (Extensio Serae)
+-- ════════════════════════════════════════════════════
+
+/-- 再描畫を手動ロックするにゃん（\\![lock,repaint,manual]）。
+    明示的に unlock するまでロックが續くにゃ -/
+def seraRepicturaManualiter {m : Type → Type} [Monad m] : SakuraM m Unit :=
+  emitte "\\![lock,repaint,manual]"
+
+/-- 吹出し再描畫を手動ロックするにゃん（\\![lock,balloonrepaint,manual]）-/
+def seraRepicturaBullaeManualiter {m : Type → Type} [Monad m] : SakuraM m Unit :=
+  emitte "\\![lock,balloonrepaint,manual]"
+
+-- ════════════════════════════════════════════════════
+--  スケーリング・透明度拡張 (Extensio Scalae et Alphae)
+-- ════════════════════════════════════════════════════
+
+/-- 縱横別々にスケーリングするにゃん（\\![set,scaling,x,y]）-/
+def configuraScalamDualem {m : Type → Type} [Monad m] (x y : Nat) : SakuraM m Unit :=
+  emitte s!"\\![set,scaling,{x},{y}]"
+
+/-- アニメーション付きスケーリングにゃん（\\![set,scaling,x,y,options]）-/
+def configuraScalamAnimatam {m : Type → Type} [Monad m]
+    (x y : Nat) (optiones : String) : SakuraM m Unit :=
+  emitte s!"\\![set,scaling,{x},{y},{evadeArgumentum optiones}]"
+
+/-- オプション付き透明度設定にゃん（\\![set,alpha,value,options]）-/
+def configuraAlphamAnimatam {m : Type → Type} [Monad m]
+    (valor : Nat) (_h : valor ≤ 100 := by omega) (optiones : String) : SakuraM m Unit :=
+  emitte s!"\\![set,alpha,{valor},{evadeArgumentum optiones}]"
+
+-- ════════════════════════════════════════════════════
+--  吹出し拡張2 (Extensio Bullae II)
+-- ════════════════════════════════════════════════════
+
+/-- ファイル受信表示をカスタマイズするにゃん（\\![set,balloonnum,name,count,max]）-/
+def configuraBullaeNumerum {m : Type → Type} [Monad m]
+    (nomen : String) (numerus maximus : Nat) : SakuraM m Unit :=
+  emitte s!"\\![set,balloonnum,{evadeArgumentum nomen},{numerus},{maximus}]"
+
 end Signaculum.Sakura

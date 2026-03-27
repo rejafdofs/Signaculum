@@ -195,4 +195,68 @@ macro_rules | `(expandSignum \_l[$x,$y]) => `(Signaculum.Sakura.cursor $x $y)
 syntax "\\&" "[" str "]" : sakuraSignum
 macro_rules | `(expandSignum \&[$s]) => `(Signaculum.Sakura.referentiaResourcei $s)
 
+-- ════════════════════════════════════════════════════
+--  舊形式スコープ (Scopi Antiqui)
+-- ════════════════════════════════════════════════════
+
+syntax "\\0" : sakuraSignum
+macro_rules | `(expandSignum \0) => `(Signaculum.Sakura.sakura)
+
+syntax "\\1" : sakuraSignum
+macro_rules | `(expandSignum \1) => `(Signaculum.Sakura.kero)
+
+-- ════════════════════════════════════════════════════
+--  文字・行淸掃拡張 (Extensio Purgationis)
+-- ════════════════════════════════════════════════════
+
+syntax "\\c" "[char," num "]" : sakuraSignum
+macro_rules | `(expandSignum \c[char, $n]) => `(Signaculum.Sakura.purgaCharacterem $n)
+
+syntax "\\c" "[char," num "," num "]" : sakuraSignum
+macro_rules | `(expandSignum \c[char, $n, $i]) => `(Signaculum.Sakura.purgaCharacteremAb $n $i)
+
+syntax "\\c" "[line," num "]" : sakuraSignum
+macro_rules | `(expandSignum \c[line, $n]) => `(Signaculum.Sakura.purgaLineam $n)
+
+syntax "\\c" "[line," num "," num "]" : sakuraSignum
+macro_rules | `(expandSignum \c[line, $n, $i]) => `(Signaculum.Sakura.purgaLineamAb $n $i)
+
+-- ════════════════════════════════════════════════════
+--  選擇肢拡張 (Extensio Optionum)
+-- ════════════════════════════════════════════════════
+
+-- イヴェントゥム附き選擇肢（\\q[title,OnEvent,r0,r1,...]）にゃん
+syntax "\\q" "[" str "," str "," str,+ "]" : sakuraSignum
+macro_rules
+| `(expandSignum \q[$t, $e, $rs,*]) => do
+  let elems := rs.getElems
+  let termElems ← elems.mapM fun (r : Lean.TSyntax `str) =>
+    `(term| $r)
+  `(Signaculum.Sakura.optioEventum $t $e [$termElems,*])
+
+-- スクリプトゥム實行型選擇肢（\\q[title,script:content]）にゃん
+syntax "\\q" "[" str "," "script:" str "]" : sakuraSignum
+macro_rules | `(expandSignum \q[$t, script: $s]) => `(Signaculum.Sakura.optioScriptum $t $s)
+
+-- 範圍選擇肢の開始にゃん（\\__q[ID]）
+syntax "\\__q" "[" str "]" : sakuraSignum
+macro_rules | `(expandSignum \__q[$s]) => `(Signaculum.Sakura.optioScopus $s)
+
+-- 範圍選擇肢の終了にゃん（\\__q）
+syntax "\\__q" : sakuraSignum
+macro_rules | `(expandSignum \__q) => `(Signaculum.Sakura.fineOptioScopus)
+
+-- ════════════════════════════════════════════════════
+--  同期拡張 (Extensio Synchroniae)
+-- ════════════════════════════════════════════════════
+
+-- スコープ指定同期にゃん（\\_s[ID1,ID2,...]）— 可變長にゃ
+syntax "\\_s" "[" num,+ "]" : sakuraSignum
+macro_rules
+| `(expandSignum \_s[$ns,*]) => do
+  let elems := ns.getElems
+  let termElems ← elems.mapM fun (n : Lean.TSyntax `num) =>
+    `(term| $n)
+  `(Signaculum.Sakura.synchronaScopi [$termElems,*])
+
 end Signaculum.Notatio

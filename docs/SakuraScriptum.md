@@ -724,7 +724,70 @@ def talkScriptum : SakuraPura Unit := scriptum!
 | `\![anim,start, s, i]` | `animaIncepit s i` | アニメーション開始 |
 | `\![change,ghost, "name"]` | `mutaGhostNomen "name"` | ゴースト変更 |
 | `\q["text","id"]` | `optio "text" "id"` | 選択肢 |
+| `\q["title", script: "content"]` | `optioScriptum "title" "content"` | スクリプト実行型選択肢 |
+| `\__q["id"]` / `\__q` | `optioScopus "id"` / `fineOptioScopus` | 範囲選択肢 |
 | `\_a["id"]` ... `\_a` | `ancora "id"` ... `fineAncora` | 錨 |
+| `\0` / `\1` | `sakura` / `kero` | 旧形式スコープ |
+| `\c[char, n]` / `\c[char, n, i]` | `purgaCharacterem n` / `purgaCharacteremAb n i` | 文字単位クリア |
+| `\c[line, n]` / `\c[line, n, i]` | `purgaLineam n` / `purgaLineamAb n i` | 行単位クリア |
+| `\_s[n]` / `\_s[n, m]` | `synchronaScopi [n]` / `synchronaScopi [n, m]` | スコープ指定同期 |
+| `\_b["file", x, y]` | `imagoBullae "file" x y` | バルーン画像（透過） |
+| `\_b["file", x, y, opaque]` | `imagoBullaeOpaca "file" x y` | バルーン画像（不透明） |
+| `\_b["file", inline]` | `imagoBullaeInlineata "file"` | インライン画像 |
+| `\_b["file", inline, opaque]` | `imagoBullaeInlineataOpaca "file"` | インライン画像（不透明） |
+| `\![raiseother, "ghost", "event"]` | `excitaAlium "ghost" "event"` | 他ゴーストイベント |
+| `\![notifyother, "ghost", "event"]` | `notificaAlium "ghost" "event"` | 他ゴースト通知 |
+| `\![raiseplugin, "plugin", "event"]` | `vocaPlugin "plugin" "event"` | プラグインイベント |
+| `\![notifyplugin, "plugin", "event"]` | `notificaPlugin "plugin" "event"` | プラグイン通知 |
+| `\![sound,load, "file"]` | `sonusOneratur "file"` | 音声事前読込 |
+| `\![sound,cdplay, n]` | `sonusCD n` | CD再生 |
+| `\![filter, "plugin", t, "param"]` | `applicaFiltratum "plugin" t "param"` | フィルター適用 |
+| `\![filter]` | `applicaFiltratum "" 0 ""` | フィルター解除 |
+| `\![anim,offset, s, i, x, y]` | `animaTranslatio s i x y` | アニメーション位置ずらし |
+| `\![anim,add,overlay, id]` | `animaAddOverlay id` | オーバーレイ追加 |
+| `\![anim,add,base, id]` | `animaAddBase id` | ベース変更 |
+| `\![anim,add,move, x, y]` | `animaAddMove x y` | 表面移動 |
+| `\![execute,http-get, "url"]` | `executaHttpGet "url"` | HTTP GET |
+| `\![execute,http-options, "url"]` | `executaHttpOptions "url"` | HTTP OPTIONS |
+| `\![execute,rss-post, "url"]` | `executaRssPost "url"` | RSS POST |
+| `\![execute,headline, "name"]` | `executaHeadline "name"` | ヘッドライン |
+| `\![execute,install,path, "file"]` | `executaInstallationemVia "file"` | ファイルからインストール |
+| `\![execute,createnar]` | `executaCreationemNar` | NAR作成 |
+| `\![execute,emptyrecyclebin]` | `evacuaRecyclatorium` | ゴミ箱を空にする |
+| `\![execute,createupdatedata]` | `executaCreationemUpdateData` | 更新データ作成 |
+| `\![execute,resetballoonpos]` | `renovaPositionemBullae` | バルーン位置リセット |
+| `\![execute,resetwindowpos]` | `renovaPositionemWindowae` | ウィンドウ位置リセット |
+| `\![moveasync,cancel]` | `cancellaMotumAsync` | 非同期移動キャンセル |
+| `\![lock,repaint,manual]` | `seraRepicturaManualiter` | 手動再描画ロック |
+| `\![lock,balloonrepaint,manual]` | `seraRepicturaBullaeManualiter` | 手動バルーン再描画ロック |
+| `\![open,ghostexplorer]` | `aperi .exploratorFantasmatis` | ゴーストエクスプローラ |
+| `\![open,browser, "url"]` | `aperi (.navigator "url")` | ブラウザで開く |
+| `\![open,editor, "file"]` | `aperiEditorem "file"` | エディタで開く |
+| `\![open,dateinput, ...]` | `aperiInputumDiei ...` | 日付入力 |
+| `\![open,timeinput, ...]` | `aperiInputumTemporis ...` | 時刻入力 |
+| `\![open,sliderinput, ...]` | `aperiInputumGradus ...` | スライダー入力 |
+| `\![open,ipinput, ...]` | `aperiInputumIP ...` | IPアドレス入力 |
+| `\![open,dialog, modus]` | `aperiDialogum modus` | ダイアログ |
+| `\![close,dialog, "id"]` | `claudeDialogum "id"` | ダイアログを閉じる |
+| `\![set,balloonoffset, s, x, y]` | `configuraBullaeOffset s x y` | バルーンオフセット |
+| `\![set,balloonwait, p]` | `moraTextus p` | テキスト速度 |
+| `\![set,balloonmarker, "s"]` | `signatumBullae "s"` | バルーンマーカー |
+| `\![set,blink, b]` | `nictatus b` | まばたき設定 |
+| `\![set,alwaysontop, b]` | `semperSupra b` | 最前面設定 |
+| `\![set,scaling, p]` | `configuratioScalae p` | 拡大率 |
+| `\![set,alpha, v]` | `configuratioAlphae v` | 透明度 |
+| `\![set,position, x, y, s]` | `configuraPositionem x y s` | 位置固定 |
+| `\![set,shioridebugmode]` | `configuraShioriDebug` | SHIORIデバッグ |
+| `\![set,choicetimeout, ms]` | `tempusOptionum ms` | 選択肢タイムアウト |
+| `\![enter,selectmode, m, c]` | `ingredereModumSelectionis m c` | 選択モード |
+| `\![leave,selectmode]` | `egrediereModumSelectionis` | 選択モード解除 |
+| `\![call,ghost, "name"]` | `vocaGhost "name"` | ゴースト呼出し |
+| `\![update,platform]` | `renovaPlatformam` | プラットフォーム更新 |
+| `\![wait,syncobject, "name", t]` | `expectaSyncObjectum "name" t` | 同期オブジェクト待機 |
+| `\m["umsg", "wparam", "lparam"]` | `nuntiumWindowae ...` | Windowsメッセージ |
+| `\__v["options"]` | `synthesisVocis "options"` | 音声合成調整 |
+| `\f[anchor.font.color, c]` | `colorFontisAncorae c` | 錨テキスト色 |
+| `%month` / `%username` 等 | `variabilisAmbientis "month"` | 環境変数参照 |
 | `"テキスト"` | `loqui "テキスト"` | 文字列表示 |
 | `{expr}` | （任意の Lean 式） | 式埋込（`Exhibibilis` 型クラス経由） |
 

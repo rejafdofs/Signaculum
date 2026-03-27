@@ -28,41 +28,69 @@ macro_rules | `(expandSignum $i:ident) => `(Signaculum.Sakura.loqui $(Lean.Synta
 -- ════════════════════════════════════════════════════
 
 -- ════════════════════════════════════════════════════
---  String → SakuraM 强制型變換 (Coercio)
+--  表示可能型クラス (Classis Exhibibilis)
 -- ════════════════════════════════════════════════════
 
--- String を SakuraM に強制型変換にゃん。{}の中が String 型なら直接 loqui にくるむにゃん
-instance (m : Type → Type) [Monad m] : Coe String (Signaculum.Sakura.SakuraM m Unit) where
-  coe := Signaculum.Sakura.loqui
+-- SakuraM に埋め込み可能な型のクラスにゃん♪
+-- {expr} で使へる型はぜんぶこゝに集まるにゃ
+universe u in
+class Exhibibilis (α : Type u) (m : Type → Type) [Monad m] where
+  exhibe : α → Signaculum.Sakura.SakuraM m Unit
 
--- m String（String を返すモナド値）を SakuraM m Unit に強制型変換にゃん
--- m が兩辺に出現するから合成順序問題なしにゃ
-instance {m : Type → Type} [Monad m] :
-    Coe (m String) (Signaculum.Sakura.SakuraM m Unit) where
-  coe action := do
+-- String → loqui にゃん
+instance (priority := 100) {m : Type → Type} [Monad m] : Exhibibilis String m where
+  exhibe := Signaculum.Sakura.loqui
+
+-- m String → 實行して loqui にゃん
+instance (priority := 90) {m : Type → Type} [Monad m] : Exhibibilis (m String) m where
+  exhibe action := do
     let v ← liftM action
     Signaculum.Sakura.loqui v
 
--- ToString α をもつ型 α を SakuraM m Unit に強制型変換にゃん（CoeDep にゃ）
--- Coe では synthesis order エラーになるため CoeDep を使ふにゃん
--- {numerus} のやうに値を直接表示できるにゃ
-instance {α : Type} {m : Type → Type} [Monad m] [ToString α] (a : α) :
-    CoeDep α a (Signaculum.Sakura.SakuraM m Unit) where
-  coe := Signaculum.Sakura.loqui (toString a)
+-- IO.Ref α → ref.get して toString して loqui にゃん（IO 專用）
+instance (priority := 85) {α : Type} [ToString α] : Exhibibilis (IO.Ref α) IO where
+  exhibe (ref : IO.Ref α) := do
+    let v : α ← liftM (show IO α from ST.Ref.get ref)
+    Signaculum.Sakura.loqui (toString v)
 
--- ToString α をもつ型を返すモナド値 m α を SakuraM m Unit に強制型変換にゃん（CoeDep にゃ）
--- {numerusSalutationum.obtinere} のやうにモナド値を直接表示できるにゃ
-instance {α : Type} {m : Type → Type} [Monad m] [ToString α] (action : m α) :
-    CoeDep (m α) action (Signaculum.Sakura.SakuraM m Unit) where
-  coe := do
+-- m α [ToString α] → 實行して toString して loqui にゃん
+instance (priority := 80) {α : Type} {m : Type → Type} [Monad m] [ToString α] : Exhibibilis (m α) m where
+  exhibe action := do
     let v ← liftM action
     Signaculum.Sakura.loqui (toString v)
 
--- IO.Ref α（ToString α をもつ型）を IO String に強制型変換にゃん（CoeDep にゃ）
--- chain: {ref} → IO String → SakuraM IO Unit と繋がるにゃ
-instance {α : Type} [ToString α] (ref : IO.Ref α) :
-    CoeDep (IO.Ref α) ref (IO String) where
-  coe := toString <$> ref.get
+-- α [ToString α] → toString して loqui にゃん（最汎用、最低優先）
+instance (priority := 70) {α : Type} {m : Type → Type} [Monad m] [ToString α] : Exhibibilis α m where
+  exhibe a := Signaculum.Sakura.loqui (toString a)
+
+-- Array α → ランダムに1要素選んで exhibe にゃん（IO.rand が要るから IO 專用）
+universe u in
+instance (priority := 95) {α : Type u} [Exhibibilis α IO] : Exhibibilis (Array α) IO where
+  exhibe (a : Array α) := do
+    if h : a.size = 0 then pure ()
+    else
+      let n := a.size
+      let idx ← liftM (IO.rand 0 (n - 1))
+      let i : Fin n := ⟨idx % n, Nat.mod_lt idx (by omega)⟩
+      Exhibibilis.exhibe (m := IO) a[i]
+
+-- List α → toArray してランダムに1要素選んで exhibe にゃん（IO 專用）
+universe u in
+instance (priority := 95) {α : Type u} [Exhibibilis α IO] : Exhibibilis (List α) IO where
+  exhibe (l : List α) := do
+    let a : Array α := List.toArray l
+    if h : a.size = 0 then pure ()
+    else
+      let n := a.size
+      let idx ← liftM (IO.rand 0 (n - 1))
+      let i : Fin n := ⟨idx % n, Nat.mod_lt idx (by omega)⟩
+      Exhibibilis.exhibe (m := IO) a[i]
+
+-- Exhibibilis 經由の CoeDep にゃん。{expr} の型強制はぜんぶこゝを通るにゃ
+universe u in
+instance {α : Type u} {m : Type → Type} [Monad m] [Exhibibilis α m] (a : α) :
+    CoeDep α a (Signaculum.Sakura.SakuraM m Unit) where
+  coe := Exhibibilis.exhibe a
 
 -- 中括弧で圍んだ Lean の式を直接埋め込むにゃん
 -- show で期待型を明示することで IO α 等のモナド値の CoeDep 強制変換を起動するにゃ

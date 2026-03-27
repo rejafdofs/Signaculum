@@ -65,4 +65,9 @@ end StatusCodis
 /-- 行末の CR+LF にゃん -/
 def crlf : String := "\r\n"
 
+/-- ヘッダー値から CR・LF を除去してプロトコッルムパケットゥムの破損を防ぐにゃん。
+    SHIORI/3.0 レスポンスムと SSTP リクエストゥムの両方で使ふにゃ -/
+def purgaCrlf (s : String) : String :=
+  s.foldl (fun acc c => if c != '\r' && c != '\n' then acc.push c else acc) ""
+
 end Signaculum

@@ -90,8 +90,8 @@ instance (priority := 95) {α : Type u} [Exhibibilis α IO] : Exhibibilis (List 
 universe u in
 instance (priority := 92) {α : Type u} {m : Type → Type} [Monad m] [Exhibibilis α m] : Exhibibilis (Option α) m where
   exhibe
-    | some a => Exhibibilis.exhibe (m := m) a
-    | none   => pure ()
+    | .some a => Exhibibilis.exhibe (m := m) a
+    | .none   => pure ()
 
 -- some のとき内側の exhibe に委譲するにゃん♪ 定義から自明にゃ
 universe u in
@@ -101,7 +101,7 @@ theorem exhibeOptionSome_eq {α : Type u} {m : Type → Type} [Monad m] [Exhibib
 -- none のとき無出力にゃん♪ これも定義から自明にゃ
 universe u in
 theorem exhibeOptionNullus_eq {m : Type → Type} [Monad m] {α : Type} [Exhibibilis α m] :
-    Exhibibilis.exhibe (m := m) (none : Option α) = pure () := rfl
+    Exhibibilis.exhibe (m := m) (.none : Option α) = pure () := rfl
 
 -- Exhibibilis 經由の CoeDep にゃん。{expr} の型強制はぜんぶこゝを通るにゃ
 universe u in
@@ -268,7 +268,7 @@ def elabScriptum : TermElab := fun stx expectedType? => do
       let pos? := match s.getHeadInfo with
         | .original (pos := p) .. => some p
         | .synthetic (pos := p) .. => some p
-        | .none => none
+        | .none => Option.none
       pos?.map fun pos => (tabulaFontis.toPosition pos).line
     let mut body ← genTerm (ss[0]'h)
     let mut lineaPrior := lineamSigni (ss[0]'h)

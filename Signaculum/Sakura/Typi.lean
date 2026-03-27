@@ -3,6 +3,26 @@
 
 namespace Signaculum.Sakura
 
+/-- SHIORI/3.0 レスポンスムの ErrorLevel ヘッダーの等級にゃん。
+    SSP のデヴェロッパーパレットで確認できるにゃ♪ -/
+inductive GradusErroris where
+  | informatio  -- info: 情報にゃ
+  | monitum     -- notice: 通知にゃ
+  | admonitio   -- warning: 警告にゃ
+  | error       -- error: エラーにゃ
+  | pernicies   -- critical: 致命的エラーにゃ
+  deriving Repr, BEq, Inhabited
+
+/-- GradusErroris を SHIORI/3.0 仕樣の文字列に變換するにゃん -/
+def GradusErroris.adCatenam : GradusErroris → String
+  | .informatio => "info"
+  | .monitum    => "notice"
+  | .admonitio  => "warning"
+  | .error      => "error"
+  | .pernicies  => "critical"
+
+instance : ToString GradusErroris := ⟨GradusErroris.adCatenam⟩
+
 /-- サクラスクリプト構築モナドの狀態にゃん。
     スクリプトゥム文字列に加へて SHIORI/3.0 レスポンスムの附加ヘッダーも蓄積するにゃ。
     Value（スクリプトゥム）以外のレスポンスムヘッダーをイヴェントゥム處理器から設定できるにゃん♪ -/
@@ -13,8 +33,8 @@ structure StatusSakurae where
   marker           : Option String := none
   /-- BalloonOffset ヘッダー: バルーン位置の補正 (X, Y) にゃ -/
   balloonOffset    : Option (Int × Int) := none
-  /-- ErrorLevel ヘッダー: "info"|"notice"|"warning"|"error"|"critical" にゃ -/
-  errorLevel       : Option String := none
+  /-- ErrorLevel ヘッダーにゃ -/
+  errorLevel       : Option GradusErroris := none
   /-- ErrorDescription ヘッダー: エラーの詳細にゃ -/
   errorDescription : Option String := none
   /-- MarkerSend ヘッダー: SSTP 送信先へのマーカーにゃ -/

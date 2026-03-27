@@ -2,6 +2,7 @@
 -- SHIORI/3.0 應答の構築にゃん
 
 import Signaculum.Protocollum.Typi
+import Signaculum.Sakura.Typi
 
 namespace Signaculum
 
@@ -14,8 +15,8 @@ structure Responsum where
   valor            : Option String := none
   /-- Sender 頭部: SHIORI 名を返すにゃ -/
   sender           : Option String := none
-  /-- ErrorLevel 頭部: "info"|"notice"|"warning"|"error"|"critical" にゃ -/
-  errorLevel       : Option String := none
+  /-- ErrorLevel 頭部にゃ -/
+  errorLevel       : Option Sakura.GradusErroris := none
   /-- ErrorDescription 頭部: エラーの詳細にゃ -/
   errorDescription : Option String := none
   /-- Marker 頭部: バルーン下部の附加情報文字列にゃ -/
@@ -57,28 +58,29 @@ def errorInternus : Responsum :=
 def adProtocollum (r : Responsum) : String :=
   let lineaStatus := r.status.lineaStatus ++ crlf
   let forma       := "Charset: UTF-8" ++ crlf
+  -- 全ヘッダー値に purgaCrlf を適用して CR/LF 混入によるパケットゥム破損を防ぐにゃん
   let senderStr   := match r.sender with
-    | some s => s!"Sender: {s}" ++ crlf | none => ""
+    | some s => s!"Sender: {purgaCrlf s}" ++ crlf | none => ""
   let valorStr    := match r.valor with
-    | some v => s!"Value: {v}" ++ crlf | none => ""
+    | some v => s!"Value: {purgaCrlf v}" ++ crlf | none => ""
   let errorLvl    := match r.errorLevel with
-    | some l => s!"ErrorLevel: {l}" ++ crlf | none => ""
+    | some l => s!"ErrorLevel: {l.adCatenam}" ++ crlf | none => ""
   let errorDesc   := match r.errorDescription with
-    | some d => s!"ErrorDescription: {d}" ++ crlf | none => ""
+    | some d => s!"ErrorDescription: {purgaCrlf d}" ++ crlf | none => ""
   let markerStr   := match r.marker with
-    | some m => s!"Marker: {m}" ++ crlf | none => ""
+    | some m => s!"Marker: {purgaCrlf m}" ++ crlf | none => ""
   let offsetStr   := match r.balloonOffset with
     | some (x, y) => s!"BalloonOffset: {x},{y}" ++ crlf | none => ""
   let ageStr      := match r.age with
     | some a => s!"Age: {a}" ++ crlf | none => ""
   let secStr      := match r.securitas with
-    | some s => s!"SecurityLevel: {s}" ++ crlf | none => ""
+    | some s => s!"SecurityLevel: {purgaCrlf s}" ++ crlf | none => ""
   let mSendStr    := match r.markerSend with
-    | some m => s!"MarkerSend: {m}" ++ crlf | none => ""
+    | some m => s!"MarkerSend: {purgaCrlf m}" ++ crlf | none => ""
   let vNotifStr   := match r.valorNotifica with
-    | some v => s!"ValueNotify: {v}" ++ crlf | none => ""
+    | some v => s!"ValueNotify: {purgaCrlf v}" ++ crlf | none => ""
   let extra := r.cappitta.foldl
-    (fun acc (k, v) => acc ++ s!"{k}: {v}" ++ crlf) ""
+    (fun acc (k, v) => acc ++ s!"{purgaCrlf k}: {purgaCrlf v}" ++ crlf) ""
   lineaStatus ++ forma ++ senderStr ++ valorStr
     ++ errorLvl ++ errorDesc ++ markerStr ++ offsetStr
     ++ ageStr ++ secStr ++ mSendStr ++ vNotifStr

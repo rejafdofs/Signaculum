@@ -4,6 +4,7 @@
 
 import Std.Internal.UV.TCP
 import Std.Net
+import Signaculum.Protocollum.Typi
 
 namespace Signaculum.Sstp
 
@@ -27,10 +28,6 @@ def sstpDirectumMittere (request : String) : IO Unit := do
     IO.ofExcept shutdownPromise.result!.get
   catch _ =>
     pure ()  -- SSP 未起動 or 接續拒否: 靜かに無視にゃ
-
-/-- ヘッダー値から CR・LF を除去して SSTP パケットゥムの破損を防ぐにゃん -/
-private def purgaCrlf (s : String) : String :=
-  s.foldl (fun acc c => if c != '\r' && c != '\n' then acc.push c else acc) ""
 
 /-- SSTP のデフォルト送信者名にゃん。ゴースト名等で上書きできるにゃ -/
 def mittensDefectus : String := "uka-lean"

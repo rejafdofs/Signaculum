@@ -1,5 +1,57 @@
 # 變更記錄 (Mutationum Registrum)
 
+## v0.4.0 (2026-03-27) — SHIORI/3.0 レスポンスムヘッダー型安全化 & 設計改善
+
+### SakuraM ステート拡張 — レスポンスムヘッダーを型安全にカスタマイズ可能に
+
+`SakuraM` のステートを `String` → `StatusSakurae` 構造體に拡張し、イヴェントゥム處理器内から Value 以外の SHIORI/3.0 レスポンスムヘッダーを設定可能にした。
+
+- `StatusSakurae` 構造體: `scriptum`（スクリプトゥム文字列）に加へ `marker`/`balloonOffset`/`errorLevel`/`errorDescription`/`markerSend`/`valorNotifica`/`age`/`securitas`/`cappitta` を蓄積
+- `Responsum` に Sender/ErrorLevel/ErrorDescription/Marker/BalloonOffset/Age/SecurityLevel/MarkerSend/ValueNotify の型付きフィールド追加
+- `adProtocollum` で全ヘッダーを仕樣通りに出力
+- ヘルパー關數群追加: `configuraMarker`、`configuraBalloonOffset`、`configuraErrorLevel`、`configuraErrorDescription`、`configuraMarkerSend`、`configuraValorNotifica`、`configuraAge`、`configuraSecuritas`、`addeCastellum`
+- `currereScriptum` 追加（スクリプトゥム文字列のみ取得する便利關數）
+- `currere` は `StatusSakurae` を返すやうに變更
+
+### ErrorLevel/ErrorDescription による例外報告
+
+- `Shiori.tracta`: `catch _ =>` を `catch e =>` に變更し、ErrorLevel=error + ErrorDescription=例外メッセージで 500 應答を返す
+- `tractaCatenam`: 同樣。不正要求時は ErrorLevel=warning + ErrorDescription=パースエラーメッセージ
+- `exportaRequest`: 同樣。ErrorLevel=critical + ErrorDescription=例外メッセージ
+
+### `!` 關數の全排除（claude.md 違反修正）
+
+- `Memoria/Auxilia.lean`: `lebDecodeLoop` の `b[pos]!` を `b[pos]`（`if h : pos < b.size` で證明）に變更。`elementumInPrefixo`/`elementumInPrefixo2`/`elementumDextriObliquum` を安全版に書き換へ。`lebDecodeIteratioRecta`/`lebDecodeIteratioPraefixo` の `if_pos` → `dif_pos` に更新
+- `Sakura/Textus.lean`: `elige` の `optiones[i]!` を `Nat.mod_lt` の證明付き安全アクセスに
+- `Memoria/Lemma.lean`: `StatusPermanens` Bool/UInt8/Option の `b[0]!` を `b[0]'(by omega)` に
+
+### loopPrincipalis の分割 & LE 重複排除
+
+- `Communicatio` 構造體を導入（`rivusIngressus`/`rivusEgressus` を一元管理）
+- `loopPrincipalis` を `tractaOnerare`/`tractaExonerare`/`tractaRogationem` の3關數に分割
+- `match` 式でコマンドバイトをディスパッチする明瞭な構造に
+- `egressusU32`/`ingressusU32` を削除し `Memoria.u32LE`/`Memoria.readU32LE` を利用
+
+### コード品質改善
+
+- `escapePropNomen` 重複排除（`Typi.lean` に統合、`Systema.lean` から削除）
+- Citatio UInt8/16/32/64 インスタンティアを共通補題 `citatioUIntRecursus` で簡潔化
+- ヘッダーパースの `prepend → reverse` を `Array.push` に變更
+- `spawnaMunitus` のマーギクムナンバー 256/128 を定數 `maximumMunera` に抽出
+
+### SHIORI/3.0 仕樣準拠
+
+- `StatusCodis` に `pluribusDatis` (311) / `rescribeInput` (312) 追加
+- `Rogatio` に `typusMittentis` (SenderType)、`status` (Status)、`securitasOrigo` (SecurityOrigin) 追加
+- `executaHttpGet`/`executaHttpPost` 追加（SakuraScript HTTP GET/POST）
+- SSTP Sender のハードコード解消: `mitteSstpScriptum`/`excitaEventum` に `mittens` 引數追加、デフォルト `mittensDefectus = "uka-lean"`
+
+### バグ修正
+
+- `Notatio/Literalia.lean`: カスタム構文 `syntax "none"` が Lean の `Option.none` と衝突する問題を修正。構文キーワードを `nullus` に變更（出力される SakuraScript は從前通り `none`）
+
+---
+
 ## v0.3.2 (2026-03-24) — ident/lambda 形統合エラボレーター & タグ構文簡素化
 
 ### Syntaxis.lean — ident 形と lambda 形を単一 elab に統合

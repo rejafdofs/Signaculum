@@ -59,8 +59,8 @@ example : Id.run (currereScriptum (scriptum! \f[color, 255,0,0]))
 example : Id.run (currereScriptum (scriptum! \f[color, red]))
         = "\\f[color,red]" := by native_decide
 
--- nullus リテラル
-example : Id.run (currereScriptum (scriptum! \f[color, nullus]))
+-- none リテラル（SakuraScript 仕樣通り none をそのまま書けるにゃん）
+example : Id.run (currereScriptum (scriptum! \f[color, none]))
         = "\\f[color,none]" := by native_decide
 
 -- 後方互換（Lean 式の括弧包み形式）

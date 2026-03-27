@@ -29,7 +29,7 @@ Signaculum.Nucleus.Exporta  ← exportaLoad / exportaUnload / exportaRequest
   │
   ├── Signaculum.Syntaxis    ← コンパイル時 DSL 構文擴張
   ├── Signaculum.Notatio.*   ← scriptum! マクロ DSL（原形タグ記法）
-  ├── Signaculum.Nucleus.Loop ← タイマー・ループ管理
+  ├── Signaculum.Nucleus.Loop ← Communicatio 構造體による通信ループ管理
   └── Signaculum.Elementa.*  ← 基礎要素（公理・補題・變數補助）
 ```
 
@@ -44,7 +44,7 @@ SHIORI/3.0 プロトコルの共通型と定數。
 | 型 | 説明 |
 |---|---|
 | `Methodus` | 要求の手法。`.pete` (GET) か `.notifica` (NOTIFY) |
-| `StatusCodis` | 應答の狀態符號。200 / 204 / 400 / 500 |
+| `StatusCodis` | 應答の狀態符號。200 / 204 / 311 / 312 / 400 / 500 |
 | `crlf` | `"\r\n"` |
 | `shioriVersio` | `"SHIORI/3.0"` |
 
@@ -75,6 +75,14 @@ Reference0: 0\r\n
 `Reference0`〜`ReferenceN` は番號順に `referentiae : Array String` へ格納される。
 番號が飛んでいる場合は空文字列で埋める。
 
+追加ヘッダー:
+
+| フィールド | ヘッダー | 説明 |
+|---|---|---|
+| `typusMittentis` | SenderType | イヴェントゥム發信元の分類（SSP 2.5.05+） |
+| `status` | Status | ゴーストの狀態フラグ（talking, choosing 等） |
+| `securitasOrigo` | SecurityOrigin | 送信サーヴァーの URL 形式文字列 |
+
 ---
 
 ### Signaculum.Protocollum.Responsum
@@ -92,8 +100,25 @@ Value: \h\s[0]やあ。\e\r\n
 |---|---|---|
 | `ok scriptum` | 200 | SakuraScript を Value に入れる |
 | `nihil` | 204 | 空應答（應答不要イベント） |
+| `pluribusDatis` | 311 | OnTeach で追加情報が必要 |
+| `rescribeInput` | 312 | OnTeach で最新入力を破棄して再試行 |
 | `malaRogatio` | 400 | 要求が不正 |
 | `errorInternus` | 500 | 内部例外 |
+
+`Responsum` は Value 以外のレスポンスムヘッダーも型安全に保持する:
+
+| フィールド | ヘッダー | 型 |
+|---|---|---|
+| `sender` | Sender | `Option String` |
+| `errorLevel` | ErrorLevel | `Option String`（"info"/"notice"/"warning"/"error"/"critical"）|
+| `errorDescription` | ErrorDescription | `Option String` |
+| `marker` | Marker | `Option String` |
+| `balloonOffset` | BalloonOffset | `Option (Int × Int)` |
+| `age` | Age | `Option Nat` |
+| `securitas` | SecurityLevel | `Option String` |
+| `markerSend` | MarkerSend | `Option String` |
+| `valorNotifica` | ValueNotify | `Option String` |
+| `cappitta` | 任意ヘッダー | `List (String × String)` |
 
 ---
 
@@ -112,7 +137,8 @@ def Tractator := Rogatio → SakuraIO Unit
 ```
 
 `tracta` が要求を受け取り `tractatores[rogatio.nomen]?`（`Std.HashMap` の O(1) 探索）でイベント名に對應する處理器を探して呼ぶ。
-見つからなければ 204、例外が出れば `Responsum.errorInternus.adProtocollum` で正規の SHIORI/3.0 500 應答を返す。
+見つからなければ 204、例外が出れば `ErrorLevel: error` + `ErrorDescription: 例外メッセージ` 附きの SHIORI/3.0 500 應答を返す。
+`Sakura.currere` は `StatusSakurae` を返し、`tracta` がレスポンスムヘッダー（Marker, BalloonOffset 等）を `Responsum` にマッピングする。
 
 ---
 
@@ -128,7 +154,9 @@ C グルーから呼ばれる `@[export]` 關數群。
 
 `spawnaMunitus` で非同期タスクを GC から保護しながら起動する機構もここにある。
 新規タスク追加時に `IO.hasFinished` で完了済みタスクを自動除去し、
-残りが 256 件を超えたら後半 128 件だけ残して古い前半を捨てる。
+残りが `maximumMunera`（256）件を超えたら後半を残して古い前半を捨てる。
+
+`exportaRequest` は例外を `ErrorLevel: critical` + `ErrorDescription` 附きの SHIORI/3.0 500 應答として返す。
 
 ---
 
@@ -136,11 +164,12 @@ C グルーから呼ばれる `@[export]` 關數群。
 
 SakuraScript を Lean で組み立てるためのモナドと DSL。
 
-`SakuraIO α = StateT String IO α` — 文字列を積み上げていくモナド。
+`SakuraIO α = StateT StatusSakurae IO α` — スクリプトゥム文字列とレスポンスムヘッダーを積み上げていくモナド。
 
 | 關數 | 説明 |
 |---|---|
-| `Sakura.currere` | SakuraIO を実行して文字列を得る |
+| `Sakura.currere` | SakuraIO を実行して `StatusSakurae`（スクリプトゥム + ヘッダー）を得る |
+| `Sakura.currereScriptum` | SakuraIO を実行してスクリプトゥム文字列のみを得る |
 | `Sakura.excita` | 別イベントを發生させる |
 | `Sakura.insere` | スクリプトに別イベントを埋め込む |
 | `Sakura.notifica` | NOTIFY 通知を發生させる |
@@ -185,8 +214,8 @@ SSTP/1.4 プロトコルで TCP (`localhost:9801`) 經由で SSP にスクリプ
 | 關數 | 説明 |
 |---|---|
 | `sstpDirectumMittere` | 生の SSTP リクエスト文字列を TCP で SSP に送信する |
-| `mitteSstpScriptum` | `EXECUTE SSTP/1.4` リクエストを組み立てて送信する |
-| `excitaEventum` | `NOTIFY SSTP/1.4` リクエストを送信する |
+| `mitteSstpScriptum` | `EXECUTE SSTP/1.4` リクエストを組み立てて送信する。`mittens` 引數で Sender を指定可能（デフォルト: `mittensDefectus = "uka-lean"`） |
+| `excitaEventum` | `NOTIFY SSTP/1.4` リクエストを送信する。`mittens` 引數で Sender を指定可能 |
 | `purgaCrlf` | ヘッダー値から CR/LF を除去してパケット破損を防ぐ |
 
 #### SSTP/1.4 パケット形式
@@ -195,7 +224,7 @@ Execute:
 ```
 EXECUTE SSTP/1.4\r\n
 Charset: UTF-8\r\n
-Sender: uka-lean\r\n
+Sender: {mittens}\r\n
 Script: \h\s[0]やあ。\e\r\n
 \r\n
 ```
@@ -204,7 +233,7 @@ Notify:
 ```
 NOTIFY SSTP/1.4\r\n
 Charset: UTF-8\r\n
-Sender: uka-lean\r\n
+Sender: {mittens}\r\n
 Event: OnSomeEvent\r\n
 Reference0: arg0\r\n
 \r\n
@@ -313,8 +342,9 @@ def myTalk : SakuraPura Unit := scriptum!
         → Shiori.tracta       (dispatch)
             → tractatores.lookup(nomen)
             → tractator(rogatio)  [ゴースト定義のハンドラ]
-            → Sakura.currere  (SakuraScript 文字列を得る)
-        → Responsum.adProtocollum  (serialize)
+            → Sakura.currere  (StatusSakurae を得る)
+            → StatusSakurae → Responsum にマッピング
+        → Responsum.adProtocollum  (serialize、全ヘッダーを出力)
     ← 應答文字列
   unload()
     → exportaUnload: onExire 呼出し
@@ -336,8 +366,9 @@ spawnaScriptum f →
 
 ## 不変条件・制約
 
-- `exportaRequest` は必ず應答文字列を返す（例外は catch して `Responsum.errorInternus.adProtocollum` で正規の SHIORI/3.0 500 應答に変換）
-- `Rogatio.interpreta` が失敗した場合は 400 を返す
+- `exportaRequest` は必ず應答文字列を返す（例外は catch して `ErrorLevel: critical` + `ErrorDescription` 附きの SHIORI/3.0 500 應答に変換）
+- `Rogatio.interpreta` が失敗した場合は `ErrorLevel: warning` 附きの 400 を返す
 - `tractatores[nomen]?`（HashMap O(1) 探索）が失敗した場合は 204 を返す（ハンドラ未登録は正常）
-- SSTP 送信は Pure Lean TCP（`localhost:9801`）で行ふ。C コード不要
-- `taskusCustodia` は `IO.hasFinished` で完了済みタスクを自動除去し、上限 256 件を超えたら前半を捨てて後半 128 件を残す
+- SSTP 送信は Pure Lean TCP（`localhost:9801`）で行ふ。C コード不要。Sender は `mittens` 引數で指定可能
+- `taskusCustodia` は `IO.hasFinished` で完了済みタスクを自動除去し、上限 `maximumMunera`（256）件を超えたら前半を捨てて後半を残す
+- `!` 關數（getElem!）は使用しにゃい。全ての配列アクセスは添字の正当性を證明して安全アクセスする

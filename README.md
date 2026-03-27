@@ -137,6 +137,10 @@ eventum "事象名" fun rogatio => do
 | `rogatio.nomen` | `String` | 事象名 |
 | `rogatio.referentiam 0` | `Option String` | Reference0 |
 | `rogatio.mittens` | `Option String` | Sender ヘッダ |
+| `rogatio.securitas` | `Option String` | SecurityLevel ヘッダ |
+| `rogatio.typusMittentis` | `Option String` | SenderType ヘッダ（SSP 2.5.05+） |
+| `rogatio.status` | `Option String` | Status ヘッダ（talking, choosing 等） |
+| `rogatio.securitasOrigo` | `Option String` | SecurityOrigin ヘッダ |
 | `rogatio.caput "key"` | `Option String` | 任意ヘッダ |
 
 ---
@@ -189,7 +193,7 @@ eventum "OnBoot" fun _ => do
 | `\w 500` | 待機（ミリ秒）にゃ |
 | `\b[0]` `\b[-1]` | 吹き出しにゃ |
 | `\f[bold, true]` `\f[default]` | 書体にゃ |
-| `\f[color, 255,0,0]` `\f[color, red]` `\f[color, none]` | 文字色にゃ |
+| `\f[color, 255,0,0]` `\f[color, red]` `\f[color, nullus]` | 文字色にゃ |
 | `\f[align, left]` `\f[align, center]` | 横揃へにゃ |
 | `\f[valign, top]` `\f[valign, bottom]` | 縦揃へにゃ |
 | `"文字列"` | テキストを表示にゃ |
@@ -356,6 +360,9 @@ TCP (`localhost:9801`) で SSP に SSTP/1.4 リクエストを送信するにゃ
 -- SakuraScript を SSP に送信にゃ
 Sstp.mitteSstpScriptum "\\h\\s[0]こんにちは\\e"
 
+-- ゴースト名を Sender に指定して送信にゃ
+Sstp.mitteSstpScriptum "\\h\\s[0]こんにちは\\e" (mittens := "MyGhost")
+
 -- SHIORI イヴェントゥムを SSP に通知にゃ
 Sstp.excitaEventum "OnSomeEvent" ["arg0", "arg1"]
 ```
@@ -435,6 +442,41 @@ Sstp.excitaEventum "OnSomeEvent" ["arg0", "arg1"]
 | `sonus "via"` | 音声を再生にゃ |
 | `aperi "nexus"` | URL を開くにゃ |
 
+### レスポンスムヘッダー設定
+
+イヴェントゥム處理器内から Value 以外の SHIORI/3.0 レスポンスムヘッダーを設定できるにゃ。
+
+| 命令 | 意味 |
+|---|---|
+| `configuraMarker "文字列"` | Marker ヘッダ（バルーン下部の附加情報）にゃ |
+| `configuraBalloonOffset x y` | BalloonOffset ヘッダ（バルーン位置補正）にゃ |
+| `configuraErrorLevel "info"` | ErrorLevel ヘッダにゃ |
+| `configuraErrorDescription "..."` | ErrorDescription ヘッダにゃ |
+| `configuraAge n` | Age ヘッダ（通信世代カウンタ）にゃ |
+| `configuraSecuritas "local"` | SecurityLevel ヘッダにゃ |
+| `configuraMarkerSend "..."` | MarkerSend ヘッダにゃ |
+| `configuraValorNotifica "..."` | ValueNotify ヘッダにゃ |
+| `addeCastellum "Key" "Value"` | 任意ヘッダ（X-SSTP-PassThru-* 等）にゃ |
+
+```lean
+eventum "OnBoot" fun _ => do
+  sakura; superficies 0; loqui "こんにちは"
+  configuraMarker "起動しました"
+  configuraBalloonOffset 10 (-5)
+  finis
+```
+
+### HTTP コマンド
+
+| 命令 | SakuraScript | 意味 |
+|---|---|---|
+| `executaHttpGet url` | `\![execute,http-get,URL]` | HTTP GET にゃ |
+| `executaHttpPost url` | `\![execute,http-post,URL]` | HTTP POST にゃ |
+| `executaHttpHead url` | `\![execute,http-head,URL]` | HTTP HEAD にゃ |
+| `executaHttpPut url` | `\![execute,http-put,URL]` | HTTP PUT にゃ |
+| `executaHttpDelete url` | `\![execute,http-delete,URL]` | HTTP DELETE にゃ |
+| `executaHttpPatch url` | `\![execute,http-patch,URL]` | HTTP PATCH にゃ |
+
 便利な一括命令:
 
 ```lean
@@ -466,6 +508,26 @@ eventum "OnBoot" fun _ => do
   sakura; superficies 0
   loqui s!"起動 {<- numerusSalutationum.obtinere} 囘目にゃん♪"
   finis
+```
+
+---
+
+## SakuraScript モナドの實行
+
+`currere` と `currereScriptum` の2つの實行關數があるにゃ。
+
+| 關數 | 戻り値 | 用途 |
+|---|---|---|
+| `Sakura.currere action` | `StatusSakurae` | スクリプトゥム + 全レスポンスムヘッダーを取得にゃ |
+| `Sakura.currereScriptum action` | `String` | スクリプトゥム文字列のみ取得にゃ |
+
+通常のイヴェントゥム處理器（`eventum` / `Tractator`）では `currere` が自動的に呼ばれるにゃ。
+手動で SakuraScript を生成したい時は `currereScriptum` を使ふにゃ:
+
+```lean
+def testPuraSakura : String := Id.run do
+  Sakura.currereScriptum do
+    sakura; superficies 0; loqui "テストにゃ！"; finis
 ```
 
 ---

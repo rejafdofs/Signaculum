@@ -69,10 +69,14 @@ def animaPurgat {m : Type → Type} [Monad m] (scopus animId : Nat) : SakuraM m 
 def animaTranslatio {m : Type → Type} [Monad m] (scopus animId : Nat) (x y : Int) : SakuraM m Unit :=
   emitte s!"\\![anim,offset,{scopus},{animId},{x},{y}]"
 
-/-- 着せ替えパーツを切り替へるにゃん（\\![bind,category,part,value]）-/
+/-- 着せ替えパーツを切り替へるにゃん（\\![bind,category,part,value]）。
+    valor: `some true`=着衣(1)、`some false`=脱衣(0)、`none`=トグル（省略）にゃ -/
 def nexaDressup {m : Type → Type} [Monad m]
-    (categoria pars valor : String) : SakuraM m Unit :=
-  emitte s!"\\![bind,{evadeArgumentum categoria},{evadeArgumentum pars},{evadeArgumentum valor}]"
+    (categoria pars : String) (valor : Option Bool := none) : SakuraM m Unit :=
+  match valor with
+  | some true  => emitte s!"\\![bind,{evadeArgumentum categoria},{evadeArgumentum pars},1]"
+  | some false => emitte s!"\\![bind,{evadeArgumentum categoria},{evadeArgumentum pars},0]"
+  | none       => emitte s!"\\![bind,{evadeArgumentum categoria},{evadeArgumentum pars}]"
 
 /-- 效果プラグインを適用するにゃん（\\![effect,plugin,speed,parameter]）-/
 def applicaEffectum {m : Type → Type} [Monad m]
@@ -387,11 +391,13 @@ def configuraAliosGhostes {m : Type → Type} [Monad m] (modus : ModusGhostAlien
 def configuraAliasSuperficies {m : Type → Type} [Monad m] (b : Bool) : SakuraM m Unit :=
   emitte s!"\\![set,othersurfacechange,{if b then "true" else "false"}]"
 
-/-- 壁紙を設定するにゃん（\\![set,wallpaper,file,option]）-/
+/-- 壁紙を設定するにゃん（\\![set,wallpaper,file,option]）。
+    optio: `center`/`tile`/`stretch`/`stretch-x`/`stretch-y`/`span` にゃ -/
 def configuraTapete {m : Type → Type} [Monad m]
-    (via : String) (optio : String := "") : SakuraM m Unit :=
-  if optio.isEmpty then emitte s!"\\![set,wallpaper,{evadeArgumentum via}]"
-  else emitte s!"\\![set,wallpaper,{evadeArgumentum via},{evadeArgumentum optio}]"
+    (via : String) (optio : Option ModusTapetis := none) : SakuraM m Unit :=
+  match optio with
+  | none   => emitte s!"\\![set,wallpaper,{evadeArgumentum via}]"
+  | some m => emitte s!"\\![set,wallpaper,{evadeArgumentum via},{m.toString}]"
 
 -- ════════════════════════════════════════════════════
 --  音響拡張2 (Extensio Soni II)

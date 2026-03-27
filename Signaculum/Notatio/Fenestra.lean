@@ -2,6 +2,7 @@
 -- 窓制御・UI・モード・設定・開閉の構文規則にゃん♪
 
 import Signaculum.Notatio.Categoria
+import Signaculum.Notatio.Literalia
 import Signaculum.Sakura.Scriptum
 
 namespace Signaculum.Notatio
@@ -100,8 +101,8 @@ macro_rules | `(expandSignum \![set,windowstate, $s]) => `(Signaculum.Sakura.con
 syntax "\\!" "[set,alignmentondesktop," term "]" : sakuraSignum
 macro_rules | `(expandSignum \![set,alignmentondesktop, $d]) => `(Signaculum.Sakura.allineatioDesktop $d)
 
-syntax "\\!" "[set,balloonalign," term "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,balloonalign, $n]) => `(Signaculum.Sakura.allineatioBullae $n)
+syntax "\\!" "[set,balloonalign," directioAllineatioBullaeLiteral "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,balloonalign, $d:directioAllineatioBullaeLiteral]) => `(Signaculum.Sakura.allineatioBullae (directioAllineatioBullaeL $d))
 
 syntax "\\!" "[set,balloontimeout," term "]" : sakuraSignum
 macro_rules | `(expandSignum \![set,balloontimeout, $n]) => `(Signaculum.Sakura.tempusBullae $n)
@@ -321,8 +322,8 @@ macro_rules | `(expandSignum \![set,trayballoon, $o]) => `(Signaculum.Sakura.con
 --  モード拡張 (Extensio Modorum)
 -- ════════════════════════════════════════════════════
 
-syntax "\\!" "[enter,selectmode," str "," str "]" : sakuraSignum
-macro_rules | `(expandSignum \![enter,selectmode, $m, $c]) => `(Signaculum.Sakura.ingredereModumSelectionis $m $c)
+syntax "\\!" "[enter,selectmode," "rect" "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![enter,selectmode, rect, $c]) => `(Signaculum.Sakura.ingredereModumSelectionis .rectus $c)
 
 syntax "\\!" "[leave,selectmode]" : sakuraSignum
 macro_rules | `(expandSignum \![leave,selectmode]) => `(Signaculum.Sakura.egrediereModumSelectionis)

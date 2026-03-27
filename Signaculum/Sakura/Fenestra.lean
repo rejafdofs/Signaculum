@@ -150,9 +150,10 @@ def lineaProportionalis {m : Type → Type} [Monad m] (n : Int) : SakuraM m Unit
 def linearisAbrogatur {m : Type → Type} [Monad m] : SakuraM m Unit :=
   emitte "\\_n"
 
-/-- 吹出しの方向IDを設定するにゃん（\\![set,balloonalign,id]）-/
-def allineatioBullae {m : Type → Type} [Monad m] (id : Nat) : SakuraM m Unit :=
-  emitte s!"\\![set,balloonalign,{id}]"
+/-- 吹出しの方向を設定するにゃん（\\![set,balloonalign,方向]）。
+    `sinistrum`=左、`centrum`=中央、`summum`=上、`dextrum`=右、`imum`=下、`nullus`=自動にゃ -/
+def allineatioBullae {m : Type → Type} [Monad m] (directio : DirectioAllineatioBullae) : SakuraM m Unit :=
+  emitte s!"\\![set,balloonalign,{directio.toString}]"
 
 /-- 吹出しを一定時間後に消すにゃん（\\![set,balloontimeout,ms]）-/
 def tempusBullae {m : Type → Type} [Monad m] (ms : Nat) : SakuraM m Unit :=
@@ -290,8 +291,8 @@ def allineatioDesktop {m : Type → Type} [Monad m] (directio : DirectioDesktop)
   emitte s!"\\![set,alignmentondesktop,{directio.toString}]"
 
 /-- 表面の拡大率を設定するにゃん（\\![set,scaling,比率]）。
-    比率はパーセント整數にゃ。SSP 固有にゃん -/
-def configuratioScalae {m : Type → Type} [Monad m] (proportio : Nat) : SakuraM m Unit :=
+    比率はパーセント整數にゃ。負値で軸反轉にゃ。SSP 固有にゃん -/
+def configuratioScalae {m : Type → Type} [Monad m] (proportio : Int) : SakuraM m Unit :=
   emitte s!"\\![set,scaling,{proportio}]"
 
 /-- 透明度を設定するにゃん（\\![set,alpha,值]）。0=完全透明、100=不透明にゃ -/
@@ -386,10 +387,11 @@ def ingredereModumCollisionis {m : Type → Type} [Monad m]
 def egrediereModumCollisionis {m : Type → Type} [Monad m] : SakuraM m Unit :=
   emitte "\\![leave,collisionmode]"
 
-/-- 選擇モードに入るにゃん（\\![enter,selectmode,mode,coords|name]）-/
+/-- 選擇モードに入るにゃん（\\![enter,selectmode,mode,coords|name]）。
+    modus に `ModusSelectionis` を指定するにゃ。coordsVelNomen は座標文字列かコリジョン名にゃ -/
 def ingredereModumSelectionis {m : Type → Type} [Monad m]
-    (modus coordsVelNomen : String) : SakuraM m Unit :=
-  emitte s!"\\![enter,selectmode,{evadeArgumentum modus},{evadeArgumentum coordsVelNomen}]"
+    (modus : ModusSelectionis) (coordsVelNomen : String) : SakuraM m Unit :=
+  emitte s!"\\![enter,selectmode,{modus.toString},{evadeArgumentum coordsVelNomen}]"
 
 /-- 選擇モードから出るにゃん（\\![leave,selectmode]）-/
 def egrediereModumSelectionis {m : Type → Type} [Monad m] : SakuraM m Unit :=
@@ -437,13 +439,13 @@ def seraRepicturaBullaeManualiter {m : Type → Type} [Monad m] : SakuraM m Unit
 --  スケーリング・透明度拡張 (Extensio Scalae et Alphae)
 -- ════════════════════════════════════════════════════
 
-/-- 縱横別々にスケーリングするにゃん（\\![set,scaling,x,y]）-/
-def configuraScalamDualem {m : Type → Type} [Monad m] (x y : Nat) : SakuraM m Unit :=
+/-- 縱横別々にスケーリングするにゃん（\\![set,scaling,x,y]）。負値で軸反轉にゃ -/
+def configuraScalamDualem {m : Type → Type} [Monad m] (x y : Int) : SakuraM m Unit :=
   emitte s!"\\![set,scaling,{x},{y}]"
 
-/-- アニメーション付きスケーリングにゃん（\\![set,scaling,x,y,options]）-/
+/-- アニメーション付きスケーリングにゃん（\\![set,scaling,x,y,options]）。負値で軸反轉にゃ -/
 def configuraScalamAnimatam {m : Type → Type} [Monad m]
-    (x y : Nat) (optiones : String) : SakuraM m Unit :=
+    (x y : Int) (optiones : String) : SakuraM m Unit :=
   emitte s!"\\![set,scaling,{x},{y},{evadeArgumentum optiones}]"
 
 /-- オプション付き透明度設定にゃん（\\![set,alpha,value,options]）-/

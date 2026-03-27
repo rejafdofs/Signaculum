@@ -37,19 +37,21 @@ macro_rules | `(expandSignum \f[color, $c:colorisLiteral]) => `(Signaculum.Sakur
 syntax "shadowcolor" "," colorisLiteral : fontisClavis
 macro_rules | `(expandSignum \f[shadowcolor, $c:colorisLiteral]) => `(Signaculum.Sakura.colorUmbrae (colorisL $c))
 
--- 數値系にゃん
-syntax "height" "," term : fontisClavis
-macro_rules | `(expandSignum \f[height, $n]) => `(Signaculum.Sakura.altitudoLitterarum $n)
+-- 文字サイズ系にゃん（magnitudoLitterarumLiteral で px/+n/-n/n%/default が書けるにゃ）
+syntax "height" "," magnitudoLitterarumLiteral : fontisClavis
+macro_rules | `(expandSignum \f[height, $n:magnitudoLitterarumLiteral]) => `(Signaculum.Sakura.altitudoLitterarum (magnitudoLitterarumL $n))
 
 -- 文字列系にゃん
 syntax "name" "," term : fontisClavis
 macro_rules | `(expandSignum \f[name, $s]) => `(Signaculum.Sakura.nomenFontis $s)
 
-syntax "shadowstyle" "," term : fontisClavis
-macro_rules | `(expandSignum \f[shadowstyle, $s]) => `(Signaculum.Sakura.stylumUmbrae $s)
+-- 影スタイル系にゃん（stylusUmbraeLiteral で offset/outline/default が書けるにゃ）
+syntax "shadowstyle" "," stylusUmbraeLiteral : fontisClavis
+macro_rules | `(expandSignum \f[shadowstyle, $s:stylusUmbraeLiteral]) => `(Signaculum.Sakura.stylumUmbrae (stylusUmbraeL $s))
 
-syntax "outline" "," term : fontisClavis
-macro_rules | `(expandSignum \f[outline, $s]) => `(Signaculum.Sakura.contornus $s)
+-- 輪郭系にゃん（statusContorniLiteral で true/false/default/disable が書けるにゃ）
+syntax "outline" "," statusContorniLiteral : fontisClavis
+macro_rules | `(expandSignum \f[outline, $s:statusContorniLiteral]) => `(Signaculum.Sakura.contornus (statusContorniL $s))
 
 -- 方向系にゃん（リテラルで書けるにゃ）
 syntax "align" "," directioAllineatioLiteral : fontisClavis

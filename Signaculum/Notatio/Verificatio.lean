@@ -218,4 +218,89 @@ example : Id.run (currereScriptum (scriptum! \__v["speed=100"])) = "\\__v[speed=
 
 example : Id.run (currereScriptum (scriptum! \f[anchor.font.color, red])) = "\\f[anchor.font.color,red]" := by native_decide
 
+-- ════════════════════════════════════════════════════
+--  colorisLiteral 擴張の検證にゃん（default/disable 系）
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \f[color, default]))
+        = "\\f[color,default]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \f[color, disable]))
+        = "\\f[color,disable]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \f[color, default.anchor]))
+        = "\\f[color,default.anchor]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \f[color, default.cursor]))
+        = "\\f[color,default.cursor]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \f[color, default.plain]))
+        = "\\f[color,default.plain]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  stylusUmbraeLiteral の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \f[shadowstyle, offset]))
+        = "\\f[shadowstyle,offset]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \f[shadowstyle, outline]))
+        = "\\f[shadowstyle,outline]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \f[shadowstyle, default]))
+        = "\\f[shadowstyle,default]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  statusContorniLiteral の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \f[outline, true]))
+        = "\\f[outline,true]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \f[outline, false]))
+        = "\\f[outline,false]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \f[outline, disable]))
+        = "\\f[outline,disable]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  magnitudoLitterarumLiteral の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \f[height, 15]))
+        = "\\f[height,15]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \f[height, default]))
+        = "\\f[height,default]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  directioAllineatioBullaeLiteral の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, left]))
+        = "\\![set,balloonalign,left]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, center]))
+        = "\\![set,balloonalign,center]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, none]))
+        = "\\![set,balloonalign,none]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  selectmode の検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \![enter,selectmode, rect, "0,0,100,100"]))
+        = "\\![enter,selectmode,rect,0\\,0\\,100\\,100]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  methodusMarciLiteral 擴張の検證にゃん（ROP2 モード）
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \f[cursormethod, copypen]))
+        = "\\f[cursormethod,copypen]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \f[cursormethod, notmaskpen]))
+        = "\\f[cursormethod,notmaskpen]" := by native_decide
+
 end Signaculum.Notatio.Verificatio

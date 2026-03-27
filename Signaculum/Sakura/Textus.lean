@@ -158,9 +158,10 @@ def deletura {m : Type → Type} [Monad m] (b : Bool := true) : SakuraM m Unit :
 def color {m : Type → Type} [Monad m] (c : Coloris) : SakuraM m Unit :=
   emitte s!"\\f[color,{c.toString}]"
 
-/-- 文字の大きさ（\\f[height,n]）にゃん -/
-def altitudoLitterarum {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
-  emitte s!"\\f[height,{n}]"
+/-- 文字の大きさ（\\f[height,...]）にゃん。
+    絕對ピクセル、相對（+/-）、百分率、default が指定できるにゃ -/
+def altitudoLitterarum {m : Type → Type} [Monad m] (mag : MagnitudoLitterarum) : SakuraM m Unit :=
+  emitte s!"\\f[height,{mag.toString}]"
 
 /-- 書體名の設定（\\f[name,font]）にゃん -/
 def nomenFontis {m : Type → Type} [Monad m] (nomen : String) : SakuraM m Unit :=
@@ -179,13 +180,15 @@ def allineatioVerticalis {m : Type → Type} [Monad m] (directio : DirectioVerti
 def colorUmbrae {m : Type → Type} [Monad m] (coloris : Coloris) : SakuraM m Unit :=
   emitte s!"\\f[shadowcolor,{coloris.toString}]"
 
-/-- 文字影のスタイルを設定するにゃん（\\f[shadowstyle,スタイル]）-/
-def stylumUmbrae {m : Type → Type} [Monad m] (stylus : String) : SakuraM m Unit :=
-  emitte s!"\\f[shadowstyle,{evadeArgumentum stylus}]"
+/-- 文字影のスタイルを設定するにゃん（\\f[shadowstyle,スタイル]）。
+    `offset`=右下ずらし、`contornus`=輪郭風、`praefinitus`=既定にゃ -/
+def stylumUmbrae {m : Type → Type} [Monad m] (stylus : StylusUmbrae) : SakuraM m Unit :=
+  emitte s!"\\f[shadowstyle,{stylus.toString}]"
 
-/-- 文字の輪郭を設定するにゃん（\\f[outline,パラメータ]）-/
-def contornus {m : Type → Type} [Monad m] (parametrum : String) : SakuraM m Unit :=
-  emitte s!"\\f[outline,{evadeArgumentum parametrum}]"
+/-- 文字の輪郭を設定するにゃん（\\f[outline,パラメータ]）。
+    `activus`=有效、`inactivus`=無效、`praefinitus`=既定、`inhabilis`=無效化にゃ -/
+def contornus {m : Type → Type} [Monad m] (parametrum : StatusContorni) : SakuraM m Unit :=
+  emitte s!"\\f[outline,{parametrum.toString}]"
 
 /-- 下付き文字の切替にゃん（\\f[sub,true/false]）-/
 def subscriptus {m : Type → Type} [Monad m] (b : Bool := true) : SakuraM m Unit :=

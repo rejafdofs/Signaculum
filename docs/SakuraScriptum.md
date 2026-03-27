@@ -129,8 +129,12 @@ color (.hex "#FF0000")    -- 16進
 color (.nomen "red")      -- 名前
 
 -- サイズ・フォント
-altitudoLitterarum 14    -- \f[height,14]
-nomenFontis "MS Gothic"  -- \f[name,MS Gothic]
+altitudoLitterarum (.absoluta 14)    -- \f[height,14]
+altitudoLitterarum (.relativa 3)     -- \f[height,+3]
+altitudoLitterarum (.relativa (-5))  -- \f[height,-5]
+altitudoLitterarum (.proportio 200)  -- \f[height,200%]
+altitudoLitterarum .praefinita       -- \f[height,default]
+nomenFontis "MS Gothic"             -- \f[name,MS Gothic]
 
 -- 文字揃え
 allineatio .centrum         -- \f[align,center]
@@ -138,12 +142,17 @@ allineatioVerticalis .summum -- \f[valign,top]
 
 -- 影・輪郭
 colorUmbrae (.rgb 0 0 0)
-stylumUmbrae "drop"
-contornus "white"
+stylumUmbrae .offset        -- \f[shadowstyle,offset]
+stylumUmbrae .contornus     -- \f[shadowstyle,outline]
+contornus .activus          -- \f[outline,true]
+contornus .inhabilis        -- \f[outline,disable]
 ```
 
 `DirectioAllineatio` の値: `.sinistrum` `.dextrum` `.centrum` `.contentum`
 `DirectioVerticalis` の値: `.summum` `.medium` `.imum`
+`StylusUmbrae` の値: `.offset` `.contornus` `.praefinitus`
+`StatusContorni` の値: `.activus` `.inactivus` `.praefinitus` `.inhabilis`
+`MagnitudoLitterarum` の値: `.absoluta n` `.relativa n` `.proportio n` `.praefinita`
 
 ---
 
@@ -230,7 +239,7 @@ claudeDialogum "myDialogId"
 | `cumFiltro s` | `--filter=s` |
 | `cumNomine s` | `--name=s` |
 | `cumExtensione s` | `--ext=s` |
-| `cumColore r g b` | `--color=R G B`（色選択専用） |
+| `cumColore c` | `--color=...`（色選択専用、`Coloris` 型） |
 
 ---
 
@@ -406,7 +415,7 @@ reseraRepictura  -- ロック解除
 configuraStatusFenestrae .semperSupra   -- 最前面固定
 configuraStatusFenestrae .minime        -- 最小化
 allineatioDesktop .imum                 -- 下部吸着
-configuratioScalae 150                  -- 拡大率 150%
+configuratioScalae 150                  -- 拡大率 150%（Int 型、負値で軸反転）
 configuratioAlphae 80                   -- 透明度 80（0〜100、コンパイル時検証）
 configuraPositionem 0 0 0               -- 位置固定
 reseraPositionem                        -- 位置固定解除
@@ -439,7 +448,9 @@ animaAddOverlayFast 3
 ## 着せ替え・効果
 
 ```lean
-nexaDressup "hat" "top" "redhat"   -- \![bind,hat,top,redhat]
+nexaDressup "hat" "top" (some true)  -- \![bind,hat,top,1]（着衣）
+nexaDressup "hat" "top" (some false) -- \![bind,hat,top,0]（脱衣）
+nexaDressup "hat" "top"              -- \![bind,hat,top]（トグル）
 applicaEffectum "blur.dll" 60 ""
 applicaFiltratum "sepia.dll" 500 ""
 applicaFiltratum "" 0 ""           -- フィルター除去
@@ -569,7 +580,9 @@ imagoBullaeInlineata "img.png"
 imagoBullaeInlineataOpaca "img.png"
 lineaProportionalis 50    -- \n[percent,50]（Int 型: 負値・100超も指定可能）
 linearisAbrogatur         -- \_n（自動改行禁止）
-allineatioBullae 1        -- \![set,balloonalign,1]
+allineatioBullae .sinistrum -- \![set,balloonalign,left]
+allineatioBullae .centrum   -- \![set,balloonalign,center]
+allineatioBullae .nullus    -- \![set,balloonalign,none]
 tempusBullae 3000         -- 3秒で消える
 moraTextus 200            -- テキストスクロール速度
 signatumBullae "marker"
@@ -598,7 +611,7 @@ egrediereModumInductivum
 ingredereModumCollisionis          -- \![enter,collisionmode]
 ingredereModumCollisionis true     -- 矩形衝突
 egrediereModumCollisionis
-ingredereModumSelectionis "rect" "0,0,100,100"
+ingredereModumSelectionis .rectus "0,0,100,100"
 egrediereModumSelectionis
 ingredereSticky
 egrediereSticky
@@ -691,7 +704,7 @@ def talkScriptum : SakuraPura Unit := scriptum!
 | `\b[n]` / `\b[-1]` | `bulla n` / `bullaAbsconde` | 吹出し |
 | `\f[bold, b]` | `audax b` | 太字 |
 | `\f[color, c]` | `color c` | 色 |
-| `\f[height, n]` | `altitudoLitterarum n` | 文字サイズ |
+| `\f[height, n]` | `altitudoLitterarum mag` | 文字サイズ（MagnitudoLitterarum 型） |
 | `\f[default]` | `formaPraefinita` | 書式リセット |
 | `\_v["file"]` | `sonus "file"` | 音声 |
 | `\8["file"]` | `sonus8 "file"` | 簡易音声 |
@@ -774,12 +787,12 @@ def talkScriptum : SakuraPura Unit := scriptum!
 | `\![set,balloonmarker, "s"]` | `signatumBullae "s"` | バルーンマーカー |
 | `\![set,blink, b]` | `nictatus b` | まばたき設定 |
 | `\![set,alwaysontop, b]` | `semperSupra b` | 最前面設定 |
-| `\![set,scaling, p]` | `configuratioScalae p` | 拡大率 |
+| `\![set,scaling, p]` | `configuratioScalae p` | 拡大率（Int 型、負値で軸反転） |
 | `\![set,alpha, v]` | `configuratioAlphae v` | 透明度 |
 | `\![set,position, x, y, s]` | `configuraPositionem x y s` | 位置固定 |
 | `\![set,shioridebugmode]` | `configuraShioriDebug` | SHIORIデバッグ |
 | `\![set,choicetimeout, ms]` | `tempusOptionum ms` | 選択肢タイムアウト |
-| `\![enter,selectmode, m, c]` | `ingredereModumSelectionis m c` | 選択モード |
+| `\![enter,selectmode, rect, c]` | `ingredereModumSelectionis .rectus c` | 選択モード |
 | `\![leave,selectmode]` | `egrediereModumSelectionis` | 選択モード解除 |
 | `\![call,ghost, "name"]` | `vocaGhost "name"` | ゴースト呼出し |
 | `\![update,platform]` | `renovaPlatformam` | プラットフォーム更新 |

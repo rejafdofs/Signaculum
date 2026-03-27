@@ -77,12 +77,31 @@ inductive FormaMarci where
   deriving Repr
 
 /-- 選擇肢マーカーの描畫方法にゃん。
-    `xor`=XOR 描畫、`alpha`=α合成、`normal`=通常、`praefinitus`=既定にゃ -/
+    Win32 SetROP2 の全オペレーターに加へ、SSP 擴張の `alpha`/`normal` も使へるにゃ。
+    `R2_` プレフィクスなしの小文字で指定するにゃん -/
 inductive MethodusMarci where
-  | xor
-  | alpha
-  | normal
-  | praefinitus
+  -- Win32 SetROP2 オペレーターにゃん
+  | black          -- R2_BLACK
+  | notmergepen    -- R2_NOTMERGEPEN
+  | masknotpen     -- R2_MASKNOTPEN
+  | notcopypen     -- R2_NOTCOPYPEN
+  | maskpennot     -- R2_MASKPENNOT
+  | not            -- R2_NOT
+  | xorpen         -- R2_XORPEN
+  | notmaskpen     -- R2_NOTMASKPEN
+  | maskpen        -- R2_MASKPEN
+  | notxorpen      -- R2_NOTXORPEN
+  | nop            -- R2_NOP
+  | mergenotpen    -- R2_MERGENOTPEN
+  | copypen        -- R2_COPYPEN
+  | mergepennot    -- R2_MERGEPENNOT
+  | mergepen       -- R2_MERGEPEN
+  | white          -- R2_WHITE
+  -- SSP 擴張にゃん
+  | xor            -- xor（R2_XORPEN の別名にゃ）
+  | alpha          -- α合成
+  | normal         -- 通常描畫
+  | praefinitus    -- default（既定に戾すにゃ）
   deriving Repr
 
 /-- 文字揃への方向にゃん。
@@ -126,9 +145,25 @@ def FormaMarci.toString : FormaMarci → String
   | .praefinitus   => "default"
 
 def MethodusMarci.toString : MethodusMarci → String
-  | .xor        => "xor"
-  | .alpha      => "alpha"
-  | .normal     => "normal"
+  | .black       => "black"
+  | .notmergepen => "notmergepen"
+  | .masknotpen  => "masknotpen"
+  | .notcopypen  => "notcopypen"
+  | .maskpennot  => "maskpennot"
+  | .not         => "not"
+  | .xorpen      => "xorpen"
+  | .notmaskpen  => "notmaskpen"
+  | .maskpen     => "maskpen"
+  | .notxorpen   => "notxorpen"
+  | .nop         => "nop"
+  | .mergenotpen => "mergenotpen"
+  | .copypen     => "copypen"
+  | .mergepennot => "mergepennot"
+  | .mergepen    => "mergepen"
+  | .white       => "white"
+  | .xor         => "xor"
+  | .alpha       => "alpha"
+  | .normal      => "normal"
   | .praefinitus => "default"
 
 def DirectioAllineatio.toString : DirectioAllineatio → String
@@ -152,23 +187,144 @@ def DirectioDesktop.toString : DirectioDesktop → String
   | .imum   => "bottom"
   | .liber  => "free"
 
+/-- 吹出し方向の設定にゃん。`allineatioBullae` に渡すにゃ。
+    ukadoc の `\\![set,balloonalign,...]` に對應するにゃん。
+    `sinistrum`=左、`centrum`=中央、`summum`=上、`dextrum`=右、`imum`=下、`nullus`=自動にゃ -/
+inductive DirectioAllineatioBullae where
+  | sinistrum   -- left
+  | centrum     -- center
+  | summum      -- top
+  | dextrum     -- right
+  | imum        -- bottom
+  | nullus      -- none（自動切替にゃ）
+  deriving Repr
+
+def DirectioAllineatioBullae.toString : DirectioAllineatioBullae → String
+  | .sinistrum => "left"
+  | .centrum   => "center"
+  | .summum    => "top"
+  | .dextrum   => "right"
+  | .imum      => "bottom"
+  | .nullus    => "none"
+
+/-- 文字影のスタイルにゃん。`stylumUmbrae` に渡すにゃ。
+    ukadoc の `\\f[shadowstyle,...]` に對應するにゃん。
+    `offset`=右下ずらし、`contornus`=輪郭風、`praefinitus`=既定にゃ -/
+inductive StylusUmbrae where
+  | offset      -- offset（右下ずらし影にゃ）
+  | contornus   -- outline（輪郭風影にゃ）
+  | praefinitus -- default（既定に戾すにゃ）
+  deriving Repr
+
+def StylusUmbrae.toString : StylusUmbrae → String
+  | .offset      => "offset"
+  | .contornus   => "outline"
+  | .praefinitus => "default"
+
+/-- 文字輪郭の狀態にゃん。`contornus` に渡すにゃ。
+    ukadoc の `\\f[outline,...]` に對應するにゃん。
+    `activus`=有效、`inactivus`=無效、`praefinitus`=既定、`inhabilis`=無效化にゃ -/
+inductive StatusContorni where
+  | activus     -- true / 1
+  | inactivus   -- false / 0
+  | praefinitus -- default
+  | inhabilis   -- disable
+  deriving Repr
+
+def StatusContorni.toString : StatusContorni → String
+  | .activus     => "true"
+  | .inactivus   => "false"
+  | .praefinitus => "default"
+  | .inhabilis   => "disable"
+
+/-- 壁紙の表示モードにゃん。`configuraTapete` に渡すにゃ。
+    ukadoc の `\\![set,wallpaper,...,option]` に對應するにゃん -/
+inductive ModusTapetis where
+  | centrum   -- center（中央配置にゃ）
+  | tessella  -- tile（タイル配置にゃ）
+  | extende   -- stretch（引き伸ばしにゃ）
+  | extendeX  -- stretch-x（橫方向のみ引き伸ばしにゃ）
+  | extendeY  -- stretch-y（縱方向のみ引き伸ばしにゃ）
+  | spatium   -- span（複數モニタにまたがるにゃ）
+  deriving Repr
+
+def ModusTapetis.toString : ModusTapetis → String
+  | .centrum  => "center"
+  | .tessella => "tile"
+  | .extende  => "stretch"
+  | .extendeX => "stretch-x"
+  | .extendeY => "stretch-y"
+  | .spatium  => "span"
+
+/-- 選擇モードにゃん。`ingredereModumSelectionis` に渡すにゃ。
+    ukadoc の `\\![enter,selectmode,mode,...]` に對應するにゃん -/
+inductive ModusSelectionis where
+  | rectus  -- rect（矩形選擇にゃ）
+  deriving Repr
+
+def ModusSelectionis.toString : ModusSelectionis → String
+  | .rectus => "rect"
+
+/-- 文字の大きさ指定にゃん。`altitudoLitterarum` に渡すにゃ。
+    ukadoc の `\\f[height,...]` に對應するにゃん。
+    - `absoluta n`   : 絕對ピクセル（例：15）
+    - `relativa n`   : 相對ピクセル（例：+3, -5）
+    - `proportio n`  : 百分率（例：200%）
+    - `praefinita`   : 既定に戾す -/
+inductive MagnitudoLitterarum where
+  | absoluta  (n : Nat)  -- 絕對ピクセルにゃ
+  | relativa  (n : Int)  -- 相對ピクセル（+/-）にゃ
+  | proportio (n : Int)  -- 百分率にゃ
+  | praefinita           -- default にゃ
+  deriving Repr
+
+def MagnitudoLitterarum.toString : MagnitudoLitterarum → String
+  | .absoluta n  => s!"{n}"
+  | .relativa n  => if n ≥ 0 then s!"+{n}" else s!"{n}"
+  | .proportio n => s!"{n}%"
+  | .praefinita  => "default"
+
 /-- 色の指定方法にゃん。
     - `rgb r g b`  : RGB 各 0〜255（`\f[color,...]` で r,g,b に展開されるにゃ）
     - `hex s`      : 16 進數文字列 "RRGGBB" または "#RRGGBB" にゃ
     - `nomen n`    : "red" "white" など名前付き色にゃ
-    - `nullus`     : "none"（影色を無效化するときに使ふにゃ）-/
+    - `nullus`     : "none"（影色を無效化するときに使ふにゃ）
+    - `praefinitus`                    : "default"（既定色に戾すにゃ）
+    - `inhabilis`                      : "disable"（色指定を無效化するにゃ）
+    - `praefinitusAncorae`             : "default.anchor"
+    - `praefinitusAncoraeNonElectae`   : "default.anchornotselect"
+    - `praefinitusAncoraeVisae`        : "default.anchorvisited"
+    - `praefinitusCursoris`            : "default.cursor"
+    - `praefinitusCursorisNonElecti`   : "default.cursornotselect"
+    - `praefinitusPlanus`              : "default.plain" -/
 inductive Coloris where
   | rgb   (r g b : Nat) (hr : r ≤ 255 := by omega) (hg : g ≤ 255 := by omega) (hb : b ≤ 255 := by omega)
   | hex   (s : String)
   | nomen (n : String)
   | nullus
+  | praefinitus
+  | inhabilis
+  | praefinitusAncorae
+  | praefinitusAncoraeNonElectae
+  | praefinitusAncoraeVisae
+  | praefinitusCursoris
+  | praefinitusCursorisNonElecti
+  | praefinitusPlanus
   deriving Repr
 
 def Coloris.toString : Coloris → String
-  | .rgb r g b .. => s!"{r},{g},{b}"
-  | .hex s        => s
-  | .nomen n      => n
-  | .nullus       => "none"
+  | .rgb r g b ..                  => s!"{r},{g},{b}"
+  | .hex s                         => s
+  | .nomen n                       => n
+  | .nullus                        => "none"
+  | .praefinitus                   => "default"
+  | .inhabilis                     => "disable"
+  | .praefinitusAncorae            => "default.anchor"
+  | .praefinitusAncoraeNonElectae  => "default.anchornotselect"
+  | .praefinitusAncoraeVisae       => "default.anchorvisited"
+  | .praefinitusCursoris           => "default.cursor"
+  | .praefinitusCursorisNonElecti  => "default.cursornotselect"
+  | .praefinitusPlanus             => "default.plain"
 
 /-- 音聲コマンドのオプション群にゃん。
     指定したフィールドだけが出力されるにゃ。
@@ -285,7 +441,7 @@ structure OptionesDialogi where
   filtrum          : Option String             := none
   nomen            : Option String             := none
   extensio         : Option String             := none
-  colorisInitialis : Option (Nat × Nat × Nat) := none
+  colorisInitialis : Option Coloris := none
   deriving Repr
 
 def OptionesDialogi.toString (o : OptionesDialogi) : String :=
@@ -296,7 +452,7 @@ def OptionesDialogi.toString (o : OptionesDialogi) : String :=
   let ps := match o.filtrum          with | none => ps | some s => ps ++ [s!"--filter={s}"]
   let ps := match o.nomen            with | none => ps | some s => ps ++ [s!"--name={s}"]
   let ps := match o.extensio         with | none => ps | some s => ps ++ [s!"--ext={s}"]
-  let ps := match o.colorisInitialis with | none => ps | some (r, g, b) => ps ++ [s!"--color={r} {g} {b}"]
+  let ps := match o.colorisInitialis with | none => ps | some c => ps ++ [s!"--color={c.toString}"]
   ",".intercalate ps
 
 /-- ダイアローグスのタイトルを設定するにゃん -/
@@ -323,9 +479,9 @@ def OptionesDialogi.cumNomine (o : OptionesDialogi) (s : String) : OptionesDialo
 def OptionesDialogi.cumExtensione (o : OptionesDialogi) (s : String) : OptionesDialogi :=
   { o with extensio := some s }
 
-/-- 初期色を RGB で設定するにゃん（色選擇ダイアローグス専用にゃ） -/
-def OptionesDialogi.cumColore (o : OptionesDialogi) (r g b : Nat) : OptionesDialogi :=
-  { o with colorisInitialis := some (r, g, b) }
+/-- 初期色を設定するにゃん（色選擇ダイアローグス専用にゃ） -/
+def OptionesDialogi.cumColore (o : OptionesDialogi) (c : Coloris) : OptionesDialogi :=
+  { o with colorisInitialis := some c }
 
 /-- ゴースト・シェル・吹出し切替コマンドのオプション群にゃん。
     - `excitaEventum` : 切替後に OnShellChanged 等のイベントを發生させる（`--option=raise-event`） -/

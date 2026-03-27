@@ -2,6 +2,7 @@
 -- イヴェントゥム・音響・動畫・呼出・實行・變更の構文規則にゃん♪
 
 import Signaculum.Notatio.Categoria
+import Signaculum.Notatio.Literalia
 import Signaculum.Sakura.Scriptum
 
 namespace Signaculum.Notatio
@@ -186,8 +187,16 @@ syntax "\\!" "[load,makoto]" : sakuraSignum
 macro_rules | `(expandSignum \![load,makoto]) => `(Signaculum.Sakura.oneraMakoto)
 
 -- 着替・效果にゃん
-syntax "\\!" "[bind," str "," str "," str "]" : sakuraSignum
-macro_rules | `(expandSignum \![bind, $c, $p, $v]) => `(Signaculum.Sakura.nexaDressup $c $p $v)
+syntax "\\!" "[bind," str "," str "," num "]" : sakuraSignum
+macro_rules
+  | `(expandSignum \![bind, $c, $p, $v:num]) => do
+    let n := v.getNat
+    if n == 1 then `(Signaculum.Sakura.nexaDressup $c $p (some true))
+    else if n == 0 then `(Signaculum.Sakura.nexaDressup $c $p (some false))
+    else Lean.Macro.throwError "\\![bind,...] の値は 0 か 1 のみにゃ"
+
+syntax "\\!" "[bind," str "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![bind, $c, $p]) => `(Signaculum.Sakura.nexaDressup $c $p none)
 
 syntax "\\!" "[effect," str "," term "," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![effect, $p, $s, $r]) => `(Signaculum.Sakura.applicaEffectum $p $s $r)
@@ -393,7 +402,10 @@ syntax "\\!" "[set,othersurfacechange," term "]" : sakuraSignum
 macro_rules | `(expandSignum \![set,othersurfacechange, $b]) => `(Signaculum.Sakura.configuraAliasSuperficies $b)
 
 syntax "\\!" "[set,wallpaper," str "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,wallpaper, $v]) => `(Signaculum.Sakura.configuraTapete $v)
+macro_rules | `(expandSignum \![set,wallpaper, $v]) => `(Signaculum.Sakura.configuraTapete $v none)
+
+syntax "\\!" "[set,wallpaper," str "," modusTapetisLiteral "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,wallpaper, $v, $m:modusTapetisLiteral]) => `(Signaculum.Sakura.configuraTapete $v (some (modusTapetisL $m)))
 
 syntax "\\!" "[set,shioridebugmode]" : sakuraSignum
 macro_rules | `(expandSignum \![set,shioridebugmode]) => `(Signaculum.Sakura.configuraShioriDebug)

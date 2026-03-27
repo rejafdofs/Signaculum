@@ -2,6 +2,7 @@
 -- SHIORI/3.0 應答の構築にゃん
 
 import Signaculum.Protocollum.Typi
+import Signaculum.Sakura.Typi
 
 namespace Signaculum
 
@@ -14,8 +15,8 @@ structure Responsum where
   valor            : Option String := none
   /-- Sender 頭部: SHIORI 名を返すにゃ -/
   sender           : Option String := none
-  /-- ErrorLevel 頭部: "info"|"notice"|"warning"|"error"|"critical" にゃ -/
-  errorLevel       : Option String := none
+  /-- ErrorLevel 頭部にゃ -/
+  errorLevel       : Option Sakura.GradusErroris := none
   /-- ErrorDescription 頭部: エラーの詳細にゃ -/
   errorDescription : Option String := none
   /-- Marker 頭部: バルーン下部の附加情報文字列にゃ -/
@@ -63,7 +64,7 @@ def adProtocollum (r : Responsum) : String :=
   let valorStr    := match r.valor with
     | some v => s!"Value: {purgaCrlf v}" ++ crlf | none => ""
   let errorLvl    := match r.errorLevel with
-    | some l => s!"ErrorLevel: {purgaCrlf l}" ++ crlf | none => ""
+    | some l => s!"ErrorLevel: {l.adCatenam}" ++ crlf | none => ""
   let errorDesc   := match r.errorDescription with
     | some d => s!"ErrorDescription: {purgaCrlf d}" ++ crlf | none => ""
   let markerStr   := match r.marker with

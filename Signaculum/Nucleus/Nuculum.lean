@@ -79,7 +79,7 @@ def tracta (s : Shiori) (rogatio : Rogatio) : IO Responsum := do
     catch e =>
       -- 處理器内で例外が發生した場合は 500 + ErrorLevel/ErrorDescription を返すにゃ
       return { Responsum.errorInternus with
-        errorLevel := some "error"
+        errorLevel := some .error
         errorDescription := some (toString e) }
   | none =>
     -- 處理器が見つからにゃかった場合は 204 にゃ
@@ -94,11 +94,11 @@ def tractaCatenam (s : Shiori) (catenaRogationis : String) : IO String := do
       return responsum.adProtocollum
     | .error nuntius =>
       return ({ Responsum.malaRogatio with
-        errorLevel := some "warning"
+        errorLevel := some .admonitio
         errorDescription := some nuntius }).adProtocollum
   catch e =>
     return ({ Responsum.errorInternus with
-      errorLevel := some "error"
+      errorLevel := some .error
       errorDescription := some (toString e) }).adProtocollum
 
 end Shiori

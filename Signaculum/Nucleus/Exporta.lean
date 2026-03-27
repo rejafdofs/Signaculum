@@ -89,11 +89,11 @@ def exportaRequest (catenaRogationis : @& String) : IO String := do
       shiori.tractaCatenam catenaRogationis
     | none =>
       return ({ Responsum.errorInternus with
-        errorLevel := some "critical"
+        errorLevel := some .pernicies
         errorDescription := some "SHIORI non est registrata" }).adProtocollum
   catch e =>
     return ({ Responsum.errorInternus with
-      errorLevel := some "critical"
+      errorLevel := some .pernicies
       errorDescription := some (toString e) }).adProtocollum
 
 -- ═══════════════════════════════════════════════════

@@ -24,7 +24,7 @@ declare_syntax_cat colorisLiteral
 syntax num "," num "," num  : colorisLiteral
 syntax "#" ident             : colorisLiteral
 syntax str                   : colorisLiteral
-syntax "nullus"              : colorisLiteral
+syntax "none"                : colorisLiteral
 syntax ident                 : colorisLiteral
 syntax "(" term ")"          : colorisLiteral
 
@@ -39,7 +39,7 @@ macro_rules
       `(Signaculum.Sakura.Coloris.hex $(Lean.Syntax.mkStrLit s))
   | `(colorisL $s:str) =>
       `(Signaculum.Sakura.Coloris.hex $s)
-  | `(colorisL nullus) =>
+  | `(colorisL none) =>
       `(Signaculum.Sakura.Coloris.nullus)
   | `(colorisL $n:ident) => do
       let s : String := n.getId.toString
@@ -103,7 +103,7 @@ declare_syntax_cat formaMarciLiteral
 syntax (priority := high) "square" "+" "underline" : formaMarciLiteral
 syntax "square"    : formaMarciLiteral
 syntax "underline" : formaMarciLiteral
-syntax "nullus"    : formaMarciLiteral
+syntax "none"      : formaMarciLiteral
 syntax "default"   : formaMarciLiteral
 syntax "(" term ")" : formaMarciLiteral
 
@@ -113,7 +113,7 @@ macro_rules
   | `(formaMarciL square + underline) => `(Signaculum.Sakura.FormaMarci.utrumque)
   | `(formaMarciL square)             => `(Signaculum.Sakura.FormaMarci.quadratum)
   | `(formaMarciL underline)          => `(Signaculum.Sakura.FormaMarci.sublineaForma)
-  | `(formaMarciL nullus)             => `(Signaculum.Sakura.FormaMarci.nullus)
+  | `(formaMarciL none)               => `(Signaculum.Sakura.FormaMarci.nullus)
   | `(formaMarciL default)            => `(Signaculum.Sakura.FormaMarci.praefinitus)
   | `(formaMarciL ($e))               => `($e)
 

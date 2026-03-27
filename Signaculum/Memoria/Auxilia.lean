@@ -80,8 +80,8 @@ decreasing_by
 private def lebDecodeLoop : Nat → ByteArray → Nat → Nat → Nat → Option (Nat × Nat)
   | 0,        _, _,   _,   _    => none
   | fuel + 1, b, pos, acc, mult =>
-    if pos < b.size then
-      let byte := b[pos]!.toNat
+    if h : pos < b.size then
+      let byte := (b[pos]).toNat
       if byte < 128 then some (acc + byte * mult, pos + 1)
       else lebDecodeLoop fuel b (pos + 1) (acc + (byte - 128) * mult) (mult * 128)
     else none
@@ -98,24 +98,30 @@ def lebDecode (b : ByteArray) (pos : Nat) : Option (Nat × Nat) :=
 @[simp] private theorem longitudoStruct1 (x : UInt8) :
     ({ data := #[x] } : ByteArray).size = 1 := rfl
 
-private theorem elementumInPrefixo (pre : ByteArray) (x : UInt8) (suf : ByteArray) :
-    (pre ++ ByteArray.mk #[x] ++ suf)[pre.size]! = x := by
-  have hlt : pre.size < (pre ++ ByteArray.mk #[x] ++ suf).size := by
-    simp [ByteArray.size_append]; omega
-  rw [show (pre ++ ByteArray.mk #[x] ++ suf)[pre.size]! =
-        (pre ++ ByteArray.mk #[x] ++ suf)[pre.size] from
-      getElem!_pos (pre ++ ByteArray.mk #[x] ++ suf) pre.size hlt]
+private theorem elementumInPrefixo (pre : ByteArray) (x : UInt8) (suf : ByteArray)
+    (h : pre.size < (pre ++ ByteArray.mk #[x] ++ suf).size :=
+      by simp [ByteArray.size_append]; omega) :
+    (pre ++ ByteArray.mk #[x] ++ suf)[pre.size] = x := by
   rw [ByteArray.getElem_append_left (h := by simp [ByteArray.size_append]; omega)
         (hlt := by simp [ByteArray.size_append])]
   rw [ByteArray.getElem_append_right (hle := Nat.le_refl _) (h := by simp)]
   simp only [Nat.sub_self]
   change (ByteArray.mk #[x])[0]'(by simp [ByteArray.size, Array.size]) = x; rfl
 
-private theorem elementumInPrefixo2 (pre : ByteArray) (x : UInt8) (mid suf : ByteArray) :
-    (pre ++ (ByteArray.mk #[x] ++ mid) ++ suf)[pre.size]! = x := by
-  rw [show pre ++ (ByteArray.mk #[x] ++ mid) = pre ++ ByteArray.mk #[x] ++ mid from
-      ByteArray.append_assoc.symm, ByteArray.append_assoc]
-  exact elementumInPrefixo pre x (mid ++ suf)
+private theorem elementumInPrefixo2 (pre : ByteArray) (x : UInt8) (mid suf : ByteArray)
+    (h : pre.size < (pre ++ (ByteArray.mk #[x] ++ mid) ++ suf).size :=
+      by simp [ByteArray.size_append]; omega) :
+    (pre ++ (ByteArray.mk #[x] ++ mid) ++ suf)[pre.size] = x := by
+  -- (pre ++ (mk#[x] ++ mid) ++ suf) → (pre ++ (mk#[x] ++ mid)) の pre.size 番目にゃん
+  rw [ByteArray.getElem_append_left (h := by simp [ByteArray.size_append]; omega)
+        (hlt := by simp [ByteArray.size_append]; omega)]
+  -- pre ++ (mk#[x] ++ mid) → (mk#[x] ++ mid) の 0 番目にゃん
+  rw [ByteArray.getElem_append_right (hle := Nat.le_refl _)
+        (h := by simp [ByteArray.size_append]; omega)]
+  simp only [Nat.sub_self]
+  -- (mk#[x] ++ mid) の 0 番目 → mk#[x] の 0 番目にゃん
+  rw [ByteArray.getElem_append_left (h := by simp [ByteArray.size_append]; omega) (hlt := by simp)]
+  rfl
 
 private theorem uInt8AdNat (n : Nat) (h : n < 256) : n.toUInt8.toNat = n := by
   show (UInt8.ofNat n).toNat = n; simp [UInt8.ofNat, UInt8.toNat]; omega
@@ -158,9 +164,9 @@ private theorem lebDecodeIteratioRecta (n : Nat) :
       have henc : lebEncode n = ByteArray.mk #[n.toUInt8] := by
         rw [lebEncode]; simp only [if_pos hn]
       rw [henc]
-      simp only [if_pos (show pre.size < (pre ++ ByteArray.mk #[n.toUInt8] ++ suf).size by
+      simp only [dif_pos (show pre.size < (pre ++ ByteArray.mk #[n.toUInt8] ++ suf).size by
         simp [ByteArray.size_append]; omega)]
-      rw [show (pre ++ ByteArray.mk #[n.toUInt8] ++ suf)[pre.size]!.toNat = n from by
+      rw [show (pre ++ ByteArray.mk #[n.toUInt8] ++ suf)[pre.size].toNat = n from by
         rw [elementumInPrefixo]; exact uInt8AdNat n (by omega)]
       simp only [if_pos hn, longitudoMk1]
     | inr hn =>
@@ -171,11 +177,11 @@ private theorem lebDecodeIteratioRecta (n : Nat) :
       have henc_sz : (lebEncode n).size = 1 + (lebEncode (n / 128)).size := by
         rw [henc, ByteArray.size_append]; simp
       have hfuel' : (lebEncode (n / 128)).size <= fuel' := by omega
-      simp only [if_pos (show pre.size <
+      simp only [dif_pos (show pre.size <
             (pre ++ (ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebEncode (n / 128)) ++ suf).size by
           simp [ByteArray.size_append]
           have := longitudoLebEncodePositiva (n / 128); omega)]
-      rw [show (pre ++ (ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebEncode (n / 128)) ++ suf)[pre.size]!.toNat
+      rw [show (pre ++ (ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebEncode (n / 128)) ++ suf)[pre.size].toNat
           = n % 128 + 128 from by
         rw [elementumInPrefixo2]; exact uInt8AdNat _ (by omega)]
       simp only [if_neg (show Not (n % 128 + 128 < 128) by omega)]
@@ -196,13 +202,10 @@ private theorem lebDecodeIteratioRecta (n : Nat) :
       · simp only [ByteArray.size_append, longitudoMk1]; omega
 
 private theorem elementumDextriObliquum (pre dat : ByteArray) (pos : Nat)
-    (hpos : pos < dat.size) :
-    (pre ++ dat)[pre.size + pos]! = dat[pos]! := by
-  have hlt : pre.size + pos < (pre ++ dat).size := by simp [ByteArray.size_append]; omega
-  have h1 : (pre ++ dat)[pre.size + pos]! = (pre ++ dat)[pre.size + pos] :=
-    getElem!_pos (pre ++ dat) (pre.size + pos) hlt
-  have h2 : dat[pos]! = dat[pos] := getElem!_pos dat pos hpos
-  rw [h1, h2]
+    (hpos : pos < dat.size)
+    (hlt : pre.size + pos < (pre ++ dat).size :=
+      by simp [ByteArray.size_append]; omega) :
+    (pre ++ dat)[pre.size + pos] = dat[pos] := by
   rw [ByteArray.getElem_append_right (hle := Nat.le_add_right _ _)
         (h := by simp [ByteArray.size_append]; omega)]
   simp [Nat.add_sub_cancel_left]
@@ -217,9 +220,9 @@ private theorem lebDecodeIteratioPraefixo (fuel : Nat) (pre dat : ByteArray) (po
     cases Nat.lt_or_ge pos dat.size with
     | inl hpos =>
       have hpos' : pre.size + pos < (pre ++ dat).size := by simp [ByteArray.size_append]; omega
-      simp only [if_pos hpos', if_pos hpos]
+      simp only [dif_pos hpos', dif_pos hpos]
       rw [elementumDextriObliquum pre dat pos hpos]
-      cases Nat.lt_or_ge (dat[pos]!.toNat) 128 with
+      cases Nat.lt_or_ge (dat[pos]).toNat 128 with
       | inl hbyte =>
         simp only [if_pos hbyte, Option.map_some]; simp [Nat.add_assoc]
       | inr hbyte =>
@@ -229,7 +232,7 @@ private theorem lebDecodeIteratioPraefixo (fuel : Nat) (pre dat : ByteArray) (po
     | inr hpos =>
       have hpos' : Not (pre.size + pos < (pre ++ dat).size) := by
         simp [ByteArray.size_append]; omega
-      simp only [if_neg hpos', if_neg (Nat.not_lt.mpr hpos), Option.map_none]
+      simp only [dif_neg hpos', dif_neg (Nat.not_lt.mpr hpos), Option.map_none]
 
 theorem lebDecodeAdPraefixumGen (pre dat : ByteArray) (pos : Nat) :
     lebDecode (pre ++ dat) (pre.size + pos) =

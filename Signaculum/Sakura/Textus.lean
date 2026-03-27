@@ -396,11 +396,13 @@ def keroLoquitur {m : Type → Type} [Monad m]
 /-- 配列からランダムに1つ選ぶにゃん。空配列なら空文字列を返すにゃ。
     インデックスは `i % n` で計算するから、配列アクセスは常に安全にゃ♪ -/
 def elige (optiones : Array String) : IO String := do
-  if optiones.isEmpty then return ""
-  let n := optiones.size
-  let index ← IO.rand 0 (n - 1)
-  let i := index % n
-  return optiones[i]!
+  if h : optiones.size = 0 then return ""
+  else
+    let n := optiones.size
+    let index ← IO.rand 0 (n - 1)
+    let i := index % n
+    have hi : i < n := Nat.mod_lt index (by omega)
+    return optiones[i]
 
 /-- 配列からランダムに1つ選んで表示するにゃん。
     `elige` + `loqui` の便利關數にゃ♪

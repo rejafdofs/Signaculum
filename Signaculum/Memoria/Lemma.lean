@@ -80,13 +80,13 @@ instance : StatusPermanens Int where
 instance : StatusPermanens Bool where
   typusTag := "Bool"
   adBytes b := .mk #[if b then 1 else 0]
-  eBytes  b := if b.size = 0 then none else some (b[0]! ≠ 0)
+  eBytes  b := if h : b.size = 0 then none else some (b[0]'(by omega) ≠ 0)
   roundtrip b := by cases b <;> native_decide
 
 instance : StatusPermanens UInt8 where
   typusTag := "UInt8"
   adBytes n := .mk #[n]
-  eBytes  b := if b.size = 0 then none else some b[0]!
+  eBytes  b := if h : b.size = 0 then none else some (b[0]'(by omega))
   roundtrip _ := rfl
 
 instance : StatusPermanens UInt16 where
@@ -139,8 +139,8 @@ instance {α : Type} [StatusPermanens α] : StatusPermanens (Option α) where
     | none   => .mk #[0]
     | some v => .mk #[1] ++ StatusPermanens.adBytes v
   eBytes b :=
-    if b.size = 0 then none
-    else if b[0]! = 0 then some none
+    if h : b.size = 0 then none
+    else if b[0]'(by omega) = 0 then some none
     else (StatusPermanens.eBytes (b.extract 1 b.size)).map some
   roundtrip
     | none   => rfl
@@ -148,11 +148,8 @@ instance {α : Type} [StatusPermanens α] : StatusPermanens (Option α) where
         have hsize : (.mk #[1] ++ StatusPermanens.adBytes v).size ≠ 0 := by
           rw [ByteArray.size_append, show (ByteArray.mk #[1]).size = 1 from rfl]
           omega
-        simp only [hsize, ite_false]
-        have h0 : (.mk #[1] ++ StatusPermanens.adBytes v)[0]! = 1 := by
-          simp_all only [ByteArray.size_append, ne_eq, Nat.add_eq_zero_iff,
-                         ByteArray.size_eq_zero_iff, not_and]
-          rfl
+        simp only [hsize, dif_neg hsize, ite_false]
+        have h0 : (.mk #[1] ++ StatusPermanens.adBytes v)[0]'(by omega) = 1 := by rfl
         have hne : (1 : UInt8) ≠ 0 := by decide
         simp only [h0, hne, ite_false]
         have hext : (.mk #[1] ++ StatusPermanens.adBytes v).extract 1

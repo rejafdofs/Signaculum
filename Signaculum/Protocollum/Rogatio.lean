@@ -96,15 +96,15 @@ def interpreta (s : String) : Except String Rogatio := do
     -- 第1行を解析
     let methodus ← parseLineaPrima (trimma prima)
 
-    -- 頭部を解析するにゃん
-    let mut cappitta : List (String × String) := []
+    -- 頭部を解析するにゃん（直接 Array に push して reverse 不要にゃ）
+    let mut cappittaArr : Array (String × String) := #[]
     for l in cetera do
       let linea := trimma l
       if linea.isEmpty then break  -- 空行で終了にゃ
       match parseCastellum linea with
-      | some parElementum => cappitta := parElementum :: cappitta
+      | some parElementum => cappittaArr := cappittaArr.push parElementum
       | none => pure ()  -- 解析できにゃい行は無視にゃ
-    cappitta := cappitta.reverse
+    let cappitta := cappittaArr.toList
 
     -- 既知の頭部を抽出するにゃん
     let nomen := match cappitta.lookup "ID" with

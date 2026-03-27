@@ -45,45 +45,41 @@ instance : Citatio Char where
       | []      => ' ') = c
     simp
 
--- UInt8: 十進數文字列にゃ
+-- ═══════════════════════════════════════════════════
+-- UInt 型共通のレクルスス補題にゃん
+-- ═══════════════════════════════════════════════════
+
+/-- 無符號整數型の Citatio レクルスス共通補題にゃん。
+    `ofNat (toNat n) = n` を滿たす型なら toRef/fromRef が往復するにゃ -/
+-- UInt8/16/32/64: 十進數文字列にゃん。共通タクティクスで證明するにゃ♪
+private theorem citatioUIntRecursus {α : Type}
+    (toNat : α → Nat) (ofNat : Nat → α)
+    (n : α)
+    (recursus : ofNat (toNat n) = n)
+    : ofNat ((toString (toNat n)).toNat?.getD 0) = n := by
+  have h1 : (toString (toNat n)).toNat?.getD 0 = toNat n := by
+    simp [Nat.toNat?_repr]
+  rw [h1]; exact recursus
+
 instance : Citatio UInt8 where
   toRef n   := toString n.toNat
   fromRef s := UInt8.ofNat (s.toNat?.getD 0)
-  roundtrip n := by
-    show UInt8.ofNat ((toString n.toNat).toNat?.getD 0) = n
-    have h1 : (toString n.toNat).toNat?.getD 0 = n.toNat := by
-      simp [Nat.toNat?_repr]
-    rw [h1]; exact UInt8.ofNat_toNat
+  roundtrip n := citatioUIntRecursus UInt8.toNat UInt8.ofNat n UInt8.ofNat_toNat
 
--- UInt16: 十進數文字列にゃ
 instance : Citatio UInt16 where
   toRef n   := toString n.toNat
   fromRef s := UInt16.ofNat (s.toNat?.getD 0)
-  roundtrip n := by
-    show UInt16.ofNat ((toString n.toNat).toNat?.getD 0) = n
-    have h1 : (toString n.toNat).toNat?.getD 0 = n.toNat := by
-      simp [Nat.toNat?_repr]
-    rw [h1]; exact UInt16.ofNat_toNat
+  roundtrip n := citatioUIntRecursus UInt16.toNat UInt16.ofNat n UInt16.ofNat_toNat
 
--- UInt32: 十進數文字列にゃ
 instance : Citatio UInt32 where
   toRef n   := toString n.toNat
   fromRef s := UInt32.ofNat (s.toNat?.getD 0)
-  roundtrip n := by
-    show UInt32.ofNat ((toString n.toNat).toNat?.getD 0) = n
-    have h1 : (toString n.toNat).toNat?.getD 0 = n.toNat := by
-      simp [Nat.toNat?_repr]
-    rw [h1]; exact UInt32.ofNat_toNat
+  roundtrip n := citatioUIntRecursus UInt32.toNat UInt32.ofNat n UInt32.ofNat_toNat
 
--- UInt64: 十進數文字列にゃ
 instance : Citatio UInt64 where
   toRef n   := toString n.toNat
   fromRef s := UInt64.ofNat (s.toNat?.getD 0)
-  roundtrip n := by
-    show UInt64.ofNat ((toString n.toNat).toNat?.getD 0) = n
-    have h1 : (toString n.toNat).toNat?.getD 0 = n.toNat := by
-      simp [Nat.toNat?_repr]
-    rw [h1]; exact UInt64.ofNat_toNat
+  roundtrip n := citatioUIntRecursus UInt64.toNat UInt64.ofNat n UInt64.ofNat_toNat
 
 -- ═══════════════════════════════════════════════════
 -- 複合型のインスタンティアにゃん

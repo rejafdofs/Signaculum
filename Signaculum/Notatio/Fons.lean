@@ -160,4 +160,8 @@ macro_rules | `(expandSignum \f[anchorvisitedfontcolor, $c:colorisLiteral]) => `
 syntax "anchorvisitedmethod" "," methodusMarciLiteral : fontisClavis
 macro_rules | `(expandSignum \f[anchorvisitedmethod, $m:methodusMarciLiteral]) => `(Signaculum.Sakura.methodusAncoraeVisae (methodusMarciL $m))
 
+-- 錨テクストゥス全體色にゃん（ドット區切りキーにゃ）
+syntax "anchor.font.color" "," colorisLiteral : fontisClavis
+macro_rules | `(expandSignum \f[anchor.font.color, $c:colorisLiteral]) => `(Signaculum.Sakura.colorFontisAncorae (colorisL $c))
+
 end Signaculum.Notatio

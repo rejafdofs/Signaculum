@@ -236,4 +236,207 @@ macro_rules
 | `(expandSignum \![open,passwordinput, $f:ident, $title]) =>
   `(aperiInputum .sigillum $f $title "")
 
+-- ════════════════════════════════════════════════════
+--  他ゴースト事象 (Eventum Aliorum Fantasmatum)
+-- ════════════════════════════════════════════════════
+
+syntax "\\!" "[raiseother," str "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![raiseother, $g, $e]) => `(Signaculum.Sakura.excitaAlium $g $e)
+
+syntax "\\!" "[timerraiseother," term "," term "," str "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![timerraiseother, $ms, $rep, $g, $e]) => `(Signaculum.Sakura.excitaAliumPostTempus $ms $rep $g $e)
+
+syntax "\\!" "[notifyother," str "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![notifyother, $g, $e]) => `(Signaculum.Sakura.notificaAlium $g $e)
+
+syntax "\\!" "[timernotifyother," term "," term "," str "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![timernotifyother, $ms, $rep, $g, $e]) => `(Signaculum.Sakura.notificaAliumPostTempus $ms $rep $g $e)
+
+-- ════════════════════════════════════════════════════
+--  プラグイン事象 (Eventum Pluginorum)
+-- ════════════════════════════════════════════════════
+
+syntax "\\!" "[raiseplugin," str "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![raiseplugin, $p, $e]) => `(Signaculum.Sakura.vocaPlugin $p $e)
+
+syntax "\\!" "[notifyplugin," str "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![notifyplugin, $p, $e]) => `(Signaculum.Sakura.notificaPlugin $p $e)
+
+syntax "\\!" "[timerraiseplugin," term "," term "," str "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![timerraiseplugin, $ms, $rep, $p, $e]) => `(Signaculum.Sakura.excitaPluginPostTempus $ms $rep $p $e)
+
+syntax "\\!" "[timernotifyplugin," term "," term "," str "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![timernotifyplugin, $ms, $rep, $p, $e]) => `(Signaculum.Sakura.notificaPluginPostTempus $ms $rep $p $e)
+
+-- ════════════════════════════════════════════════════
+--  音響拡張 (Extensio Soni)
+-- ════════════════════════════════════════════════════
+
+syntax "\\!" "[sound,load," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![sound,load, $s]) => `(Signaculum.Sakura.sonusOneratur $s)
+
+syntax "\\!" "[sound,cdplay," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![sound,cdplay, $n]) => `(Signaculum.Sakura.sonusCD $n)
+
+syntax "\\!" "[sound,option," str "," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![sound,option, $s, $o]) => `(Signaculum.Sakura.sonusOptio $s $o)
+
+-- ════════════════════════════════════════════════════
+--  動畫拡張 (Extensio Animationis)
+-- ════════════════════════════════════════════════════
+
+syntax "\\!" "[anim,offset," term "," term "," term "," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![anim,offset, $s, $i, $x, $y]) => `(Signaculum.Sakura.animaTranslatio $s $i $x $y)
+
+syntax "\\!" "[anim,add,overlay," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![anim,add,overlay, $i]) => `(Signaculum.Sakura.animaAddOverlay $i)
+
+syntax "\\!" "[anim,add,overlay," term "," term "," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![anim,add,overlay, $i, $x, $y]) => `(Signaculum.Sakura.animaAddOverlayPos $i $x $y)
+
+syntax "\\!" "[anim,add,overlayfast," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![anim,add,overlayfast, $i]) => `(Signaculum.Sakura.animaAddOverlayFast $i)
+
+syntax "\\!" "[anim,add,base," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![anim,add,base, $i]) => `(Signaculum.Sakura.animaAddBase $i)
+
+syntax "\\!" "[anim,add,move," term "," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![anim,add,move, $x, $y]) => `(Signaculum.Sakura.animaAddMove $x $y)
+
+-- ════════════════════════════════════════════════════
+--  フィルター (Filtratum)
+-- ════════════════════════════════════════════════════
+
+syntax "\\!" "[filter," str "," term "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![filter, $p, $t, $r]) => `(Signaculum.Sakura.applicaFiltratum $p $t $r)
+
+syntax "\\!" "[filter]" : sakuraSignum
+macro_rules | `(expandSignum \![filter]) => `(Signaculum.Sakura.applicaFiltratum "" 0 "")
+
+-- ════════════════════════════════════════════════════
+--  效果2 (Effectum II)
+-- ════════════════════════════════════════════════════
+
+syntax "\\!" "[effect2," term "," str "," term "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![effect2, $i, $p, $s, $r]) => `(Signaculum.Sakura.applicaEffectum2 $i $p $s $r)
+
+-- ════════════════════════════════════════════════════
+--  HTTP/ネットワーク (Rete)
+-- ════════════════════════════════════════════════════
+
+syntax "\\!" "[execute,http-get," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,http-get, $u]) => `(Signaculum.Sakura.executaHttpGet $u)
+
+syntax "\\!" "[execute,http-post," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,http-post, $u]) => `(Signaculum.Sakura.executaHttpPost $u)
+
+syntax "\\!" "[execute,http-head," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,http-head, $u]) => `(Signaculum.Sakura.executaHttpHead $u)
+
+syntax "\\!" "[execute,http-put," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,http-put, $u]) => `(Signaculum.Sakura.executaHttpPut $u)
+
+syntax "\\!" "[execute,http-delete," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,http-delete, $u]) => `(Signaculum.Sakura.executaHttpDelete $u)
+
+syntax "\\!" "[execute,http-patch," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,http-patch, $u]) => `(Signaculum.Sakura.executaHttpPatch $u)
+
+syntax "\\!" "[execute,http-options," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,http-options, $u]) => `(Signaculum.Sakura.executaHttpOptions $u)
+
+syntax "\\!" "[execute,rss-get," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,rss-get, $u]) => `(Signaculum.Sakura.executaRssGet $u)
+
+syntax "\\!" "[execute,rss-post," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,rss-post, $u]) => `(Signaculum.Sakura.executaRssPost $u)
+
+syntax "\\!" "[execute,headline," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,headline, $n]) => `(Signaculum.Sakura.executaHeadline $n)
+
+syntax "\\!" "[execute,nslookup," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,nslookup, $p]) => `(Signaculum.Sakura.executaNslookup [$p])
+
+syntax "\\!" "[execute,ping," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,ping, $p]) => `(Signaculum.Sakura.executaPing [$p])
+
+-- ════════════════════════════════════════════════════
+--  實行系 (Executiones)
+-- ════════════════════════════════════════════════════
+
+syntax "\\!" "[execute,dumpsurface," str "," term "," str "," str "," str "," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,dumpsurface, $d, $s, $l, $p, $e, $z]) => `(Signaculum.Sakura.executaDumpSuperficiei $d $s $l $p $e $z)
+
+syntax "\\!" "[execute,install,url," str "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,install,url, $u, $t]) => `(Signaculum.Sakura.executaInstallationemUrl $u $t)
+
+syntax "\\!" "[execute,install,path," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,install,path, $v]) => `(Signaculum.Sakura.executaInstallationemVia $v)
+
+syntax "\\!" "[execute,createupdatedata]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,createupdatedata]) => `(Signaculum.Sakura.executaCreationemUpdateData)
+
+syntax "\\!" "[execute,createnar]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,createnar]) => `(Signaculum.Sakura.executaCreationemNar)
+
+syntax "\\!" "[execute,emptyrecyclebin]" : sakuraSignum
+macro_rules | `(expandSignum \![execute,emptyrecyclebin]) => `(Signaculum.Sakura.evacuaRecyclatorium)
+
+-- ════════════════════════════════════════════════════
+--  設定系 (Configuratio)
+-- ════════════════════════════════════════════════════
+
+syntax "\\!" "[set,otherghosttalk," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,otherghosttalk, $m]) => `(Signaculum.Sakura.configuraAliosGhostes $m)
+
+syntax "\\!" "[set,othersurfacechange," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,othersurfacechange, $b]) => `(Signaculum.Sakura.configuraAliasSuperficies $b)
+
+syntax "\\!" "[set,wallpaper," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,wallpaper, $v]) => `(Signaculum.Sakura.configuraTapete $v)
+
+syntax "\\!" "[set,shioridebugmode]" : sakuraSignum
+macro_rules | `(expandSignum \![set,shioridebugmode]) => `(Signaculum.Sakura.configuraShioriDebug)
+
+syntax "\\!" "[set,choicetimeout," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,choicetimeout, $ms]) => `(Signaculum.Sakura.tempusOptionum $ms)
+
+-- ════════════════════════════════════════════════════
+--  プロパティ取得 (Legere Proprietatem)
+-- ════════════════════════════════════════════════════
+
+syntax "\\!" "[get,property," str "," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![get,property, $e, $p]) => `(Signaculum.Sakura.legeProprietatem $e [$p])
+
+-- ════════════════════════════════════════════════════
+--  同期拡張 (Extensio Synchroniae)
+-- ════════════════════════════════════════════════════
+
+syntax "\\!" "[wait,syncobject," str "," term "]" : sakuraSignum
+macro_rules | `(expandSignum \![wait,syncobject, $n, $t]) => `(Signaculum.Sakura.expectaSyncObjectum $n $t)
+
+-- ════════════════════════════════════════════════════
+--  ゴースト管理 (Administratio Fantasmatum)
+-- ════════════════════════════════════════════════════
+
+syntax "\\!" "[call,ghost," str "]" : sakuraSignum
+macro_rules | `(expandSignum \![call,ghost, $n]) => `(Signaculum.Sakura.vocaGhost $n)
+
+syntax "\\!" "[update,platform]" : sakuraSignum
+macro_rules | `(expandSignum \![update,platform]) => `(Signaculum.Sakura.renovaPlatformam)
+
+-- ════════════════════════════════════════════════════
+--  Windows メッセージ (Nuntium Windowae)
+-- ════════════════════════════════════════════════════
+
+syntax "\\m" "[" str "," str "," str "]" : sakuraSignum
+macro_rules | `(expandSignum \m[$u, $w, $l]) => `(Signaculum.Sakura.nuntiumWindowae $u $w $l)
+
+-- ════════════════════════════════════════════════════
+--  音聲合成 (Synthesis Vocis)
+-- ════════════════════════════════════════════════════
+
+syntax "\\__v" "[" str "]" : sakuraSignum
+macro_rules | `(expandSignum \__v[$o]) => `(Signaculum.Sakura.synthesisVocis $o)
+
 end Signaculum.Notatio

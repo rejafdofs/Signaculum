@@ -502,4 +502,50 @@ private def purgaClavis (s : String) : String :=
 def addeCastellum {m : Type → Type} [Monad m] (clavis valor : String) : SakuraM m Unit :=
   modify fun st => { st with cappitta := st.cappitta ++ [(purgaClavis clavis, valor)] }
 
+-- ════════════════════════════════════════════════════
+--  文字・行淸掃拡張 (Extensio Purgationis)
+-- ════════════════════════════════════════════════════
+
+/-- カーソル位置から n 文字を淸掃するにゃん（\\c[char,n]）-/
+def purgaCharacterem {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
+  emitte s!"\\c[char,{n}]"
+
+/-- 指定位置から n 文字を淸掃するにゃん（\\c[char,n,initium]）-/
+def purgaCharacteremAb {m : Type → Type} [Monad m] (n initium : Nat) : SakuraM m Unit :=
+  emitte s!"\\c[char,{n},{initium}]"
+
+/-- カーソル位置から n 行を淸掃するにゃん（\\c[line,n]）-/
+def purgaLineam {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
+  emitte s!"\\c[line,{n}]"
+
+/-- 指定位置から n 行を淸掃するにゃん（\\c[line,n,initium]）-/
+def purgaLineamAb {m : Type → Type} [Monad m] (n initium : Nat) : SakuraM m Unit :=
+  emitte s!"\\c[line,{n},{initium}]"
+
+-- ════════════════════════════════════════════════════
+--  選擇肢拡張 (Extensio Optionum)
+-- ════════════════════════════════════════════════════
+
+/-- スクリプトゥム實行型選擇肢（\\q[title,script:content]）にゃん。
+    選擇時にスクリプトゥムが直接實行されるにゃ -/
+def optioScriptum {m : Type → Type} [Monad m] (titulus scriptum : String) : SakuraM m Unit :=
+  emitte s!"\\q[{evadeArgumentum titulus},script:{evadeArgumentum scriptum}]"
+
+/-- 複數 ID 選擇肢（\\q[title,ID1,ID2,...]）にゃん。
+    複數の識別子を格納するにゃ -/
+def optioMultiplex {m : Type → Type} [Monad m] (titulus : String) (signa : List String) : SakuraM m Unit :=
+  let catenaSigorum := ",".intercalate (signa.map evadeArgumentum)
+  emitte s!"\\q[{evadeArgumentum titulus},{catenaSigorum}]"
+
+/-- 範圍選擇肢の開始（\\__q[ID,...]）にゃん。
+    次の `fineOptioScopus` まで全テクストゥスが選擇肢になるにゃ -/
+def optioScopus {m : Type → Type} [Monad m] (signum : String) (citationes : List String := []) : SakuraM m Unit :=
+  let cc := match citationes with
+    | [] => "" | res => "," ++ ",".intercalate (res.map evadeArgumentum)
+  emitte s!"\\__q[{evadeArgumentum signum}{cc}]"
+
+/-- 範圍選擇肢の終了（\\__q）にゃん -/
+def fineOptioScopus {m : Type → Type} [Monad m] : SakuraM m Unit :=
+  emitte "\\__q"
+
 end Signaculum.Sakura

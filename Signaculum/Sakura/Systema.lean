@@ -572,4 +572,119 @@ def legeProprietatem {m : Type → Type} [Monad m]
 def proprietasCitata {m : Type → Type} [Monad m] (proprietas : Proprietas) : SakuraM m Unit :=
   emitte s!"%property[{escapePropNomen proprietas.toString}]"
 
+-- ════════════════════════════════════════════════════
+--  同期拡張2 (Extensio Synchroniae II)
+-- ════════════════════════════════════════════════════
+
+/-- 名前付き同期オブジェクトゥムの完了を待つにゃん（\\![wait,syncobject,name,timeout]）-/
+def expectaSyncObjectum {m : Type → Type} [Monad m]
+    (nomen : String) (tempus : Nat) : SakuraM m Unit :=
+  emitte s!"\\![wait,syncobject,{evadeArgumentum nomen},{tempus}]"
+
+-- ════════════════════════════════════════════════════
+--  ゴースト管理拡張 (Extensio Administrationis)
+-- ════════════════════════════════════════════════════
+
+/-- ゴーストを呼び出すにゃん（\\![call,ghost,name,options]）。
+    change と違って自ゴーストは終了しにゃいにゃ -/
+def vocaGhost {m : Type → Type} [Monad m]
+    (nomen : String) (optiones : OptionesMutationis := {}) : SakuraM m Unit :=
+  let opt := optiones.toString
+  let opt := if opt.isEmpty then "" else s!",{opt}"
+  emitte s!"\\![call,ghost,{evadeArgumentum nomen}{opt}]"
+
+/-- プラットフォームの更新を開始するにゃん（\\![update,platform]）-/
+def renovaPlatformam {m : Type → Type} [Monad m] : SakuraM m Unit :=
+  emitte "\\![update,platform]"
+
+/-- 指定對象の更新を實行するにゃん（\\![update,target,options]）-/
+def renovaScopum {m : Type → Type} [Monad m]
+    (scopus : String) (optiones : String := "") : SakuraM m Unit :=
+  if optiones.isEmpty then emitte s!"\\![update,{evadeArgumentum scopus}]"
+  else emitte s!"\\![update,{evadeArgumentum scopus},{evadeArgumentum optiones}]"
+
+/-- 他者の更新を實行するにゃん（\\![updateother,options]）-/
+def renovaAlium {m : Type → Type} [Monad m] (optiones : String) : SakuraM m Unit :=
+  emitte s!"\\![updateother,{evadeArgumentum optiones}]"
+
+-- ════════════════════════════════════════════════════
+--  ファイル操作 (Operationes Fasciculorum)
+-- ════════════════════════════════════════════════════
+
+/-- アーカイブを展開するにゃん（\\![execute,extractarchive,file,folder,options]）-/
+def extraheArchivum {m : Type → Type} [Monad m]
+    (via directum : String) (optiones : String := "") : SakuraM m Unit :=
+  if optiones.isEmpty then emitte s!"\\![execute,extractarchive,{evadeArgumentum via},{evadeArgumentum directum}]"
+  else emitte s!"\\![execute,extractarchive,{evadeArgumentum via},{evadeArgumentum directum},{evadeArgumentum optiones}]"
+
+/-- フォルダを壓縮するにゃん（\\![execute,compressarchive,file,folder,options]）-/
+def comprimeArchivum {m : Type → Type} [Monad m]
+    (via directum : String) (optiones : String := "") : SakuraM m Unit :=
+  if optiones.isEmpty then emitte s!"\\![execute,compressarchive,{evadeArgumentum via},{evadeArgumentum directum}]"
+  else emitte s!"\\![execute,compressarchive,{evadeArgumentum via},{evadeArgumentum directum},{evadeArgumentum optiones}]"
+
+/-- ファイルからインストールするにゃん（\\![execute,install,path,file]）-/
+def executaInstallationemVia {m : Type → Type} [Monad m] (via : String) : SakuraM m Unit :=
+  emitte s!"\\![execute,install,path,{evadeArgumentum via}]"
+
+/-- NAR ファイルを作成するにゃん（\\![execute,createnar]）-/
+def executaCreationemNar {m : Type → Type} [Monad m] : SakuraM m Unit :=
+  emitte "\\![execute,createnar]"
+
+/-- ゴミ箱を空にするにゃん（\\![execute,emptyrecyclebin]）-/
+def evacuaRecyclatorium {m : Type → Type} [Monad m] : SakuraM m Unit :=
+  emitte "\\![execute,emptyrecyclebin]"
+
+-- ════════════════════════════════════════════════════
+--  HTTP 拡張2 (Extensio HTTP II)
+-- ════════════════════════════════════════════════════
+
+/-- HTTP OPTIONS リクエストゥムを實行するにゃん（\\![execute,http-options,URL,options]）-/
+def executaHttpOptions {m : Type → Type} [Monad m]
+    (nexus : String) (optiones : String := "") : SakuraM m Unit :=
+  if optiones.isEmpty then emitte s!"\\![execute,http-options,{evadeArgumentum nexus}]"
+  else emitte s!"\\![execute,http-options,{evadeArgumentum nexus},{evadeArgumentum optiones}]"
+
+/-- RSS POST リクエストゥムを實行するにゃん（\\![execute,rss-post,URL,options]）-/
+def executaRssPost {m : Type → Type} [Monad m]
+    (nexus : String) (optiones : String := "") : SakuraM m Unit :=
+  if optiones.isEmpty then emitte s!"\\![execute,rss-post,{evadeArgumentum nexus}]"
+  else emitte s!"\\![execute,rss-post,{evadeArgumentum nexus},{evadeArgumentum optiones}]"
+
+-- ════════════════════════════════════════════════════
+--  動畫拡張2 (Extensio Animationis II)
+-- ════════════════════════════════════════════════════
+
+/-- サーフェス上にテクストゥスを表示するにゃん（\\![anim,add,text,x,y,w,h,text,time,r,g,b,size,font]）-/
+def animaAddTextum {m : Type → Type} [Monad m]
+    (x y latitudo altitudo : Int) (textus : String) (tempus : Nat)
+    (r g b : Nat) (_hr : r ≤ 255 := by omega) (_hg : g ≤ 255 := by omega) (_hb : b ≤ 255 := by omega)
+    (magnitudo : Nat) (fons : String := "") : SakuraM m Unit :=
+  let fontPars := if fons.isEmpty then "" else s!",{evadeArgumentum fons}"
+  emitte s!"\\![anim,add,text,{x},{y},{latitudo},{altitudo},{evadeArgumentum textus},{tempus},{r},{g},{b},{magnitudo}{fontPars}]"
+
+/-- タイミング付きオーバーレイ動畫にゃん（\\![anim,add,overlay,ID,x,y,time,options]）-/
+def animaAddOverlayAnimatum {m : Type → Type} [Monad m]
+    (animId : Nat) (x y : Int) (tempus : Nat) (optiones : String := "") : SakuraM m Unit :=
+  let optPars := if optiones.isEmpty then "" else s!",{evadeArgumentum optiones}"
+  emitte s!"\\![anim,add,overlay,{animId},{x},{y},{tempus}{optPars}]"
+
+-- ════════════════════════════════════════════════════
+--  音聲合成 (Synthesis Vocis)
+-- ════════════════════════════════════════════════════
+
+/-- 音聲合成の發聲を調整するにゃん（\\__v[options]）-/
+def synthesisVocis {m : Type → Type} [Monad m] (optiones : String) : SakuraM m Unit :=
+  emitte s!"\\__v[{evadeArgumentum optiones}]"
+
+-- ════════════════════════════════════════════════════
+--  環境變數參照 (Variabiles Ambientis)
+-- ════════════════════════════════════════════════════
+
+/-- SSP が展開する環境變數をそのまま出力するにゃん（%nomen）。
+    `loqui` は `%` をエスケープするため使へにゃいから、この關數を使ふにゃん♪
+    例: `variabilisAmbientis "month"` → `%month` にゃ -/
+def variabilisAmbientis {m : Type → Type} [Monad m] (nomen : String) : SakuraM m Unit :=
+  emitte s!"%{nomen}"
+
 end Signaculum.Sakura

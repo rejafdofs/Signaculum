@@ -186,6 +186,7 @@ syntax "\\!" "[load,makoto]" : sakuraSignum
 macro_rules | `(expandSignum \![load,makoto]) => `(Signaculum.Sakura.oneraMakoto)
 
 -- 着替・效果にゃん
+-- 着替にゃん♪ 0/1 のみ受け付けるにゃ（それ以外はマクロエラーにゃ）
 syntax "\\!" "[bind," str "," str "," num "]" : sakuraSignum
 macro_rules
   | `(expandSignum \![bind, $c, $p, $v:num]) =>
@@ -403,8 +404,28 @@ macro_rules | `(expandSignum \![set,othersurfacechange, $b]) => `(Signaculum.Sak
 syntax "\\!" "[set,wallpaper," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![set,wallpaper, $v]) => `(Signaculum.Sakura.configuraTapete $v Option.none)
 
-syntax "\\!" "[set,wallpaper," str "," term "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,wallpaper, $v, $m]) => `(Signaculum.Sakura.configuraTapete $v (Option.some $m))
+-- 壁紙モードインラインリテラルにゃん♪ タグの中だけでキーワードが有效にゃ
+syntax "\\!" "[set,wallpaper," str "," "center" "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,wallpaper, $v, center]) => `(Signaculum.Sakura.configuraTapete $v (Option.some .centrum))
+
+syntax "\\!" "[set,wallpaper," str "," "tile" "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,wallpaper, $v, tile]) => `(Signaculum.Sakura.configuraTapete $v (Option.some .tessella))
+
+syntax "\\!" "[set,wallpaper," str "," "stretch" "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,wallpaper, $v, stretch]) => `(Signaculum.Sakura.configuraTapete $v (Option.some .extende))
+
+syntax "\\!" "[set,wallpaper," str "," "stretch-x" "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,wallpaper, $v, stretch-x]) => `(Signaculum.Sakura.configuraTapete $v (Option.some .extendeX))
+
+syntax "\\!" "[set,wallpaper," str "," "stretch-y" "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,wallpaper, $v, stretch-y]) => `(Signaculum.Sakura.configuraTapete $v (Option.some .extendeY))
+
+syntax "\\!" "[set,wallpaper," str "," "span" "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,wallpaper, $v, span]) => `(Signaculum.Sakura.configuraTapete $v (Option.some .spatium))
+
+-- 後方互換: 括弧で包めば任意の Lean 式を渡せるにゃ
+syntax "\\!" "[set,wallpaper," str "," "(" term ")" "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,wallpaper, $v, ($m)]) => `(Signaculum.Sakura.configuraTapete $v (Option.some $m))
 
 syntax "\\!" "[set,shioridebugmode]" : sakuraSignum
 macro_rules | `(expandSignum \![set,shioridebugmode]) => `(Signaculum.Sakura.configuraShioriDebug)

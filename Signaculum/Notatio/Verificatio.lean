@@ -37,7 +37,11 @@ example : Id.run (currereScriptum (scriptum! \b[0])) = "\\b[0]" := by native_dec
 example : Id.run (currereScriptum (scriptum! \b[-1])) = "\\b[-1]" := by native_decide
 
 -- 書體の検證にゃん
-example : Id.run (currereScriptum (scriptum! \f[bold, Bool.true])) = "\\f[bold,true]" := by native_decide
+example : Id.run (currereScriptum (scriptum! \f[bold, true])) = "\\f[bold,true]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \f[bold, false])) = "\\f[bold,false]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \f[italic, true])) = "\\f[italic,true]" := by native_decide
 
 example : Id.run (currereScriptum (scriptum! \f[default])) = "\\f[default]" := by native_decide
 
@@ -277,14 +281,63 @@ example : Id.run (currereScriptum (scriptum! \f[height, default]))
 --  directioAllineatioBullaeLiteral の検證にゃん
 -- ════════════════════════════════════════════════════
 
-example : Id.run (currereScriptum (scriptum! \![set,balloonalign, .sinistrum]))
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, left]))
         = "\\![set,balloonalign,left]" := by native_decide
 
-example : Id.run (currereScriptum (scriptum! \![set,balloonalign, .centrum]))
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, center]))
         = "\\![set,balloonalign,center]" := by native_decide
 
-example : Id.run (currereScriptum (scriptum! \![set,balloonalign, .nullus]))
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, none]))
         = "\\![set,balloonalign,none]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, top]))
+        = "\\![set,balloonalign,top]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, right]))
+        = "\\![set,balloonalign,right]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, bottom]))
+        = "\\![set,balloonalign,bottom]" := by native_decide
+
+-- 後方互換: 括弧で包む形式にゃん
+example : Id.run (currereScriptum (scriptum! \![set,balloonalign, (.sinistrum)]))
+        = "\\![set,balloonalign,left]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  modusTapetisLiteral の検證にゃん（壁紙モード）
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \![set,wallpaper, "bg.png", center]))
+        = "\\![set,wallpaper,bg.png,center]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \![set,wallpaper, "bg.png", tile]))
+        = "\\![set,wallpaper,bg.png,tile]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \![set,wallpaper, "bg.png", stretch]))
+        = "\\![set,wallpaper,bg.png,stretch]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \![set,wallpaper, "bg.png", stretch-x]))
+        = "\\![set,wallpaper,bg.png,stretch-x]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \![set,wallpaper, "bg.png", stretch-y]))
+        = "\\![set,wallpaper,bg.png,stretch-y]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \![set,wallpaper, "bg.png", span]))
+        = "\\![set,wallpaper,bg.png,span]" := by native_decide
+
+-- 後方互換: 括弧で包む形式にゃん
+example : Id.run (currereScriptum (scriptum! \![set,wallpaper, "bg.png", (.centrum)]))
+        = "\\![set,wallpaper,bg.png,center]" := by native_decide
+
+-- ════════════════════════════════════════════════════
+--  bind インラインの検證にゃん
+-- ════════════════════════════════════════════════════
+
+example : Id.run (currereScriptum (scriptum! \![bind, "category", "part", 1]))
+        = "\\![bind,category,part,1]" := by native_decide
+
+example : Id.run (currereScriptum (scriptum! \![bind, "category", "part", 0]))
+        = "\\![bind,category,part,0]" := by native_decide
 
 -- ════════════════════════════════════════════════════
 --  selectmode の検證にゃん

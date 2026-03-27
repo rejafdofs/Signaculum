@@ -11,24 +11,48 @@ open Lean Signaculum.Sakura
 
 syntax "\\f" "[" fontisClavis "]" : sakuraSignum
 
--- Bool 系にゃん
-syntax "bold" "," term : fontisClavis
-macro_rules | `(expandSignum \f[bold, $b]) => `(Signaculum.Sakura.audax $b)
+-- Bool 系インラインリテラルにゃん♪ true/false をそのまま書けるにゃ
+syntax "bold" "," "true" : fontisClavis
+macro_rules | `(expandSignum \f[bold, true]) => `(Signaculum.Sakura.audax Bool.true)
+syntax "bold" "," "false" : fontisClavis
+macro_rules | `(expandSignum \f[bold, false]) => `(Signaculum.Sakura.audax Bool.false)
+syntax "bold" "," "(" term ")" : fontisClavis
+macro_rules | `(expandSignum \f[bold, ($b)]) => `(Signaculum.Sakura.audax $b)
 
-syntax "italic" "," term : fontisClavis
-macro_rules | `(expandSignum \f[italic, $b]) => `(Signaculum.Sakura.obliquus $b)
+syntax "italic" "," "true" : fontisClavis
+macro_rules | `(expandSignum \f[italic, true]) => `(Signaculum.Sakura.obliquus Bool.true)
+syntax "italic" "," "false" : fontisClavis
+macro_rules | `(expandSignum \f[italic, false]) => `(Signaculum.Sakura.obliquus Bool.false)
+syntax "italic" "," "(" term ")" : fontisClavis
+macro_rules | `(expandSignum \f[italic, ($b)]) => `(Signaculum.Sakura.obliquus $b)
 
-syntax "underline" "," term : fontisClavis
-macro_rules | `(expandSignum \f[underline, $b]) => `(Signaculum.Sakura.sublinea $b)
+syntax "underline" "," "true" : fontisClavis
+macro_rules | `(expandSignum \f[underline, true]) => `(Signaculum.Sakura.sublinea Bool.true)
+syntax "underline" "," "false" : fontisClavis
+macro_rules | `(expandSignum \f[underline, false]) => `(Signaculum.Sakura.sublinea Bool.false)
+syntax "underline" "," "(" term ")" : fontisClavis
+macro_rules | `(expandSignum \f[underline, ($b)]) => `(Signaculum.Sakura.sublinea $b)
 
-syntax "strike" "," term : fontisClavis
-macro_rules | `(expandSignum \f[strike, $b]) => `(Signaculum.Sakura.deletura $b)
+syntax "strike" "," "true" : fontisClavis
+macro_rules | `(expandSignum \f[strike, true]) => `(Signaculum.Sakura.deletura Bool.true)
+syntax "strike" "," "false" : fontisClavis
+macro_rules | `(expandSignum \f[strike, false]) => `(Signaculum.Sakura.deletura Bool.false)
+syntax "strike" "," "(" term ")" : fontisClavis
+macro_rules | `(expandSignum \f[strike, ($b)]) => `(Signaculum.Sakura.deletura $b)
 
-syntax "sub" "," term : fontisClavis
-macro_rules | `(expandSignum \f[sub, $b]) => `(Signaculum.Sakura.subscriptus $b)
+syntax "sub" "," "true" : fontisClavis
+macro_rules | `(expandSignum \f[sub, true]) => `(Signaculum.Sakura.subscriptus Bool.true)
+syntax "sub" "," "false" : fontisClavis
+macro_rules | `(expandSignum \f[sub, false]) => `(Signaculum.Sakura.subscriptus Bool.false)
+syntax "sub" "," "(" term ")" : fontisClavis
+macro_rules | `(expandSignum \f[sub, ($b)]) => `(Signaculum.Sakura.subscriptus $b)
 
-syntax "sup" "," term : fontisClavis
-macro_rules | `(expandSignum \f[sup, $b]) => `(Signaculum.Sakura.superscriptus $b)
+syntax "sup" "," "true" : fontisClavis
+macro_rules | `(expandSignum \f[sup, true]) => `(Signaculum.Sakura.superscriptus Bool.true)
+syntax "sup" "," "false" : fontisClavis
+macro_rules | `(expandSignum \f[sup, false]) => `(Signaculum.Sakura.superscriptus Bool.false)
+syntax "sup" "," "(" term ")" : fontisClavis
+macro_rules | `(expandSignum \f[sup, ($b)]) => `(Signaculum.Sakura.superscriptus $b)
 
 -- 色系にゃん（colorisLiteral で SakuraScript リテラルが直接書けるにゃ）
 syntax "color" "," colorisLiteral : fontisClavis

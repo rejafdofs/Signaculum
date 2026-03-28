@@ -10,14 +10,14 @@ namespace Signaculum.Sakura
 -- ════════════════════════════════════════════════════
 
 /-- 主人格（\\h / \\0）に切り替へるにゃん -/
-def sakura {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\h"
+def sakura {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.scopi .sakura)
 
 /-- 副人格（\\u / \\1）に切り替へるにゃん -/
-def kero {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\u"
+def kero {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.scopi .kero)
 
 /-- 第 n 人格（\\p[n]）に切り替へるにゃん -/
 def persona {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
-  emitte s!"\\p[{n}]"
+  emitte (.scopi (.persona n))
 
 -- ════════════════════════════════════════════════════
 --  表面制御 (Imperium Superficiei) — 表情
@@ -25,32 +25,32 @@ def persona {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
 
 /-- 表面 ID を設定する（\\s[n]）にゃん -/
 def superficies {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
-  emitte s!"\\s[{n}]"
+  emitte (.superficiei (.superficies n))
 
 /-- 表面 動畫を再生する（\\i[n]）にゃん -/
 def animatio {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
-  emitte s!"\\i[{n}]"
+  emitte (.superficiei (.animatio n))
 
 -- ════════════════════════════════════════════════════
 --  文字表示 (Exhibitio Textus)
 -- ════════════════════════════════════════════════════
 
 /-- 改行（\\n）にゃん -/
-def linea {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\n"
+def linea {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.exhibitionis .linea)
 
 /-- 半改行（\\n[half]）にゃん -/
 def dimidiaLinea {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\n[half]"
+  emitte (.exhibitionis .dimidiaLinea)
 
 /-- 吹出しの文字を淸掃する（\\c）にゃん -/
-def purga {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\c"
+def purga {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.exhibitionis .purga)
 
 /-- 前の吹出しに追記する（\\C）にゃん -/
-def adscribe {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\C"
+def adscribe {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.exhibitionis .adscribe)
 
 /-- カーソル位置を指定する（\\_l[x,y]）にゃん -/
 def cursor {m : Type → Type} [Monad m] (x y : String) : SakuraM m Unit :=
-  emitte s!"\\_l[{evadeArgumentum x},{evadeArgumentum y}]"
+  emitte (.exhibitionis (.cursor x y))
 
 -- ════════════════════════════════════════════════════
 --  待機 (Mora) — テンポ制御
@@ -58,26 +58,26 @@ def cursor {m : Type → Type} [Monad m] (x y : String) : SakuraM m Unit :=
 
 /-- ミリ秒待機（\\_w[ms]）にゃん -/
 def mora {m : Type → Type} [Monad m] (ms : Nat) : SakuraM m Unit :=
-  emitte s!"\\_w[{ms}]"
+  emitte (.morae (.mora ms))
 
 /-- 簡易待機（\\w[1-9]、50ms × n）にゃん -/
 def moraCeler {m : Type → Type} [Monad m] (n : Nat) (_h : 1 ≤ n ∧ n ≤ 9 := by omega) : SakuraM m Unit :=
-  emitte s!"\\w{n}"
+  emitte (.morae (.moraCeler n _h))
 
 /-- 絕對時間待機（\\__w[ms]）にゃん -/
 def moraAbsoluta {m : Type → Type} [Monad m] (ms : Nat) : SakuraM m Unit :=
-  emitte s!"\\__w[{ms}]"
+  emitte (.morae (.moraAbsoluta ms))
 
 /-- 打鍵待ち（\\x）にゃん -/
-def expecta {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\x"
+def expecta {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.morae .expecta)
 
 /-- 打鍵待ち・淸掃にゃし（\\x[noclear]）にゃん -/
 def expectaSine {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\x[noclear]"
+  emitte (.morae .expectaSine)
 
 /-- 時間制約區劃（\\t）にゃん -/
 def tempusCriticum {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\t"
+  emitte (.imperii .tempusCriticum)
 
 -- ════════════════════════════════════════════════════
 --  選擇肢 (Optiones) — 使用者の選擇
@@ -86,52 +86,49 @@ def tempusCriticum {m : Type → Type} [Monad m] : SakuraM m Unit :=
 /-- 選擇肢を追加する（\\q[表題,識別子]）にゃん。
     表題(titulus)や識別子の特殊文字は自動的に遁走されるにゃ -/
 def optio {m : Type → Type} [Monad m] (titulus signum : String) : SakuraM m Unit :=
-  emitte s!"\\q[{evadeArgumentum titulus},{evadeArgumentum signum}]"
+  emitte (.optionum (.optio titulus signum))
 
 /-- 事象附き選擇肢（\\q[表題,OnEvent,ref0,ref1,...]）にゃん。
     表題(titulus)や事象の特殊文字は自動的に遁走されるにゃ -/
 def optioEventum {m : Type → Type} [Monad m]
     (titulus eventum : String) (citationes : List String := []) : SakuraM m Unit :=
-  let catenaCitationis := match citationes with
-    | [] => ""
-    | res => "," ++ ",".intercalate (res.map evadeArgumentum)
-  emitte s!"\\q[{evadeArgumentum titulus},{evadeArgumentum eventum}{catenaCitationis}]"
+  emitte (.optionum (.optioEventum titulus eventum citationes))
 
 /-- 錨（\\_a[id]...テキスト...\\_a）にゃん。
     閉ぢる時は `fineAncora` を呼ぶにゃ -/
 def ancora {m : Type → Type} [Monad m] (id : String) : SakuraM m Unit :=
-  emitte s!"\\_a[{evadeArgumentum id}]"
+  emitte (.optionum (.ancora id))
 
 /-- 錨を閉ぢる（\\_a）にゃん -/
 def fineAncora {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\_a"
+  emitte (.optionum .fineAncora)
 
 /-- 選擇肢の時間制限を設定する（\\![set,choicetimeout,ms]）にゃん -/
 def tempusOptionum {m : Type → Type} [Monad m] (ms : Nat) : SakuraM m Unit :=
-  emitte s!"\\![set,choicetimeout,{ms}]"
+  emitte (.optionum (.tempusOptionum ms))
 
 /-- 時間切れ防止（\\*）にゃん -/
 def prohibeTempus {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\*"
+  emitte (.imperii .prohibeTempus)
 
 -- ════════════════════════════════════════════════════
 --  制御 (Imperium)
 -- ════════════════════════════════════════════════════
 
 /-- スクリプト終了（\\e）にゃん。全ての SakuraScript の末尾に必ず置くにゃ -/
-def finis {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\e"
+def finis {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.imperii .finis)
 
 /-- 即時表示切替（\\_q）にゃん -/
-def celer {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\_q"
+def celer {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.imperii .celer)
 
 /-- ゴースト退出（\\-）にゃん -/
-def exitus {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\-"
+def exitus {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.imperii .exitus)
 
 /-- 同期區劃切替（\\_s）にゃん -/
-def synchrona {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\_s"
+def synchrona {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.imperii .synchrona)
 
 /-- 隨機ゴースト切替（\\+）にゃん -/
-def mutaGhost {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\+"
+def mutaGhost {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.imperii .mutaGhost)
 
 -- ════════════════════════════════════════════════════
 --  書體 (Forma Litterarum)

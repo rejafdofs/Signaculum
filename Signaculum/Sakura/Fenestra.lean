@@ -10,10 +10,10 @@ namespace Signaculum.Sakura
 -- ════════════════════════════════════════════════════
 
 /-- 近づく（\\5）にゃん -/
-def accede {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\5"
+def accede {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.imperii .accede)
 
 /-- 離れる（\\4）にゃん -/
-def recede {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\4"
+def recede {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.imperii .recede)
 
 -- ════════════════════════════════════════════════════
 --  位置 (Positio) — ゴーストの移動
@@ -22,12 +22,12 @@ def recede {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\4"
 /-- ゴーストを畫面座標 (sx,sy,kx,ky) に移動するにゃん（\\![move,sx,sy,kx,ky]）。
     sx/sy が主人格、kx/ky が副人格の座標にゃ -/
 def movere {m : Type → Type} [Monad m] (sx sy kx ky : Int) : SakuraM m Unit :=
-  emitte s!"\\![move,{sx},{sy},{kx},{ky}]"
+  emitte (.fenestrae (.movere sx sy kx ky))
 
 /-- ゴーストを畫面座標に非同期で移動するにゃん（\\![moveasync,sx,sy,kx,ky]）。
     スクリプトの實行を止めずに移動するにゃ -/
 def movereAsync {m : Type → Type} [Monad m] (sx sy kx ky : Int) : SakuraM m Unit :=
-  emitte s!"\\![moveasync,{sx},{sy},{kx},{ky}]"
+  emitte (.fenestrae (.movereAsync sx sy kx ky))
 
 -- ════════════════════════════════════════════════════
 --  可視性 (Visibilitas) — 表示/非表示
@@ -36,13 +36,13 @@ def movereAsync {m : Type → Type} [Monad m] (sx sy kx ky : Int) : SakuraM m Un
 /-- ゴーストを一時的に非表示にするにゃん（\\![vanish]）。
     `restituere` で復元できるにゃ -/
 def vanesco {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![vanish]"
+  emitte (.fenestrae .vanesco)
 
 /-- 非表示のゴーストを復元するにゃん（\\![restore] / \\![restore,name]）。
     nomen を省略すると自ゴーストを復元するにゃ -/
 def restituere {m : Type → Type} [Monad m] (nomen : String := "") : SakuraM m Unit :=
-  if nomen.isEmpty then emitte "\\![restore]"
-  else emitte s!"\\![restore,{evadeArgumentum nomen}]"
+  if nomen.isEmpty then emitte (.fenestrae (.restituere none))
+  else emitte (.fenestrae (.restituere (some nomen)))
 
 -- ════════════════════════════════════════════════════
 --  再描畫制御 (Imperium Repicturae)
@@ -51,11 +51,11 @@ def restituere {m : Type → Type} [Monad m] (nomen : String := "") : SakuraM m 
 /-- 畫面の再描畫をロックするにゃん（\\![lock,repaint]）。
     `reseraRepictura` と對で使ふにゃ -/
 def seraRepictura {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![lock,repaint]"
+  emitte (.fenestrae .seraRepictura)
 
 /-- 畫面の再描畫ロックを解除するにゃん（\\![unlock,repaint]）-/
 def reseraRepictura {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![unlock,repaint]"
+  emitte (.fenestrae .reseraRepictura)
 
 -- ════════════════════════════════════════════════════
 --  設定 (Configuratio)

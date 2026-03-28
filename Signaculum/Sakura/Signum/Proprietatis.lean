@@ -1,11 +1,12 @@
 -- Signaculum.Sakura.Signum.Proprietatis
--- プロパティ・環境・更新系シグヌムにゃん♪ ゴーストの設定や參照を表すにゃ
+-- プロパティ・環境・更新系シグヌムにゃん♪ ゴーストの設定や參照を表すにゃ。ボクに任せるにゃ
 
 import Signaculum.Sakura.Typi
 
 namespace Signaculum.Sakura
 
-/-- プロパティ・環境・更新系のシグヌムにゃん。\![set,property,...] / %property[...] 等に對應するにゃ -/
+/-- プロパティ・環境・更新系のシグヌムにゃん。\\![set,property,...] / %property[...] 等に對應するにゃ。
+    設定も取得も效果もぜんぶボクがまとめてあげたにゃん♪ -/
 inductive SignumProprietatis where
   | configuraProprietatem (proprietas : Proprietas) (valor : String)              -- \![set,property,prop,val]
   | legeProprietatem (eventum : String) (proprietates : List Proprietas)          -- \![get,property,ev,prop1,prop2,...]

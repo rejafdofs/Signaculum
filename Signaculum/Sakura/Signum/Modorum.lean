@@ -1,11 +1,12 @@
 -- Signaculum.Sakura.Signum.Modorum
--- モード制御シグヌムにゃん♪ 各種モードの出入りを表すにゃ
+-- モード制御シグヌムにゃん♪ 各種モードの出入りを表すにゃ。ボクが全部やるにゃ
 
 import Signaculum.Sakura.Typi
 
 namespace Signaculum.Sakura
 
-/-- モード制御のシグヌムにゃん。\![enter,...] / \![leave,...] 等に對應するにゃ -/
+/-- モード制御のシグヌムにゃん。\\![enter,...] / \\![leave,...] 等に對應するにゃ。
+    パッシヴモードやスティッキーやら、ボクが全部まとめたにゃ♪ -/
 inductive SignumModorum where
   | ingredereModumPassivum                                                           -- \![enter,passivemode]
   | egrediereModumPassivum                                                           -- \![leave,passivemode]

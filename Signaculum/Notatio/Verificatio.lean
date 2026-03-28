@@ -109,6 +109,23 @@ example : Id.run (currereScriptum (scriptum!
   \h
   \e)) = "\\h\\n\\e" := by native_decide
 
+-- 條件4: \u の後に別タグが續く場合（單行）
+example : Id.run (currereScriptum (scriptum! \u \h)) = "\\u\\h" := by native_decide
+
+-- 條件5: 複數行 \u 混在（scriptum!）
+example : Id.run (currereScriptum (scriptum!
+  \h \s[0]
+  \u \s[10]
+  \e)) = "\\h\\s[0]\\n\\u\\s[10]\\n\\e" := by native_decide
+
+-- 條件6: 裸の數値リテラルもテクストゥスとして表示にゃん
+example : Id.run (currereScriptum (scriptum! \h \s[0] 844424930131960 \e)) = "\\h\\s[0]844424930131960\\e" := by native_decide
+
+-- 條件7: 裸テクストゥスの後にタグが續く場合（rawTextusFn 後續空白消費の検證にゃん）
+example : Id.run (currereScriptum (scriptum!
+  \h \s[0] こんにちは
+  \u \s[10] よろしく \e)) = "\\h\\s[0]こんにちは\\n\\u\\s[10]よろしく\\e" := by native_decide
+
 -- ════════════════════════════════════════════════════
 --  舊形式スコープの検證にゃん
 -- ════════════════════════════════════════════════════

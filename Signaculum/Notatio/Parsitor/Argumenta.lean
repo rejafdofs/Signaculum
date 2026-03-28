@@ -59,7 +59,8 @@ private def legeParenTermFn (c : ParserContext) (s : ParserState) : ParserState 
   -- '(' を消費にゃ（atom は積まない — term の中に含まれるにゃ）
   let s := { s with pos := s.pos.next input }
   let s := skipWsFn c s
-  -- prec 0 で任意の Lean 式を許容するにゃ（舊 syntax "(" term ")" と同等）
+  -- 括弧内では precedence をリセットするにゃ（Lean.Parser.Term.paren と同樣）
+  -- 舊 syntax 宣言の "(" term ")" も term は prec 0 にゃ
   let s := (termParser 0).fn c s
   if s.hasError then s
   else

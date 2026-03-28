@@ -148,7 +148,7 @@ instance {α : Type} [StatusPermanens α] : StatusPermanens (Option α) where
         have hsize : (.mk #[1] ++ StatusPermanens.adBytes v).size ≠ 0 := by
           rw [ByteArray.size_append, show (ByteArray.mk #[1]).size = 1 from rfl]
           omega
-        simp only [hsize, dif_neg hsize, ite_false]
+        simp only [hsize]
         have h0 : (.mk #[1] ++ StatusPermanens.adBytes v)[0]'(by omega) = 1 := by rfl
         have hne : (1 : UInt8) ≠ 0 := by decide
         simp only [h0, hne, ite_false]

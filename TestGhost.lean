@@ -71,3 +71,13 @@ def testPuraSakura : String := Id.run do
     loqui "テスト完了にゃ。"
     finis
 
+-- ═══════════════════════════════════════════════════
+-- エントリーポイントにゃん
+-- ═══════════════════════════════════════════════════
+
+def main : IO Unit := do
+  IO.println "=== TestGhost ==="
+  IO.println s!"SakuraScript 生成テスト:\n{testPuraSakura}"
+  let registrata ← Signaculum.estRegistrata
+  IO.println s!"栞登錄狀態: {registrata}"
+

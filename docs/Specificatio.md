@@ -29,6 +29,10 @@ Signaculum.Nucleus.Exporta  ← exportaLoad / exportaUnload / exportaRequest
   │
   ├── Signaculum.Syntaxis    ← コンパイル時 DSL 構文擴張
   ├── Signaculum.Notatio.*   ← scriptum! マクロ DSL（原形タグ記法）
+  │     ├── Notatio.Lexema       ← LexemaSakurae 帰納型 IR
+  │     ├── Notatio.Parsitor     ← カスタムパーサー（sakuraLexemaParser）
+  │     ├── Notatio.Expande.*    ← タグ別展開ディスパッチ
+  │     └── Notatio.Macro        ← scriptum! エラボレーター
   ├── Signaculum.Nucleus.Loop ← Communicatio 構造體による通信ループ管理
   └── Signaculum.Elementa.*  ← 基礎要素（公理・補題・變數補助）
 ```

@@ -1,5 +1,28 @@
 # 變更記錄 (Mutationum Registrum)
 
+## v0.5.0 (2026-03-28) — LexemaSakurae IR + カスタムパーサー全面移行
+
+### LexemaSakurae 帰納型パーサー中間表現
+- `Notatio/Lexema.lean`: scriptum ブロック内トークンの構文中間表現 `LexemaSakurae` 帰納型を新設（7 コンストラクタ: textusNudus, signum, signumExclamationis, expressioInserta, textusLiteralis, variabilisAmbientis, signaturaFontis）
+
+### カスタムパーサー全面移行
+- `Notatio/Parsitor.lean` + `Parsitor/Argumenta.lean`: 先頭文字分岐の単一カスタム `ParserFn` で全サクラスクリプトトークンを直接パース
+- `sakuraSignum` カテゴリパーサーへの委譲を廃止し、`scriptumParserCore` で `sakuraLexemaParser` を直接使用
+- 括弧内引数パーサー `argumentaInUncisFn`: 不正な引数に対してタグ名入り日本語エラーメッセージを生成（例: `\s[aaa]` → `\s: []の中には数字が期待されてゐますにゃ`）
+
+### Expande ディスパッチ関数
+- `Notatio/Expande/Textus.lean`: 基本タグ展開（56 タグ）
+- `Notatio/Expande/Fenestra.lean` + `Fenestra/Aperitio.lean` + `Fenestra/Configuratio.lean`: 窓制御タグ展開（103 タグ）
+- `Notatio/Expande/Systema.lean` + `Systema/Eventum.lean` + `Systema/Sonus.lean` + `Systema/Animatio.lean` + `Systema/Rete.lean` + `Systema/Reliqua.lean`: システムタグ展開（107 タグ）
+- `Notatio/Expande/Fons.lean`: 書体タグ展開（60 タグ、リテラル解釈含む）
+
+### リテラルオーバーロード型クラス
+- `Sakura/Literalis.lean`: OfNat 方式で none/default/left 等のキーワードを期待型に応じて自動解決する型クラス群（SakuraNullus, SakuraPraefinitus, SakuraInhabilis 等）
+- `Option α` にも `SakuraNullus` インスタンスを実装
+
+### 既知の制限
+- `\q[..., script: ...]` 構文はカスタムパーサーで未対応（TODO）
+
 ## v0.4.1 (2026-03-28) — scriptum パーサ堅牢化 & lean-toolchain 安定版移行
 
 ### lean-toolchain を安定版 v4.29.0 に移行

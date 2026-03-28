@@ -11,8 +11,8 @@ Ukagaka ゴーストが require するだけで使える。
 SSP (Ukagaka ベースウェア)
   │  DLL load/unload/request 呼出し
   ▼
-ffi/shiori.c  (ゴースト側の C グルー)
-  │  @[export] された Lean 關數を直接呼ぶ
+procurator/shiori.dll  (Rust FFI ラッパー)
+  │  パイプ經由で ghost.exe と通信する
   ▼
 Signaculum.Nucleus.Exporta  ← exportaLoad / exportaUnload / exportaRequest
   │
@@ -164,7 +164,39 @@ C グルーから呼ばれる `@[export]` 關數群。
 
 SakuraScript を Lean で組み立てるためのモナドと DSL。
 
-`SakuraIO α = StateT StatusSakurae IO α` — スクリプトゥム文字列とレスポンスムヘッダーを積み上げていくモナド。
+`SakuraIO α = StateT StatusSakurae IO α` — 構造化シグヌムのリストゥス（`List Signum`）とレスポンスムヘッダーを積み上げていくモナド。
+
+#### Signum 型 — 構造化サクラスクリプトタグ
+
+全ての SakuraScript タグを型安全な帰納型 `Signum` で表現する。17 のカテゴリ別子帰納型をラップした判別共用體。
+
+```lean
+inductive Signum where
+  | scopi         : SignumScopi → Signum         -- 人格切替（\h, \u, \p[n]）
+  | superficiei   : SignumSuperficiei → Signum   -- 表情（\s[n], \i[n]）
+  | exhibitionis  : SignumExhibitionis → Signum  -- テキスト表示（\n, \c, \_l 等）
+  | morae         : SignumMorae → Signum         -- 待機（\w, \_w, \x）
+  | optionum      : SignumOptionum → Signum      -- 選擇肢
+  | imperii       : SignumImperii → Signum       -- 制御（\e, \-, \_q 等）
+  | formae        : SignumFormae → Signum        -- 書式（フォント、色、揃へ）
+  | bullae        : SignumBullae → Signum        -- 吹出し
+  | fenestrae     : SignumFenestrae → Signum     -- 窓操作
+  | inputi        : SignumInputi → Signum        -- 入力ダイアログ
+  | soni          : SignumSoni → Signum          -- 音聲
+  | eventuum      : SignumEventuum → Signum      -- 事象（\![raise,...] 等）
+  | animationis   : SignumAnimationis → Signum   -- アニメーション
+  | mutationis    : SignumMutationis → Signum    -- ゴースト切替
+  | retis         : SignumRetis → Signum         -- ネットワーク・HTTP
+  | modorum       : SignumModorum → Signum       -- モード變更
+  | proprietatis  : SignumProprietatis → Signum  -- プロパティ取得
+```
+
+| 關數 | 説明 |
+|---|---|
+| `Signum.adCatenam` | 個別の `Signum` をサクラスクリプト文字列に變換する |
+| `adCatenamLista signa` | `List Signum` を連結してサクラスクリプト文字列に變換する |
+
+`StatusSakurae.scriptum` の型は `List Signum` であり、`emitte` で蓄積し、最終的に `adCatenamLista` で文字列化される。
 
 | 關數 | 説明 |
 |---|---|

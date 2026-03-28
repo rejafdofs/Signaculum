@@ -87,9 +87,7 @@ def aperiInputum {m : Type → Type} [Monad m]
     (modus : ModusInputiTextus := .simplex)
     (eventum titulus textus : String)
     (optiones : OptionesInputi := {}) : SakuraM m Unit :=
-  let opt := optiones.toString
-  let opt := if opt.isEmpty then "" else s!",{opt}"
-  emitte s!"\\![open,{modus.toString},{evadeArgumentum eventum},{evadeArgumentum titulus},{evadeArgumentum textus}{opt}]"
+  emitte (.inputi (.aperiInputum modus eventum titulus textus optiones))
 
 /-- 日付入力ボックスを開くにゃん（\\![open,dateinput,...]）。
     annus/mensis/dies は年/月(1〜12)/日(1〜月の日数) にゃ。
@@ -99,9 +97,7 @@ def aperiInputumDiei {m : Type → Type} [Monad m]
     (_hm : 1 ≤ mensis ∧ mensis ≤ 12 := by omega)
     (_hd : 1 ≤ dies ∧ dies ≤ diesInMense annus mensis := by omega)
     (optiones : OptionesInputi := {}) : SakuraM m Unit :=
-  let opt := optiones.toString
-  let opt := if opt.isEmpty then "" else s!",{opt}"
-  emitte s!"\\![open,dateinput,{evadeArgumentum eventum},{evadeArgumentum titulus},{annus},{mensis},{dies}{opt}]"
+  emitte (.inputi (.aperiInputumDiei eventum titulus annus mensis dies _hm _hd optiones))
 
 /-- 時刻入力ボックスを開くにゃん（\\![open,timeinput,...]）。
     hora(0〜23)/minutum(0〜59)/secundum(0〜59) にゃ -/
@@ -111,9 +107,7 @@ def aperiInputumTemporis {m : Type → Type} [Monad m]
     (_hmin : minutum ≤ 59 := by omega)
     (_hs : secundum ≤ 59 := by omega)
     (optiones : OptionesInputi := {}) : SakuraM m Unit :=
-  let opt := optiones.toString
-  let opt := if opt.isEmpty then "" else s!",{opt}"
-  emitte s!"\\![open,timeinput,{evadeArgumentum eventum},{evadeArgumentum titulus},{hora},{minutum},{secundum}{opt}]"
+  emitte (.inputi (.aperiInputumTemporis eventum titulus hora _hh minutum _hmin secundum _hs optiones))
 
 /-- スライダー入力ボックスを開くにゃん（\\![open,sliderinput,...]）。
     minimum ≤ initium ≤ maximum の制約があるにゃ -/

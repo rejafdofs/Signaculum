@@ -42,15 +42,15 @@ def notifica {m : Type → Type} [Monad m]
 
 /-- 表面を非表示にするにゃん（\\s[-1]）-/
 def superficiesAbsconde {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\s[-1]"
+  emitte (.superficiei .superficiesAbsconde)
 
 /-- 表面動畫を再生して完了まで待つにゃん（\\i[id,wait]）-/
 def animatioExpecta {m : Type → Type} [Monad m] (animId : Nat) : SakuraM m Unit :=
-  emitte s!"\\i[{animId},wait]"
+  emitte (.superficiei (.animatioExpecta animId))
 
 /-- 指定スコープのアニメーションパターンを再開するにゃん（\\![anim,resume,scopus,id]）-/
 def animaContinuat {m : Type → Type} [Monad m] (scopus animId : Nat) : SakuraM m Unit :=
-  emitte s!"\\![anim,resume,{scopus},{animId}]"
+  emitte (.animationis (.animaContinuat scopus animId))
 
 /-- 指定スコープのアニメーションパターンを消去するにゃん（\\![anim,clear,scopus,id]）-/
 def animaPurgat {m : Type → Type} [Monad m] (scopus animId : Nat) : SakuraM m Unit :=

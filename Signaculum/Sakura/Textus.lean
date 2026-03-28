@@ -162,46 +162,46 @@ def altitudoLitterarum {m : Type → Type} [Monad m] (mag : MagnitudoLitterarum)
 
 /-- 書體名の設定（\\f[name,font]）にゃん -/
 def nomenFontis {m : Type → Type} [Monad m] (nomen : String) : SakuraM m Unit :=
-  emitte s!"\\f[name,{evadeArgumentum nomen}]"
+  emitte (.formae (.nomenFontis nomen))
 
 /-- 文字揃へ（\\f[align,方向]）にゃん -/
 def allineatio {m : Type → Type} [Monad m] (directio : DirectioAllineatio) : SakuraM m Unit :=
-  emitte s!"\\f[align,{directio.toString}]"
+  emitte (.formae (.allineatio directio))
 
 /-- 縦方向文字揃へ（\\f[valign,方向]）にゃん -/
 def allineatioVerticalis {m : Type → Type} [Monad m] (directio : DirectioVerticalis) : SakuraM m Unit :=
-  emitte s!"\\f[valign,{directio.toString}]"
+  emitte (.formae (.allineatioVerticalis directio))
 
 /-- 文字影の色を設定するにゃん（\\f[shadowcolor,色]）。
     "none" で影を無效にするにゃ -/
 def colorUmbrae {m : Type → Type} [Monad m] (coloris : Coloris) : SakuraM m Unit :=
-  emitte s!"\\f[shadowcolor,{coloris.toString}]"
+  emitte (.formae (.colorUmbrae coloris))
 
 /-- 文字影のスタイルを設定するにゃん（\\f[shadowstyle,スタイル]）。
     `offset`=右下ずらし、`contornus`=輪郭風、`praefinitus`=既定にゃ -/
 def stylumUmbrae {m : Type → Type} [Monad m] (stylus : StylusUmbrae) : SakuraM m Unit :=
-  emitte s!"\\f[shadowstyle,{stylus.toString}]"
+  emitte (.formae (.stylumUmbrae stylus))
 
 /-- 文字の輪郭を設定するにゃん（\\f[outline,パラメータ]）。
     `activus`=有效、`inactivus`=無效、`praefinitus`=既定、`inhabilis`=無效化にゃ -/
 def contornus {m : Type → Type} [Monad m] (parametrum : StatusContorni) : SakuraM m Unit :=
-  emitte s!"\\f[outline,{parametrum.toString}]"
+  emitte (.formae (.contornus parametrum))
 
 /-- 下付き文字の切替にゃん（\\f[sub,true/false]）-/
 def subscriptus {m : Type → Type} [Monad m] (b : Bool := true) : SakuraM m Unit :=
-  emitte s!"\\f[sub,{if b then "true" else "false"}]"
+  emitte (.formae (.subscriptus b))
 
 /-- 上付き文字の切替にゃん（\\f[sup,true/false]）-/
 def superscriptus {m : Type → Type} [Monad m] (b : Bool := true) : SakuraM m Unit :=
-  emitte s!"\\f[sup,{if b then "true" else "false"}]"
+  emitte (.formae (.superscriptus b))
 
 /-- テキスト表示を無效にするにゃん（\\f[disable]）-/
 def formaInhabilis {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\f[disable]"
+  emitte (.formae .formaInhabilis)
 
 /-- 書式を既定に戾す（\\f[default]）にゃん -/
 def formaPraefinita {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\f[default]"
+  emitte (.formae .formaPraefinita)
 
 -- カーソル（選擇中）スタイル
 

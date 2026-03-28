@@ -2,6 +2,7 @@
 -- 窓制御・UI・モード・設定・開閉の構文規則にゃん♪
 
 import Signaculum.Notatio.Categoria
+import Signaculum.Notatio.Literalia
 import Signaculum.Sakura.Scriptum
 
 namespace Signaculum.Notatio
@@ -100,28 +101,10 @@ macro_rules | `(expandSignum \![set,windowstate, $s]) => `(Signaculum.Sakura.con
 syntax "\\!" "[set,alignmentondesktop," term "]" : sakuraSignum
 macro_rules | `(expandSignum \![set,alignmentondesktop, $d]) => `(Signaculum.Sakura.allineatioDesktop $d)
 
--- バルーン整列インラインリテラルにゃん♪ タグの中だけでキーワードが有效にゃ
-syntax "\\!" "[set,balloonalign," "left" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,balloonalign, left]) => `(Signaculum.Sakura.allineatioBullae .sinistrum)
-
-syntax "\\!" "[set,balloonalign," "center" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,balloonalign, center]) => `(Signaculum.Sakura.allineatioBullae .centrum)
-
-syntax "\\!" "[set,balloonalign," "top" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,balloonalign, top]) => `(Signaculum.Sakura.allineatioBullae .summum)
-
-syntax "\\!" "[set,balloonalign," "right" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,balloonalign, right]) => `(Signaculum.Sakura.allineatioBullae .dextrum)
-
-syntax "\\!" "[set,balloonalign," "bottom" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,balloonalign, bottom]) => `(Signaculum.Sakura.allineatioBullae .imum)
-
-syntax "\\!" "[set,balloonalign," "none" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,balloonalign, none]) => `(Signaculum.Sakura.allineatioBullae .nullus)
-
--- 後方互換: 括弧で包めば任意の Lean 式を渡せるにゃ
-syntax "\\!" "[set,balloonalign," "(" term ")" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,balloonalign, ($d)]) => `(Signaculum.Sakura.allineatioBullae $d)
+-- バルーン整列にゃん♪ Literalia の directioAllineatioBullaeLiteral を使ふにゃ
+syntax "\\!" "[set,balloonalign," directioAllineatioBullaeLiteral "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,balloonalign, $d:directioAllineatioBullaeLiteral]) =>
+  `(Signaculum.Sakura.allineatioBullae (directioAllineatioBullaeL $d))
 
 syntax "\\!" "[set,balloontimeout," term "]" : sakuraSignum
 macro_rules | `(expandSignum \![set,balloontimeout, $n]) => `(Signaculum.Sakura.tempusBullae $n)

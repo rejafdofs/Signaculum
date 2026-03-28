@@ -2,6 +2,7 @@
 -- イヴェントゥム・音響・動畫・呼出・實行・變更の構文規則にゃん♪
 
 import Signaculum.Notatio.Categoria
+import Signaculum.Notatio.Literalia
 import Signaculum.Sakura.Scriptum
 
 namespace Signaculum.Notatio
@@ -404,28 +405,10 @@ macro_rules | `(expandSignum \![set,othersurfacechange, $b]) => `(Signaculum.Sak
 syntax "\\!" "[set,wallpaper," str "]" : sakuraSignum
 macro_rules | `(expandSignum \![set,wallpaper, $v]) => `(Signaculum.Sakura.configuraTapete $v Option.none)
 
--- 壁紙モードインラインリテラルにゃん♪ タグの中だけでキーワードが有效にゃ
-syntax "\\!" "[set,wallpaper," str "," "center" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,wallpaper, $v, center]) => `(Signaculum.Sakura.configuraTapete $v (Option.some .centrum))
-
-syntax "\\!" "[set,wallpaper," str "," "tile" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,wallpaper, $v, tile]) => `(Signaculum.Sakura.configuraTapete $v (Option.some .tessella))
-
-syntax "\\!" "[set,wallpaper," str "," "stretch" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,wallpaper, $v, stretch]) => `(Signaculum.Sakura.configuraTapete $v (Option.some .extende))
-
-syntax "\\!" "[set,wallpaper," str "," "stretch-x" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,wallpaper, $v, stretch-x]) => `(Signaculum.Sakura.configuraTapete $v (Option.some .extendeX))
-
-syntax "\\!" "[set,wallpaper," str "," "stretch-y" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,wallpaper, $v, stretch-y]) => `(Signaculum.Sakura.configuraTapete $v (Option.some .extendeY))
-
-syntax "\\!" "[set,wallpaper," str "," "span" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,wallpaper, $v, span]) => `(Signaculum.Sakura.configuraTapete $v (Option.some .spatium))
-
--- 後方互換: 括弧で包めば任意の Lean 式を渡せるにゃ
-syntax "\\!" "[set,wallpaper," str "," "(" term ")" "]" : sakuraSignum
-macro_rules | `(expandSignum \![set,wallpaper, $v, ($m)]) => `(Signaculum.Sakura.configuraTapete $v (Option.some $m))
+-- 壁紙モードにゃん♪ Literalia の modusTapetisLiteral を使ふにゃ
+syntax "\\!" "[set,wallpaper," str "," modusTapetisLiteral "]" : sakuraSignum
+macro_rules | `(expandSignum \![set,wallpaper, $v, $m:modusTapetisLiteral]) =>
+  `(Signaculum.Sakura.configuraTapete $v (Option.some (modusTapetisL $m)))
 
 syntax "\\!" "[set,shioridebugmode]" : sakuraSignum
 macro_rules | `(expandSignum \![set,shioridebugmode]) => `(Signaculum.Sakura.configuraShioriDebug)

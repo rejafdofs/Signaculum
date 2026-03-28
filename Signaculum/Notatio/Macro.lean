@@ -74,17 +74,10 @@ instance (priority := 95) {α : Type u} [Exhibibilis α IO] : Exhibibilis (Array
       let i : Fin n := ⟨idx % n, Nat.mod_lt idx (by omega)⟩
       Exhibibilis.exhibe (m := IO) a[i]
 
--- List α → toArray してランダムに1要素選んで exhibe にゃん（IO 專用）
+-- List α → toArray して Array α のインスタンスに委譲にゃん（IO 專用）
 universe u in
 instance (priority := 95) {α : Type u} [Exhibibilis α IO] : Exhibibilis (List α) IO where
-  exhibe (l : List α) := do
-    let a : Array α := List.toArray l
-    if h : a.size = 0 then pure ()
-    else
-      let n := a.size
-      let idx ← liftM (IO.rand 0 (n - 1))
-      let i : Fin n := ⟨idx % n, Nat.mod_lt idx (by omega)⟩
-      Exhibibilis.exhibe (m := IO) a[i]
+  exhibe (l : List α) := Exhibibilis.exhibe (m := IO) l.toArray
 
 -- Option α → some なら exhibe、none なら無出力にゃん（非正格評價）
 universe u in

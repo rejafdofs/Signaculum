@@ -323,4 +323,24 @@ macro_rules
   | `(magnitudoLitterarumL $n:num)   => `(Signaculum.Sakura.MagnitudoLitterarum.absoluta $n)
   | `(magnitudoLitterarumL ($e))     => `($e)
 
+
+-- ════════════════════════════════════════════════════
+--  veritasLiteral (Bool 型リテラル)
+-- ════════════════════════════════════════════════════
+
+/-- 眞僞リテラルカテゴリアにゃん。true/false をそのまま書けるにゃ。
+    括弧で包めば任意の Lean 式も渡せるにゃ -/
+declare_syntax_cat veritasLiteral
+
+syntax "true"       : veritasLiteral
+syntax "false"      : veritasLiteral
+syntax "(" term ")" : veritasLiteral
+
+syntax "veritasL " veritasLiteral : term
+
+macro_rules
+  | `(veritasL true)  => `(Bool.true)
+  | `(veritasL false) => `(Bool.false)
+  | `(veritasL ($e))  => `($e)
+
 end Signaculum.Notatio

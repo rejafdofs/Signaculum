@@ -149,6 +149,38 @@ private def registraLaziumLambda (lamStx : Syntax) (posIdx : Nat) (pc : Nat := 0
   return nomenEventi
 
 -- ═══════════════════════════════════════════════════
+-- excita / insere / notifica 共通エラボレーターにゃん
+-- ═══════════════════════════════════════════════════
+
+/-- 事象發火系エラボレーターの共通處理にゃん♪
+    excita / insere / notifica / excitaPostTempus / notificaPostTempus は
+    全て同一の登録ロジックを使ふにゃ。差異は接頭辭引數の有無と呼出先にゃ。
+    - `initiumIdx`: ident/lambda が始まるインデックスにゃん（0=接頭辭なし、2=ms+rep あり）
+    - `praefixaTerma`: 接頭辭引數の配列にゃん（空 or [ms, rep]）
+    - `funcIdent`: 呼出先 Sakura 函數の識別子にゃん -/
+private def elabSignalumCommunis
+    (stx : Lean.Syntax) (initiumIdx : Nat)
+    (praefixaTerma : Array (TSyntax `term))
+    (funcIdent : Lean.Ident) : TermElabM Lean.Expr := do
+  let fIdx := initiumIdx + 1
+  let (fStx, args) :=
+    if stx[fIdx].isIdent then (stx[fIdx], stx[fIdx + 1].getArgs)
+    else (stx[fIdx + 1], stx[fIdx + 3].getArgs)
+  let nomenEventi ←
+    if stx[fIdx].isIdent
+    then registraLazium ⟨fStx⟩
+    else registraLaziumLambda fStx (stx.getPos?.getD ⟨0⟩).byteIdx args.size
+  let argTerms ← args.mapM fun a => do
+    let t : TSyntax `term := ⟨a⟩
+    `(Signaculum.Memoria.Citatio.toRef $t)
+  let nomenLit := Syntax.mkStrLit nomenEventi
+  let argsLit ← `([$argTerms,*])
+  -- 接頭辭引數 + nomen + args の呼出しを組み立てるにゃ
+  let allArgs : Array (TSyntax `term) := praefixaTerma ++ #[⟨nomenLit⟩, argsLit]
+  let call ← `($funcIdent $allArgs*)
+  elabTerm call none
+
+-- ═══════════════════════════════════════════════════
 -- excita / insere の識別子形 elab にゃん
 -- ═══════════════════════════════════════════════════
 
@@ -174,20 +206,8 @@ def excitaTermParser : Lean.Parser.Parser :=
     (Lean.Parser.symbol "excita" >> Lean.Parser.ident >> excitaArgParser)
 
 @[term_elab excitaSyntax]
-def elabExcitaTerm : TermElab := fun stx _ => do
-  -- ident 形: stx[1]=ident, stx[2]=null(args)
-  -- lambda 形: stx[1]="(", stx[2]=lambda, stx[3]=")", stx[4]=null(args)
-  let (fStx, args) :=
-    if stx[1].isIdent then (stx[1], stx[2].getArgs)
-    else (stx[2], stx[4].getArgs)
-  let nomenEventi ←
-    if stx[1].isIdent
-    then registraLazium ⟨fStx⟩
-    else registraLaziumLambda fStx (stx.getPos?.getD ⟨0⟩).byteIdx args.size
-  let argTerms ← args.mapM fun a => do
-    let t : TSyntax `term := ⟨a⟩
-    `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm (← `(Signaculum.Sakura.excita $(Syntax.mkStrLit nomenEventi) [$argTerms,*])) none
+def elabExcitaTerm : TermElab := fun stx _ =>
+  elabSignalumCommunis stx 0 #[] (mkIdent ``Signaculum.Sakura.excita)
 
 /-- `excita ( term ) args*` — ラムダ式（Tractator 型）を直接渡しにゃ♪
     args は Reference 経由でイベントに渡されるにゃ -/
@@ -209,20 +229,8 @@ def insereTermParser : Lean.Parser.Parser :=
     (Lean.Parser.symbol "insere" >> Lean.Parser.ident >> excitaArgParser)
 
 @[term_elab insereSyntax]
-def elabInsereTerm : TermElab := fun stx _ => do
-  -- ident 形: stx[1]=ident, stx[2]=null(args)
-  -- lambda 形: stx[1]="(", stx[2]=lambda, stx[3]=")", stx[4]=null(args)
-  let (fStx, args) :=
-    if stx[1].isIdent then (stx[1], stx[2].getArgs)
-    else (stx[2], stx[4].getArgs)
-  let nomenEventi ←
-    if stx[1].isIdent
-    then registraLazium ⟨fStx⟩
-    else registraLaziumLambda fStx (stx.getPos?.getD ⟨0⟩).byteIdx args.size
-  let argTerms ← args.mapM fun a => do
-    let t : TSyntax `term := ⟨a⟩
-    `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm (← `(Signaculum.Sakura.insere $(Syntax.mkStrLit nomenEventi) [$argTerms,*])) none
+def elabInsereTerm : TermElab := fun stx _ =>
+  elabSignalumCommunis stx 0 #[] (mkIdent ``Signaculum.Sakura.insere)
 
 /-- `insere ( term ) args*` — ラムダ式（Tractator 型）を直接渡しにゃ♪ -/
 @[term_parser]
@@ -247,20 +255,8 @@ def notificaTermParser : Lean.Parser.Parser :=
     (Lean.Parser.symbol "notifica" >> Lean.Parser.ident >> excitaArgParser)
 
 @[term_elab notificaSyntax]
-def elabNotificaTerm : TermElab := fun stx _ => do
-  -- ident 形: stx[1]=ident, stx[2]=null(args)
-  -- lambda 形: stx[1]="(", stx[2]=lambda, stx[3]=")", stx[4]=null(args)
-  let (fStx, args) :=
-    if stx[1].isIdent then (stx[1], stx[2].getArgs)
-    else (stx[2], stx[4].getArgs)
-  let nomenEventi ←
-    if stx[1].isIdent
-    then registraLazium ⟨fStx⟩
-    else registraLaziumLambda fStx (stx.getPos?.getD ⟨0⟩).byteIdx args.size
-  let argTerms ← args.mapM fun a => do
-    let t : TSyntax `term := ⟨a⟩
-    `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm (← `(Signaculum.Sakura.notifica $(Syntax.mkStrLit nomenEventi) [$argTerms,*])) none
+def elabNotificaTerm : TermElab := fun stx _ =>
+  elabSignalumCommunis stx 0 #[] (mkIdent ``Signaculum.Sakura.notifica)
 
 /-- `notifica ( term ) args*` — ラムダ式（Tractator 型）を直接渡しにゃ♪ -/
 @[term_parser]
@@ -283,24 +279,8 @@ def excitaPostTempusTermParser : Lean.Parser.Parser :=
      Lean.Parser.ident >> excitaArgParser)
 
 @[term_elab excitaPostTempusSyntax]
-def elabExcitaPostTempusTerm : TermElab := fun stx _ => do
-  -- ident 形: stx[1]=ms, stx[2]=rep, stx[3]=ident, stx[4]=null(args)
-  -- lambda 形: stx[1]=ms, stx[2]=rep, stx[3]="(", stx[4]=lambda, stx[5]=")", stx[6]=null(args)
-  let ms : TSyntax `term := ⟨stx[1]⟩
-  let rep : TSyntax `term := ⟨stx[2]⟩
-  let (fStx, args) :=
-    if stx[3].isIdent then (stx[3], stx[4].getArgs)
-    else (stx[4], stx[6].getArgs)
-  let nomenEventi ←
-    if stx[3].isIdent
-    then registraLazium ⟨fStx⟩
-    else registraLaziumLambda fStx (stx.getPos?.getD ⟨0⟩).byteIdx args.size
-  let argTerms ← args.mapM fun a => do
-    let t : TSyntax `term := ⟨a⟩
-    `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm
-    (← `(Signaculum.Sakura.excitaPostTempus $ms $rep $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
-    none
+def elabExcitaPostTempusTerm : TermElab := fun stx _ =>
+  elabSignalumCommunis stx 2 #[⟨stx[1]⟩, ⟨stx[2]⟩] (mkIdent ``Signaculum.Sakura.excitaPostTempus)
 
 /-- `excitaPostTempus ms rep ( term ) args*` — ラムダ式（Tractator 型）を遅延発火させるにゃ♪ -/
 @[term_parser]
@@ -322,24 +302,8 @@ def notificaPostTempusTermParser : Lean.Parser.Parser :=
      Lean.Parser.ident >> excitaArgParser)
 
 @[term_elab notificaPostTempusSyntax]
-def elabNotificaPostTempusTerm : TermElab := fun stx _ => do
-  -- ident 形: stx[1]=ms, stx[2]=rep, stx[3]=ident, stx[4]=null(args)
-  -- lambda 形: stx[1]=ms, stx[2]=rep, stx[3]="(", stx[4]=lambda, stx[5]=")", stx[6]=null(args)
-  let ms : TSyntax `term := ⟨stx[1]⟩
-  let rep : TSyntax `term := ⟨stx[2]⟩
-  let (fStx, args) :=
-    if stx[3].isIdent then (stx[3], stx[4].getArgs)
-    else (stx[4], stx[6].getArgs)
-  let nomenEventi ←
-    if stx[3].isIdent
-    then registraLazium ⟨fStx⟩
-    else registraLaziumLambda fStx (stx.getPos?.getD ⟨0⟩).byteIdx args.size
-  let argTerms ← args.mapM fun a => do
-    let t : TSyntax `term := ⟨a⟩
-    `(Signaculum.Memoria.Citatio.toRef $t)
-  elabTerm
-    (← `(Signaculum.Sakura.notificaPostTempus $ms $rep $(Syntax.mkStrLit nomenEventi) [$argTerms,*]))
-    none
+def elabNotificaPostTempusTerm : TermElab := fun stx _ =>
+  elabSignalumCommunis stx 2 #[⟨stx[1]⟩, ⟨stx[2]⟩] (mkIdent ``Signaculum.Sakura.notificaPostTempus)
 
 /-- `notificaPostTempus ms rep ( term ) args*` — ラムダ式（Tractator 型）を遅延通知するにゃ♪ -/
 @[term_parser]

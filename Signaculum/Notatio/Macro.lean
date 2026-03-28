@@ -314,6 +314,17 @@ def elabScriptum : TermElab := fun stx expectedType? => do
       let next ← genTerm s
       body ← `(Bind.bind $body fun () => $next)
       lineaPrior := lineaCurrens
-    elabTerm body expectedType?
+    let result ← elabTerm body expectedType?
+    -- ポスト・エラボレーション: 各タグにホバー情報を登録するにゃん♪
+    -- 一括 elabTerm でモナドパラメータが解決した後なので、resultType を期待型として
+    -- 渡すことで個別タグのエラボレーションでも同じモナドが使はれるにゃ
+    let resultType ← inferType result
+    for s in ss do
+      try
+        let termStx ← genTerm s
+        let tagExpr ← elabTerm termStx (some resultType)
+        addTermInfo s tagExpr
+      catch _ => pure ()
+    return result
   else
     elabTerm (← `(pure ())) expectedType?

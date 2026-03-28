@@ -188,7 +188,7 @@ SakuraScript を原形タグ記法で書ける `scriptum!` マクロを追加。
 
 ---
 
-## 最適化 (Optimizatio) (2026-01-01)
+## v0.1.1 (2026-01-01) — 最適化 (Optimizatio)
 
 ### `evadeTextus` の文字列構築改善 (`SakuraScriptum.lean`)
 SakuraScriptum の特殊文字遁走處理で、通常文字の追加を `String.ofList [c]`（毎囘リスト生成 + 文字列變換）から `acc.push c`（1文字直接追加）に變更したにゃ。文字列が長いほど效果が出るにゃん♪

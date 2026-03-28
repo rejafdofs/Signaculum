@@ -117,7 +117,7 @@ numerusSalutationum.renovare (· + 1)   -- 更新にゃ
 
 **型安全な永続化にゃ♪**
 型が変はつても `typusTag` が一致しにゃければ安全に読み飛ばされるにゃん。
-保存→復元の往復は `serializeMappam_roundtrip` 定理として Lean 4 で証明済みにゃ（補題は一部 sorry）。
+保存→復元の往復は `serializeMappam_roundtrip` 定理として Lean 4 で証明済みにゃ。
 
 ---
 
@@ -567,7 +567,7 @@ instance : StatusPermanens DatorumLusoris where
     let (gradus, pos1) <- decodeField b 0
     let (nomen,  _)    <- decodeField b pos1
     return { gradus, nomen }
-  roundtrip :=by sorry
+  roundtrip := by sorry   -- ユーザー側の構造體では sorry から始めて後で證明する流れにゃ
 
 varia perpetua lusor : DatorumLusoris := { gradus := 1, nomen := "シロ" }
 ```

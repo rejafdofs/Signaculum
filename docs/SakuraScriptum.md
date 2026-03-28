@@ -31,7 +31,7 @@ def myScript : SakuraPura Unit := do
   finis
 
 -- 文字列を取得
-#eval currere myScript  -- "\h\s[0]こんにちは！\n\u\s[10]やっほー♪\e"
+#eval currereScriptum myScript  -- "\h\s[0]こんにちは！\n\u\s[10]やっほー♪\e"
 ```
 
 ---

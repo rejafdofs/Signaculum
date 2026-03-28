@@ -1,6 +1,5 @@
 -- Signaculum.Elementa.Lemma
--- 理論上證明可能だけど今はまだ證明しないシグナークルムの補題置き場にゃん♪
--- sorry 付きで此處に置いておくにゃ。證明できたら sorry を消すにゃ
+-- シグナークルムの補題置き場にゃん♪
 -- 既存型の補題は LemmaGeneralis プロイェクトゥムに移動してゐるにゃ
 
 import Signaculum.Elementa.Axiom

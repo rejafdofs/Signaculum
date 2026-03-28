@@ -23,44 +23,6 @@ def GradusErroris.adCatenam : GradusErroris → String
 
 instance : ToString GradusErroris := ⟨GradusErroris.adCatenam⟩
 
-/-- サクラスクリプト構築モナドの狀態にゃん。
-    スクリプトゥム文字列に加へて SHIORI/3.0 レスポンスムの附加ヘッダーも蓄積するにゃ。
-    Value（スクリプトゥム）以外のレスポンスムヘッダーをイヴェントゥム處理器から設定できるにゃん♪ -/
-structure StatusSakurae where
-  /-- 蓄積中のサクラスクリプトゥム文字列にゃ -/
-  scriptum         : String := ""
-  /-- Marker ヘッダー: バルーン下部の附加情報文字列にゃ -/
-  marker           : Option String := none
-  /-- BalloonOffset ヘッダー: バルーン位置の補正 (X, Y) にゃ -/
-  balloonOffset    : Option (Int × Int) := none
-  /-- ErrorLevel ヘッダーにゃ -/
-  errorLevel       : Option GradusErroris := none
-  /-- ErrorDescription ヘッダー: エラーの詳細にゃ -/
-  errorDescription : Option String := none
-  /-- MarkerSend ヘッダー: SSTP 送信先へのマーカーにゃ -/
-  markerSend       : Option String := none
-  /-- ValueNotify ヘッダー: NOTIFY でもスクリプトゥムを實行するにゃ -/
-  valorNotifica    : Option String := none
-  /-- Age ヘッダー: 通信世代カウンタにゃ -/
-  age              : Option Nat := none
-  /-- SecurityLevel ヘッダー: "local"|"external" にゃ -/
-  securitas        : Option String := none
-  /-- 其の他の任意ヘッダー（X-SSTP-PassThru-* 等）にゃ -/
-  cappitta         : List (String × String) := []
-  deriving Repr, Inhabited
-
-/-- サクラスクリプト構築モナドにゃん。
-    StatusSakurae を蓄積する StateT で、基底モナド m を自由に選べるにゃ。
-    純粹な構築には `SakuraPura`、IO が要る時は `SakuraIO` を使ふにゃん -/
-abbrev SakuraM (m : Type → Type) [Monad m] (α : Type) :=
-  StateT StatusSakurae m α
-
-/-- IO 附きサクラスクリプト・モナドにゃん。お嬢樣の處理器はこれを使ふにゃ -/
-abbrev SakuraIO (α : Type) := SakuraM IO α
-
-/-- 純粹サクラスクリプト・モナドにゃん。副作用が要らにゃい時に使ふにゃ -/
-abbrev SakuraPura (α : Type) := SakuraM Id α
-
 -- ════════════════════════════════════════════════════
 --  列挙型 (Typi Enumerati)
 -- ════════════════════════════════════════════════════
@@ -496,29 +458,39 @@ def OptionesMutationis.toString (o : OptionesMutationis) : String :=
 def OptionesMutationis.cumExcitaEventu (o : OptionesMutationis) : OptionesMutationis :=
   { o with excitaEventum := true }
 
-/-- `\\![open,X]`（追加引數なし）で開けるウィンドウの種類にゃん。
-    `aperi` 關數に渡すにゃ。
-    - `console`              : コンソール
-    - `arcaCommunicationis`  : コミュニケートボックス
-    - `arcaDoctrinae`        : 教育ボックス
-    - `arcaFabricationis`    : 作成ボックス
-    - `exploratorFantasmatis`: ゴースト探索ダイアローグス
-    - `exploratorTegumenti`  : シェル探索ダイアローグス
-    - `exploratorBullae`     : 吹出し探索ダイアローグス
-    - `probatioSuperficiei`  : 表面テスト
-    - `exploratorHeadlineae` : ヘッドラインセンサー探索
-    - `exploratorModulorum`  : プラグイン探索
-    - `graphumUsus`          : 使用率グラフ
-    - `graphumUsusBullae`    : 吹出し使用率グラフ
-    - `graphumUsusTotal`     : 總合使用率グラフ
-    - `calendarium`          : カレンダー
-    - `nuntium`              : メッセンジャー
-    - `readme`               : README
-    - `conditiones`          : 利用規約
-    - `graphumAI`            : AI グラフ
-    - `palettaDeveloper`     : 開發者パレット
-    - `petitioShiori`        : SHIORI リクエストビューワー
-    - `exploratorDressupi`   : 着せ替え探索 -/
+-- ════════════════════════════════════════════════════
+--  遁走關數 (Functiones Evasionis)
+--  FenestraAperibilis.toString 等で使ふので此處に置くにゃん♪
+-- ════════════════════════════════════════════════════
+
+/-- 文字列中の特殊文字（\\、%、]）を全て遁走して表示用に安全な形にするにゃん。
+    loqui 等の表示系關數はこれを通すから、お嬢樣は氣にしにゃくていいにゃ♪ -/
+def evadeTextus (s : String) : String :=
+  s.foldl (fun acc c =>
+    match c with
+    | '\\' => acc ++ "\\"
+    | '%'  => acc ++ "\\%"
+    | ']'  => acc ++ "\\]"
+    | _    => acc.push c
+  ) ""
+
+/-- タグ引數内の特殊文字（\\、%、]）を遁走し、`,` や `"` を含む場合は `"..."` 括りにするにゃん。
+    ukadoc 仕樣: `"..."` 括りが公式で、`\,` は未定義にゃ。
+    括り内では `"` → `""` に二重化するにゃ♪ -/
+def evadeArgumentum (s : String) : String :=
+  let s1 := s.foldl (fun acc c =>
+    match c with
+    | '\\' => acc ++ "\\\\"
+    | ']'  => acc ++ "\\]"
+    | '%'  => acc ++ "\\%"
+    | _    => acc.push c
+  ) ""
+  if s1.any (fun c => c == ',' || c == '"') then
+    "\"" ++ s1.replace "\"" "\"\"" ++ "\""
+  else
+    s1
+
+/-- `\\![open,X]` で開けるウィンドウの種類にゃん。`aperi` 關數に渡すにゃ -/
 inductive FenestraAperibilis where
   | console
   | arcaCommunicationis
@@ -548,6 +520,35 @@ inductive FenestraAperibilis where
   | fasciculum   (via    : String)
   | auxilium     (id     : String)
   deriving Repr
+
+def FenestraAperibilis.toString : FenestraAperibilis → String
+  | .console               => "console"
+  | .arcaCommunicationis   => "communicatebox"
+  | .arcaDoctrinae         => "teachbox"
+  | .arcaFabricationis     => "makebox"
+  | .exploratorFantasmatis => "ghostexplorer"
+  | .exploratorTegumenti   => "shellexplorer"
+  | .exploratorBullae      => "balloonexplorer"
+  | .probatioSuperficiei   => "surfacetest"
+  | .exploratorHeadlineae  => "headlinesensorexplorer"
+  | .exploratorModulorum   => "pluginexplorer"
+  | .graphumUsus           => "rateofusegraph"
+  | .graphumUsusBullae     => "rateofusegraphballoon"
+  | .graphumUsusTotal      => "rateofusegraphtotal"
+  | .calendarium           => "calendar"
+  | .nuntium               => "messenger"
+  | .readme                => "readme"
+  | .conditiones           => "terms"
+  | .graphumAI             => "aigraph"
+  | .palettaDeveloper      => "developer"
+  | .petitioShiori         => "shiorirequest"
+  | .exploratorDressupi    => "dressupexplorer"
+  | .navigator    nexus    => s!"browser,{evadeArgumentum nexus}"
+  | .nuntiatorem  param    => s!"mailer,{evadeArgumentum param}"
+  | .explorator   via      => s!"explorer,{evadeArgumentum via}"
+  | .configuratio id       => s!"configurationdialog,{evadeArgumentum id}"
+  | .fasciculum   via      => s!"file,{evadeArgumentum via}"
+  | .auxilium     id       => s!"help,{evadeArgumentum id}"
 
 /-- `\\![close,X]`（追加引數なし）で閉ぢられるウィンドウの種類にゃん。
     `claude` 關數に渡すにゃ。

@@ -10,10 +10,10 @@ namespace Signaculum.Sakura
 -- ════════════════════════════════════════════════════
 
 /-- 近づく（\\5）にゃん -/
-def accede {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\5"
+def accede {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.imperii .accede)
 
 /-- 離れる（\\4）にゃん -/
-def recede {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\4"
+def recede {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.imperii .recede)
 
 -- ════════════════════════════════════════════════════
 --  位置 (Positio) — ゴーストの移動
@@ -22,12 +22,12 @@ def recede {m : Type → Type} [Monad m] : SakuraM m Unit := emitte "\\4"
 /-- ゴーストを畫面座標 (sx,sy,kx,ky) に移動するにゃん（\\![move,sx,sy,kx,ky]）。
     sx/sy が主人格、kx/ky が副人格の座標にゃ -/
 def movere {m : Type → Type} [Monad m] (sx sy kx ky : Int) : SakuraM m Unit :=
-  emitte s!"\\![move,{sx},{sy},{kx},{ky}]"
+  emitte (.fenestrae (.movere sx sy kx ky))
 
 /-- ゴーストを畫面座標に非同期で移動するにゃん（\\![moveasync,sx,sy,kx,ky]）。
     スクリプトの實行を止めずに移動するにゃ -/
 def movereAsync {m : Type → Type} [Monad m] (sx sy kx ky : Int) : SakuraM m Unit :=
-  emitte s!"\\![moveasync,{sx},{sy},{kx},{ky}]"
+  emitte (.fenestrae (.movereAsync sx sy kx ky))
 
 -- ════════════════════════════════════════════════════
 --  可視性 (Visibilitas) — 表示/非表示
@@ -36,13 +36,13 @@ def movereAsync {m : Type → Type} [Monad m] (sx sy kx ky : Int) : SakuraM m Un
 /-- ゴーストを一時的に非表示にするにゃん（\\![vanish]）。
     `restituere` で復元できるにゃ -/
 def vanesco {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![vanish]"
+  emitte (.fenestrae .vanesco)
 
 /-- 非表示のゴーストを復元するにゃん（\\![restore] / \\![restore,name]）。
     nomen を省略すると自ゴーストを復元するにゃ -/
 def restituere {m : Type → Type} [Monad m] (nomen : String := "") : SakuraM m Unit :=
-  if nomen.isEmpty then emitte "\\![restore]"
-  else emitte s!"\\![restore,{evadeArgumentum nomen}]"
+  if nomen.isEmpty then emitte (.fenestrae (.restituere none))
+  else emitte (.fenestrae (.restituere (some nomen)))
 
 -- ════════════════════════════════════════════════════
 --  再描畫制御 (Imperium Repicturae)
@@ -51,11 +51,11 @@ def restituere {m : Type → Type} [Monad m] (nomen : String := "") : SakuraM m 
 /-- 畫面の再描畫をロックするにゃん（\\![lock,repaint]）。
     `reseraRepictura` と對で使ふにゃ -/
 def seraRepictura {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![lock,repaint]"
+  emitte (.fenestrae .seraRepictura)
 
 /-- 畫面の再描畫ロックを解除するにゃん（\\![unlock,repaint]）-/
 def reseraRepictura {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![unlock,repaint]"
+  emitte (.fenestrae .reseraRepictura)
 
 -- ════════════════════════════════════════════════════
 --  設定 (Configuratio)
@@ -63,17 +63,17 @@ def reseraRepictura {m : Type → Type} [Monad m] : SakuraM m Unit :=
 
 /-- 吹出しの自動スクロールを設定するにゃん（\\![set,autoscroll,on/off]）-/
 def configuraAutoScroll {m : Type → Type} [Monad m] (b : Bool) : SakuraM m Unit :=
-  emitte s!"\\![set,autoscroll,{if b then "on" else "off"}]"
+  emitte (.fenestrae (.configuraAutoScroll b))
 
 /-- 吹出しのオフセットを設定するにゃん（\\![set,balloonoffset,target,x,y]）。
     scopus に `ScopusBullae.sakura` か `ScopusBullae.kero` を指定するにゃ -/
 def configuraBullaeOffset {m : Type → Type} [Monad m]
     (scopus : ScopusBullae) (x y : Int) : SakuraM m Unit :=
-  emitte s!"\\![set,balloonoffset,{scopus.toString},{x},{y}]"
+  emitte (.fenestrae (.configuraBullaeOffset scopus x y))
 
 /-- クイックセッションの有效/無效を設定するにゃん（\\![quicksession,true/false]）-/
 def sessioRapida {m : Type → Type} [Monad m] (b : Bool) : SakuraM m Unit :=
-  emitte s!"\\![quicksession,{if b then "true" else "false"}]"
+  emitte (.fenestrae (.sessioRapida b))
 
 -- ════════════════════════════════════════════════════
 --  入力 (Ingressus)
@@ -87,9 +87,7 @@ def aperiInputum {m : Type → Type} [Monad m]
     (modus : ModusInputiTextus := .simplex)
     (eventum titulus textus : String)
     (optiones : OptionesInputi := {}) : SakuraM m Unit :=
-  let opt := optiones.toString
-  let opt := if opt.isEmpty then "" else s!",{opt}"
-  emitte s!"\\![open,{modus.toString},{evadeArgumentum eventum},{evadeArgumentum titulus},{evadeArgumentum textus}{opt}]"
+  emitte (.inputi (.aperiInputum modus eventum titulus textus optiones))
 
 /-- 日付入力ボックスを開くにゃん（\\![open,dateinput,...]）。
     annus/mensis/dies は年/月(1〜12)/日(1〜月の日数) にゃ。
@@ -99,9 +97,7 @@ def aperiInputumDiei {m : Type → Type} [Monad m]
     (_hm : 1 ≤ mensis ∧ mensis ≤ 12 := by omega)
     (_hd : 1 ≤ dies ∧ dies ≤ diesInMense annus mensis := by omega)
     (optiones : OptionesInputi := {}) : SakuraM m Unit :=
-  let opt := optiones.toString
-  let opt := if opt.isEmpty then "" else s!",{opt}"
-  emitte s!"\\![open,dateinput,{evadeArgumentum eventum},{evadeArgumentum titulus},{annus},{mensis},{dies}{opt}]"
+  emitte (.inputi (.aperiInputumDiei eventum titulus annus mensis dies _hm _hd optiones))
 
 /-- 時刻入力ボックスを開くにゃん（\\![open,timeinput,...]）。
     hora(0〜23)/minutum(0〜59)/secundum(0〜59) にゃ -/
@@ -111,9 +107,7 @@ def aperiInputumTemporis {m : Type → Type} [Monad m]
     (_hmin : minutum ≤ 59 := by omega)
     (_hs : secundum ≤ 59 := by omega)
     (optiones : OptionesInputi := {}) : SakuraM m Unit :=
-  let opt := optiones.toString
-  let opt := if opt.isEmpty then "" else s!",{opt}"
-  emitte s!"\\![open,timeinput,{evadeArgumentum eventum},{evadeArgumentum titulus},{hora},{minutum},{secundum}{opt}]"
+  emitte (.inputi (.aperiInputumTemporis eventum titulus hora _hh minutum _hmin secundum _hs optiones))
 
 /-- スライダー入力ボックスを開くにゃん（\\![open,sliderinput,...]）。
     minimum ≤ initium ≤ maximum の制約があるにゃ -/
@@ -121,9 +115,7 @@ def aperiInputumGradus {m : Type → Type} [Monad m]
     (eventum titulus : String) (minimum maximum initium : Nat)
     (_h : minimum ≤ initium ∧ initium ≤ maximum := by omega)
     (optiones : OptionesInputi := {}) : SakuraM m Unit :=
-  let opt := optiones.toString
-  let opt := if opt.isEmpty then "" else s!",{opt}"
-  emitte s!"\\![open,sliderinput,{evadeArgumentum eventum},{evadeArgumentum titulus},{minimum},{maximum},{initium}{opt}]"
+  emitte (.inputi (.aperiInputumGradus eventum titulus minimum maximum initium _h optiones))
 
 -- ════════════════════════════════════════════════════
 --  擴張 (Extensio) — SSP 固有
@@ -132,7 +124,7 @@ def aperiInputumGradus {m : Type → Type} [Monad m]
 /-- ゴーストの表示倍率を設定するにゃん（\\z[n]）。
     n は整數パーセント（100 = 等倍）にゃ。SSP 固有にゃ♪ -/
 def zoom {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
-  emitte s!"\\z[{n}]"
+  emitte (.fenestrae (.zoom n))
 
 -- ════════════════════════════════════════════════════
 --  吹出し拡張 (Extensio Bullae)
@@ -140,60 +132,60 @@ def zoom {m : Type → Type} [Monad m] (n : Nat) : SakuraM m Unit :=
 
 /-- 吹出しを非表示にするにゃん（\\b[-1]）-/
 def bullaAbsconde {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\b[-1]"
+  emitte (.bullae .bullaAbsconde)
 
 /-- パーセント指定改行にゃん（\\n[percent,n]）。負値や100超も指定可にゃ -/
 def lineaProportionalis {m : Type → Type} [Monad m] (n : Int) : SakuraM m Unit :=
-  emitte s!"\\n[percent,{n}]"
+  emitte (.exhibitionis (.lineaProportionalis n))
 
 /-- 自動改行を禁止するにゃん（\\_n）-/
 def linearisAbrogatur {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\_n"
+  emitte (.exhibitionis .linearisAbrogatur)
 
 /-- 吹出しの方向を設定するにゃん（\\![set,balloonalign,方向]）。
     `sinistrum`=左、`centrum`=中央、`summum`=上、`dextrum`=右、`imum`=下、`nullus`=自動にゃ -/
 def allineatioBullae {m : Type → Type} [Monad m] (directio : DirectioAllineatioBullae) : SakuraM m Unit :=
-  emitte s!"\\![set,balloonalign,{directio.toString}]"
+  emitte (.fenestrae (.allineatioBullae directio))
 
 /-- 吹出しを一定時間後に消すにゃん（\\![set,balloontimeout,ms]）-/
 def tempusBullae {m : Type → Type} [Monad m] (ms : Nat) : SakuraM m Unit :=
-  emitte s!"\\![set,balloontimeout,{ms}]"
+  emitte (.fenestrae (.tempusBullae ms))
 
 /-- テキストスクロール速度を設定するにゃん（\\![set,balloonwait,比率]）-/
 def moraTextus {m : Type → Type} [Monad m] (proportio : Nat) : SakuraM m Unit :=
-  emitte s!"\\![set,balloonwait,{proportio}]"
+  emitte (.fenestrae (.moraTextus proportio))
 
 /-- SERIKO の口パクを設定するにゃん（\\![set,serikotalk,true/false]）-/
 def configuraSerikoOs {m : Type → Type} [Monad m] (b : Bool) : SakuraM m Unit :=
-  emitte s!"\\![set,serikotalk,{if b then "true" else "false"}]"
+  emitte (.fenestrae (.configuraSerikoOs b))
 
 /-- 吹出しの再描畫をロックするにゃん（\\![lock,balloonrepaint]）-/
 def seraRepicturaBullae {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![lock,balloonrepaint]"
+  emitte (.fenestrae .seraRepicturaBullae)
 
 /-- 吹出しの再描畫ロックを解除するにゃん（\\![unlock,balloonrepaint]）-/
 def reseraRepicturaBullae {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![unlock,balloonrepaint]"
+  emitte (.fenestrae .reseraRepicturaBullae)
 
 /-- 吹出しの移動をロックするにゃん（\\![lock,balloonmove]）-/
 def seraMotusBullae {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![lock,balloonmove]"
+  emitte (.fenestrae .seraMotusBullae)
 
 /-- 吹出しの移動ロックを解除するにゃん（\\![unlock,balloonmove]）-/
 def reseraMotusBullae {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![unlock,balloonmove]"
+  emitte (.fenestrae .reseraMotusBullae)
 
 /-- マーカーを表示するにゃん（\\![*]）-/
 def ostendeMarcam {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![*]"
+  emitte (.fenestrae .ostendeMarcam)
 
 /-- 吹出し位置をリセットするにゃん（\\![execute,resetballoonpos]）-/
 def renovaPositionemBullae {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![execute,resetballoonpos]"
+  emitte (.fenestrae .renovaPositionemBullae)
 
 /-- 吹出しの SSTP マーカー文字列を設定するにゃん（\\![set,balloonmarker,文字列]）-/
 def signatumBullae {m : Type → Type} [Monad m] (signum : String) : SakuraM m Unit :=
-  emitte s!"\\![set,balloonmarker,{evadeArgumentum signum}]"
+  emitte (.fenestrae (.signatumBullae signum))
 
 -- ════════════════════════════════════════════════════
 --  重ね順 (Ordo Stratorum) — Zオーダー
@@ -203,8 +195,7 @@ def signatumBullae {m : Type → Type} [Monad m] (signum : String) : SakuraM m U
     先頭が最前面にゃ。
     例：`ordoFenestrarum [0, 1]` → `\\![set,zorder,0,1]` にゃ♪ -/
 def ordoFenestrarum {m : Type → Type} [Monad m] (scopiId : List Nat) : SakuraM m Unit :=
-  let catenula := ",".intercalate (scopiId.map toString)
-  emitte s!"\\![set,zorder,{catenula}]"
+  emitte (.fenestrae (.ordoFenestrarum scopiId))
 
 -- ════════════════════════════════════════════════════
 --  吹出し詳細設定 (Configuratio Bullae)
@@ -213,7 +204,7 @@ def ordoFenestrarum {m : Type → Type} [Monad m] (scopiId : List Nat) : SakuraM
 /-- 吹出しの内側余白を設定するにゃん（\\![set,balloonpadding,l,t,r,b]）。
     l/t/r/b は左/上/右/下の余白（ピクセル）にゃ -/
 def margosBullae {m : Type → Type} [Monad m] (l t r b : Int) : SakuraM m Unit :=
-  emitte s!"\\![set,balloonpadding,{l},{t},{r},{b}]"
+  emitte (.fenestrae (.margosBullae l t r b))
 
 -- ════════════════════════════════════════════════════
 --  動作設定 (Configuratio Operationis)
@@ -221,19 +212,19 @@ def margosBullae {m : Type → Type} [Monad m] (l t r b : Int) : SakuraM m Unit 
 
 /-- まばたきの有效/無效を設定するにゃん（\\![set,blink,on/off]）-/
 def nictatus {m : Type → Type} [Monad m] (b : Bool) : SakuraM m Unit :=
-  emitte s!"\\![set,blink,{if b then "on" else "off"}]"
+  emitte (.fenestrae (.nictatus b))
 
 /-- 常に最前面表示の有效/無效を設定するにゃん（\\![set,alwaysontop,true/false]）-/
 def semperSupra {m : Type → Type} [Monad m] (b : Bool) : SakuraM m Unit :=
-  emitte s!"\\![set,alwaysontop,{if b then "true" else "false"}]"
+  emitte (.fenestrae (.semperSupra b))
 
 /-- タスクバーへの表示/非表示を設定するにゃん（\\![set,taskbar,show/hide]）-/
 def tabellaTascae {m : Type → Type} [Monad m] (monstrum : Bool) : SakuraM m Unit :=
-  emitte s!"\\![set,taskbar,{if monstrum then "show" else "hide"}]"
+  emitte (.fenestrae (.tabellaTascae monstrum))
 
 /-- ウィンドウドラッグの有效/無效を設定するにゃん（\\![set,windowdragging,on/off]）-/
 def tractusWindowae {m : Type → Type} [Monad m] (b : Bool) : SakuraM m Unit :=
-  emitte s!"\\![set,windowdragging,{if b then "on" else "off"}]"
+  emitte (.fenestrae (.tractusWindowae b))
 
 -- ════════════════════════════════════════════════════
 --  モード制御 (Imperium Modorum)
@@ -242,29 +233,29 @@ def tractusWindowae {m : Type → Type} [Monad m] (b : Bool) : SakuraM m Unit :=
 /-- パッシブモードに入るにゃん（\\![enter,passivemode]）。
     パッシブモード中はユーザー操作を受け付けにゃいにゃ -/
 def ingredereModumPassivum {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![enter,passivemode]"
+  emitte (.modorum .ingredereModumPassivum)
 
 /-- パッシブモードから出るにゃん（\\![leave,passivemode]）-/
 def egrediereModumPassivum {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![leave,passivemode]"
+  emitte (.modorum .egrediereModumPassivum)
 
 /-- スティッキー（固定）モードに入るにゃん（\\![enter,sticky,name]）。
     nomen に固定点名を指定するにゃ。空の場合は無名固定にゃ -/
 def ingredereSticky {m : Type → Type} [Monad m] (nomen : String := "") : SakuraM m Unit :=
-  if nomen.isEmpty then emitte "\\![enter,sticky]"
-  else emitte s!"\\![enter,sticky,{evadeArgumentum nomen}]"
+  if nomen.isEmpty then emitte (.modorum (.ingredereSticky none))
+  else emitte (.modorum (.ingredereSticky (some nomen)))
 
 /-- スティッキーモードから出るにゃん（\\![leave,sticky]）-/
 def egrediereSticky {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![leave,sticky]"
+  emitte (.modorum .egrediereSticky)
 
 /-- ホームポジションモードに入るにゃん（\\![enter,homeposition]）-/
 def ingrederePositionemDomesticam {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![enter,homeposition]"
+  emitte (.modorum .ingrederePositionemDomesticam)
 
 /-- ホームポジションモードから出るにゃん（\\![leave,homeposition]）-/
 def egredierePositionemDomesticam {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![leave,homeposition]"
+  emitte (.modorum .egredierePositionemDomesticam)
 
 -- ════════════════════════════════════════════════════
 --  開閉 (Apertio) — 各種ウィンドウの開閉
@@ -272,11 +263,11 @@ def egredierePositionemDomesticam {m : Type → Type} [Monad m] : SakuraM m Unit
 
 /-- `FenestraAperibilis` で指定されたウィンドウを開くにゃん（\\![open,X]）-/
 def aperi {m : Type → Type} [Monad m] (fenestra : FenestraAperibilis) : SakuraM m Unit :=
-  emitte s!"\\![open,{fenestra.toString}]"
+  emitte (.fenestrae (.aperi fenestra))
 
 /-- `FenestraClaudibilis` で指定されたウィンドウを閉ぢるにゃん（\\![close,X]）-/
 def claude {m : Type → Type} [Monad m] (fenestra : FenestraClaudibilis) : SakuraM m Unit :=
-  emitte s!"\\![close,{fenestra.toString}]"
+  emitte (.fenestrae (.claude fenestra))
 
 -- ════════════════════════════════════════════════════
 --  窓状態 (Status Fenestrae)
@@ -284,53 +275,53 @@ def claude {m : Type → Type} [Monad m] (fenestra : FenestraClaudibilis) : Saku
 
 /-- ウィンドウ状態を設定するにゃん（\\![set,windowstate,状態]）-/
 def configuraStatusFenestrae {m : Type → Type} [Monad m] (status : StatusFenestrae) : SakuraM m Unit :=
-  emitte s!"\\![set,windowstate,{status.toString}]"
+  emitte (.fenestrae (.configuraStatusFenestrae status))
 
 /-- デスクトップへの吸着方向を設定するにゃん（\\![set,alignmentondesktop,方向]）-/
 def allineatioDesktop {m : Type → Type} [Monad m] (directio : DirectioDesktop) : SakuraM m Unit :=
-  emitte s!"\\![set,alignmentondesktop,{directio.toString}]"
+  emitte (.fenestrae (.allineatioDesktop directio))
 
 /-- 表面の拡大率を設定するにゃん（\\![set,scaling,比率]）。
     比率はパーセント整數にゃ。負値で軸反轉にゃ。SSP 固有にゃん -/
 def configuratioScalae {m : Type → Type} [Monad m] (proportio : Int) : SakuraM m Unit :=
-  emitte s!"\\![set,scaling,{proportio}]"
+  emitte (.fenestrae (.configuratioScalae proportio))
 
 /-- 透明度を設定するにゃん（\\![set,alpha,值]）。0=完全透明、100=不透明にゃ -/
 def configuratioAlphae {m : Type → Type} [Monad m] (valor : Nat) (_h : valor ≤ 100 := by omega) : SakuraM m Unit :=
-  emitte s!"\\![set,alpha,{valor}]"
+  emitte (.fenestrae (.configuratioAlphae valor _h))
 
 /-- ゴーストの位置を固定するにゃん（\\![set,position,x,y,scopeId]）-/
 def configuraPositionem {m : Type → Type} [Monad m] (x y : Int) (scopus : Nat) : SakuraM m Unit :=
-  emitte s!"\\![set,position,{x},{y},{scopus}]"
+  emitte (.fenestrae (.configuraPositionem x y scopus))
 
 /-- 固定位置を解除するにゃん（\\![reset,position]）-/
 def reseraPositionem {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![reset,position]"
+  emitte (.fenestrae .reseraPositionem)
 
 /-- Z順序をリセットするにゃん（\\![reset,zorder]）-/
 def reseraOrdoFenestrarum {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![reset,zorder]"
+  emitte (.fenestrae .reseraOrdoFenestrarum)
 
 /-- 複數スコープのウィンドウを連動移動するにゃん（\\![set,sticky-window,s0,s1,...]）-/
 def configuraStickyWindow {m : Type → Type} [Monad m] (scopiId : List Nat) : SakuraM m Unit :=
-  emitte s!"\\![set,sticky-window,{",".intercalate (scopiId.map toString)}]"
+  emitte (.fenestrae (.configuraStickyWindow scopiId))
 
 /-- スティッキーウィンドウをリセットするにゃん（\\![reset,sticky-window]）-/
 def resetStickyWindow {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![reset,sticky-window]"
+  emitte (.fenestrae .resetStickyWindow)
 
 /-- ウィンドウ位置をリセットするにゃん（\\![execute,resetwindowpos]）-/
 def renovaPositionemWindowae {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![execute,resetwindowpos]"
+  emitte (.fenestrae .renovaPositionemWindowae)
 
 /-- システムトレイアイコンを設定するにゃん（\\![set,tasktrayicon,file,text,options]）-/
 def configuraTascamIcon {m : Type → Type} [Monad m]
     (via textus optiones : String) : SakuraM m Unit :=
-  emitte s!"\\![set,tasktrayicon,{evadeArgumentum via},{evadeArgumentum textus},{evadeArgumentum optiones}]"
+  emitte (.fenestrae (.configuraTascamIcon via textus optiones))
 
 /-- トレイのバルーン通知を表示するにゃん（\\![set,trayballoon,options]）-/
 def configuraTascamBullam {m : Type → Type} [Monad m] (optiones : String) : SakuraM m Unit :=
-  emitte s!"\\![set,trayballoon,{evadeArgumentum optiones}]"
+  emitte (.fenestrae (.configuraTascamBullam optiones))
 
 -- ════════════════════════════════════════════════════
 --  開閉拡張 (Extensio Aperitionis)
@@ -339,7 +330,7 @@ def configuraTascamBullam {m : Type → Type} [Monad m] (optiones : String) : Sa
 /-- テキストエディタでファイルを開くにゃん（\\![open,editor,file,line]）-/
 def aperiEditorem {m : Type → Type} [Monad m]
     (via : String) (linea : Nat := 0) : SakuraM m Unit :=
-  emitte s!"\\![open,editor,{evadeArgumentum via},{linea}]"
+  emitte (.fenestrae (.aperiEditorem via linea))
 
 /-- IP アドレス入力ボックスを開くにゃん（\\![open,ipinput,event,caption,ip1,ip2,ip3,ip4,options]）-/
 def aperiInputumIP {m : Type → Type} [Monad m]
@@ -347,22 +338,18 @@ def aperiInputumIP {m : Type → Type} [Monad m]
     (_h1 : ip1 ≤ 255 := by omega) (_h2 : ip2 ≤ 255 := by omega)
     (_h3 : ip3 ≤ 255 := by omega) (_h4 : ip4 ≤ 255 := by omega)
     (optiones : OptionesInputi := {}) : SakuraM m Unit :=
-  let opt := optiones.toString
-  let opt := if opt.isEmpty then "" else s!",{opt}"
-  emitte s!"\\![open,ipinput,{evadeArgumentum eventum},{evadeArgumentum titulus},{ip1},{ip2},{ip3},{ip4}{opt}]"
+  emitte (.inputi (.aperiInputumIP eventum titulus ip1 _h1 ip2 _h2 ip3 _h3 ip4 _h4 optiones))
 
 
 /-- ダイアローグスを開くにゃん（\\![open,dialog,modus,options]）。
     modus で種類を選ぶにゃ（`aperire`/`servare`/`directorium`/`color`）にゃ -/
 def aperiDialogum {m : Type → Type} [Monad m]
     (modus : ModusDialogi) (optiones : OptionesDialogi := {}) : SakuraM m Unit :=
-  let opt := optiones.toString
-  let opt := if opt.isEmpty then "" else s!",{opt}"
-  emitte s!"\\![open,dialog,{modus.toString}{opt}]"
+  emitte (.inputi (.aperiDialogum modus optiones))
 
 /-- ダイアログを閉ぢるにゃん（\\![close,dialog,ID]）-/
 def claudeDialogum {m : Type → Type} [Monad m] (dialogId : String) : SakuraM m Unit :=
-  emitte s!"\\![close,dialog,{evadeArgumentum dialogId}]"
+  emitte (.inputi (.claudeDialogum dialogId))
 
 -- ════════════════════════════════════════════════════
 --  拡張モード (Modi Extensi)
@@ -370,32 +357,31 @@ def claudeDialogum {m : Type → Type} [Monad m] (dialogId : String) : SakuraM m
 
 /-- 誘導モードに入るにゃん（\\![enter,inductionmode]）-/
 def ingredereModumInductivum {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![enter,inductionmode]"
+  emitte (.modorum .ingredereModumInductivum)
 
 /-- 誘導モードから出るにゃん（\\![leave,inductionmode]）-/
 def egrediereModumInductivum {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![leave,inductionmode]"
+  emitte (.modorum .egrediereModumInductivum)
 
 /-- 衝突モードに入るにゃん（\\![enter,collisionmode]）。
     rectus=true で矩形衝突にゃ -/
 def ingredereModumCollisionis {m : Type → Type} [Monad m]
     (rectus : Bool := false) : SakuraM m Unit :=
-  if rectus then emitte "\\![enter,collisionmode,rect]"
-  else emitte "\\![enter,collisionmode]"
+  emitte (.modorum (.ingredereModumCollisionis rectus))
 
 /-- 衝突モードから出るにゃん（\\![leave,collisionmode]）-/
 def egrediereModumCollisionis {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![leave,collisionmode]"
+  emitte (.modorum .egrediereModumCollisionis)
 
 /-- 選擇モードに入るにゃん（\\![enter,selectmode,mode,coords|name]）。
     modus に `ModusSelectionis` を指定するにゃ。coordsVelNomen は座標文字列かコリジョン名にゃ -/
 def ingredereModumSelectionis {m : Type → Type} [Monad m]
     (modus : ModusSelectionis) (coordsVelNomen : String) : SakuraM m Unit :=
-  emitte s!"\\![enter,selectmode,{modus.toString},{evadeArgumentum coordsVelNomen}]"
+  emitte (.modorum (.ingredereModumSelectionis modus coordsVelNomen))
 
 /-- 選擇モードから出るにゃん（\\![leave,selectmode]）-/
 def egrediereModumSelectionis {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![leave,selectmode]"
+  emitte (.modorum .egrediereModumSelectionis)
 
 -- ════════════════════════════════════════════════════
 --  吹出し畫像拡張 (Extensio Imaginis Bullae)
@@ -404,15 +390,15 @@ def egrediereModumSelectionis {m : Type → Type} [Monad m] : SakuraM m Unit :=
 /-- 吹出しに不透明畫像を埋め込むにゃん（\\_b[path,x,y,opaque]）-/
 def imagoBullaeOpaca {m : Type → Type} [Monad m]
     (via : String) (x y : Nat) : SakuraM m Unit :=
-  emitte s!"\\_b[{evadeArgumentum via},{x},{y},opaque]"
+  emitte (.bullae (.imagoBullaeOpaca via x y))
 
 /-- 吹出しにインライン畫像を埋め込むにゃん（\\_b[path,inline]）-/
 def imagoBullaeInlineata {m : Type → Type} [Monad m] (via : String) : SakuraM m Unit :=
-  emitte s!"\\_b[{evadeArgumentum via},inline]"
+  emitte (.bullae (.imagoBullaeInlineata via))
 
 /-- 吹出しに不透明インライン畫像を埋め込むにゃん（\\_b[path,inline,opaque]）-/
 def imagoBullaeInlineataOpaca {m : Type → Type} [Monad m] (via : String) : SakuraM m Unit :=
-  emitte s!"\\_b[{evadeArgumentum via},inline,opaque]"
+  emitte (.bullae (.imagoBullaeInlineataOpaca via))
 
 -- ════════════════════════════════════════════════════
 --  移動拡張 (Extensio Motus)
@@ -420,7 +406,7 @@ def imagoBullaeInlineataOpaca {m : Type → Type} [Monad m] (via : String) : Sak
 
 /-- 非同期移動をキャンセルするにゃん（\\![moveasync,cancel]）-/
 def cancellaMotumAsync {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![moveasync,cancel]"
+  emitte (.fenestrae .cancellaMotumAsync)
 
 -- ════════════════════════════════════════════════════
 --  ロック拡張 (Extensio Serae)
@@ -429,11 +415,11 @@ def cancellaMotumAsync {m : Type → Type} [Monad m] : SakuraM m Unit :=
 /-- 再描畫を手動ロックするにゃん（\\![lock,repaint,manual]）。
     明示的に unlock するまでロックが續くにゃ -/
 def seraRepicturaManualiter {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![lock,repaint,manual]"
+  emitte (.fenestrae .seraRepicturaManualiter)
 
 /-- 吹出し再描畫を手動ロックするにゃん（\\![lock,balloonrepaint,manual]）-/
 def seraRepicturaBullaeManualiter {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\![lock,balloonrepaint,manual]"
+  emitte (.fenestrae .seraRepicturaBullaeManualiter)
 
 -- ════════════════════════════════════════════════════
 --  スケーリング・透明度拡張 (Extensio Scalae et Alphae)
@@ -441,17 +427,17 @@ def seraRepicturaBullaeManualiter {m : Type → Type} [Monad m] : SakuraM m Unit
 
 /-- 縱横別々にスケーリングするにゃん（\\![set,scaling,x,y]）。負値で軸反轉にゃ -/
 def configuraScalamDualem {m : Type → Type} [Monad m] (x y : Int) : SakuraM m Unit :=
-  emitte s!"\\![set,scaling,{x},{y}]"
+  emitte (.fenestrae (.configuraScalamDualem x y))
 
 /-- アニメーション付きスケーリングにゃん（\\![set,scaling,x,y,options]）。負値で軸反轉にゃ -/
 def configuraScalamAnimatam {m : Type → Type} [Monad m]
     (x y : Int) (optiones : String) : SakuraM m Unit :=
-  emitte s!"\\![set,scaling,{x},{y},{evadeArgumentum optiones}]"
+  emitte (.fenestrae (.configuraScalamAnimatam x y optiones))
 
 /-- オプション付き透明度設定にゃん（\\![set,alpha,value,options]）-/
 def configuraAlphamAnimatam {m : Type → Type} [Monad m]
     (valor : Nat) (_h : valor ≤ 100 := by omega) (optiones : String) : SakuraM m Unit :=
-  emitte s!"\\![set,alpha,{valor},{evadeArgumentum optiones}]"
+  emitte (.fenestrae (.configuraAlphamAnimatam valor _h optiones))
 
 -- ════════════════════════════════════════════════════
 --  吹出し拡張2 (Extensio Bullae II)
@@ -460,6 +446,6 @@ def configuraAlphamAnimatam {m : Type → Type} [Monad m]
 /-- ファイル受信表示をカスタマイズするにゃん（\\![set,balloonnum,name,count,max]）-/
 def configuraBullaeNumerum {m : Type → Type} [Monad m]
     (nomen : String) (numerus maximus : Nat) : SakuraM m Unit :=
-  emitte s!"\\![set,balloonnum,{evadeArgumentum nomen},{numerus},{maximus}]"
+  emitte (.fenestrae (.configuraBullaeNumerum nomen numerus maximus))
 
 end Signaculum.Sakura

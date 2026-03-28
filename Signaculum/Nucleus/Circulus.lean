@@ -70,14 +70,14 @@ private partial def tractaOnerare (c : Communicatio) : IO Unit := do
         c.rivusEgressus.flush
       | some catenaViae =>
         registrareVestigium s!"[LOAD] via={catenaViae}, len={longitudoViae}"
-        let resSecunda ← Signaculum.exportaLoad catenaViae
+        let resSecunda ← exportaLoad catenaViae
         c.rivusEgressus.write ⟨#[resSecunda.toUInt8]⟩
         c.rivusEgressus.flush
 
 /-- UNLOAD 命令を處理するにゃん: [2u8] -> 終了 -/
 private def tractaExonerare : IO Unit := do
   registrareVestigium "[UNLOAD] vocatus"
-  let _ ← Signaculum.exportaUnload
+  let _ ← exportaUnload
   registrareVestigium "[UNLOAD] perfectus"
 
 /-- REQUEST 命令を處理するにゃん: [3u8] [4bytes:len] [bytes:req] -> [4bytes:len] [bytes:res] を返すにゃ -/
@@ -99,7 +99,7 @@ private partial def tractaRogationem (c : Communicatio) : IO Unit := do
         registrareVestigium "[PERNICIES] REQUEST: rogatio non est UTF-8 valida"
         c.scribeResponsum (Responsum.malaRogatio.adProtocollum.toUTF8)
       | some catenaRogationis =>
-        let catenaResponsi ← Signaculum.exportaRequest catenaRogationis
+        let catenaResponsi ← exportaRequest catenaRogationis
         let octetiResponsi := catenaResponsi.toUTF8
         registrareVestigium s!"[REQUEST] PERFECTUM, magnitudoResponsi={octetiResponsi.size}"
         c.scribeResponsum octetiResponsi

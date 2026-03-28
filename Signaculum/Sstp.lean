@@ -22,14 +22,17 @@ def sstpDirectumMittere (request : String) : IO Unit := do
     let sock ← Socket.new
     let addr : SocketAddress := .v4 ⟨.ofParts 127 0 0 1, sstpPortus⟩
     let connectPromise ← sock.connect addr
-    let connectResult ← connectPromise.block
-    IO.ofExcept connectResult
+    match connectPromise.result?.get with
+    | some r => IO.ofExcept r
+    | none   => throw (IO.Error.userError "connexio defecit")
     let sendPromise ← sock.send #[request.toUTF8]
-    let sendResult ← sendPromise.block
-    IO.ofExcept sendResult
+    match sendPromise.result?.get with
+    | some r => IO.ofExcept r
+    | none   => throw (IO.Error.userError "missio defecit")
     let shutdownPromise ← sock.shutdown
-    let shutdownResult ← shutdownPromise.block
-    IO.ofExcept shutdownResult
+    match shutdownPromise.result?.get with
+    | some r => IO.ofExcept r
+    | none   => throw (IO.Error.userError "occlusio defecit")
   catch _ =>
     pure ()  -- SSP 未起動 or 接續拒否: 靜かに無視にゃ
 

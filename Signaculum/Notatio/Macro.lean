@@ -153,37 +153,59 @@ def withInitioLineae : Lean.Parser.Parser → Lean.Parser.Parser :=
       ({ · with savedPos? := leadPos }) f c s
 
 -- ════════════════════════════════════════════════════
---  非 ASCII 裸テクストゥスパーサ (Parser Textus non ASCII)
+--  裸テクストゥスパーサ (Parser Textus Nudus)
 -- ════════════════════════════════════════════════════
 
--- ひらがな・漢字等の非 ASCII 文字を「裸テクストゥス」として讀むにゃん
--- Char.isAlpha は ASCII 専用ゆゑ日本語は ident パーサに弾かれるにゃ
--- ASCII 文字（Lean トークン・演算子・括弧等）は全て停止→他パーサに任せるにゃ
+-- SakuraScript タグ開始文字にゃ（これらに遭遇したら停止して categoryParser に委ねるにゃん）
+-- \ → タグ接頭辭、" → 文字列リテラル、{ } → 式埋込、% → 環境變數、) ] → 括弧閉ぢ
+private def estInitiumTagi (ch : Char) : Bool :=
+  ch == '\\' || ch == '"' || ch == '\'' || ch == '{' || ch == '}' || ch == '%' ||
+  ch == ')' || ch == ']'
+
+-- scriptum ブロック內の裸テクストゥスを讀むにゃん♪
+-- タグ開始文字と空白以外の全ての文字をテクストゥスとして積むにゃ
+-- まづ空白を飛ばし、次にタグ開始文字でも空白でもにゃい文字を連續して讀むにゃ
 -- @[sakuraSignum_parser] は使はず scriptumParserCore から <|> で呼ぶにゃ
 private def rawTextusFn
     (c : Lean.Parser.ParserContext) (s : Lean.Parser.ParserState)
     : Lean.Parser.ParserState :=
-  let startPos := s.pos
   let input    := c.fileMap.source
-  -- String.Pos.Raw で積むにゃ（endPos は String.Pos 別型ゆゑ使はぬ）
+  -- まづ空白を飛ばすにゃん（Lean の標準トークナイザと同樣の振舞ひにゃ）
+  let wsEnd := Id.run do
+    let mut p := s.pos
+    while p.byteIdx < input.utf8ByteSize do
+      let ch := p.get input
+      if ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' then break
+      p := p.next input
+    return p
+  -- テクストゥス本體を讀むにゃ（空白・タグ開始文字で停止にゃん）
+  let startPos := wsEnd
   let (endPos, str) := Id.run do
     let mut p   := startPos
     let mut acc : String := ""
     while p.byteIdx < input.utf8ByteSize do
       let ch := p.get input
-      -- ASCII（U+0000–U+007F）は全て停止にゃ（括弧・タグ文字・空白等をすべて回避）
-      if ch.val.toNat < 128 then break
+      if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' then break
+      if estInitiumTagi ch then break
       acc := acc.push ch
       p   := p.next input
     return (p, acc)
   if endPos == startPos then
+    -- 失敗時は元の位置（s.pos）を保つにゃん — <|> が回復できるやうにするにゃ
     s.mkError "expected text"
   else
-    -- ident ノードとして push するにゃ（$i:ident パターンで既存ルールに乗れるにゃ）
-    -- Syntax.ident で偽 ident ノードを作るにゃ（ソース位置を付けてホバー情報が出るにゃ）
+    -- ident ノードとして push するにゃ（ソース位置を付けてホバー情報が出るにゃ）
     let identNode : Lean.Syntax :=
       Lean.Syntax.ident (Lean.SourceInfo.synthetic startPos endPos) str.toRawSubstring (Lean.Name.mkSimple str) []
-    { s with pos := endPos, stxStack := s.stxStack.push identNode }
+    -- 後續空白を消費するにゃん（行跨ぎ判定は SourceInfo の位置で行ふから大丈夫にゃ）
+    let finalPos := Id.run do
+      let mut p := endPos
+      while p.byteIdx < input.utf8ByteSize do
+        let ch := p.get input
+        if ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' then break
+        p := p.next input
+      return p
+    { s with pos := finalPos, stxStack := s.stxStack.push identNode }
 
 -- @[combinator_formatter/parenthesizer] で no-op 登録にゃ
 -- （@[term_parser] がフォーマッタ生成を要求するゆゑ必要にゃ）
@@ -223,6 +245,7 @@ def rawTextusSignumParser.formatter : Lean.PrettyPrinter.Formatter := pure ()
 @[combinator_parenthesizer Signaculum.Notatio.rawTextusSignumParser]
 def rawTextusSignumParser.parenthesizer : Lean.PrettyPrinter.Parenthesizer := pure ()
 
+
 -- ════════════════════════════════════════════════════
 --  scriptum! マクロ本體 (Corpus Macri)
 -- ════════════════════════════════════════════════════
@@ -243,8 +266,8 @@ private def scriptumParserCore (kw : String) : Lean.Parser.Parser :=
     Lean.Parser.leadingNode `scriptumMacro Lean.Parser.maxPrec <|
       Lean.Parser.symbol kw >>
       Lean.Parser.many (Lean.Parser.checkColGt "expected indent" >>
-                        (Lean.Parser.categoryParser `sakuraSignum 0 <|>
-                         Signaculum.Notatio.rawTextusSignumParser)) >>
+                        (Signaculum.Notatio.rawTextusSignumParser <|>
+                         Lean.Parser.categoryParser `sakuraSignum 0)) >>
       skipTrailingWsParser
 
 @[term_parser 1001] def scriptumTermParser  : Lean.Parser.Parser := scriptumParserCore "scriptum!"
@@ -260,8 +283,11 @@ def elabScriptum : TermElab := fun stx expectedType? => do
   -- 各シグナムノードを term に變換するにゃ
   let genTerm (s : Lean.Syntax) : Lean.Elab.Term.TermElabM (TSyntax `term) := do
     if s.isIdent then
-      -- rawTextusFn 由來の裸 ident にゃ → 識別子名をテクストゥスとして直接 loqui にくるむにゃ
-      `(Signaculum.Sakura.loqui $(Lean.Syntax.mkStrLit s.getId.toString))
+      -- rawTextusFn 由來の裸 ident にゃ → rawVal から直接文字列を取るにゃん（guillemet 回避）
+      let textus := match s with
+        | .ident _ rawVal _ _ => rawVal.toString
+        | _ => s.getId.toString  -- 到達しにゃいはずにゃが安全策にゃ
+      `(Signaculum.Sakura.loqui $(Lean.Syntax.mkStrLit textus))
     else
       let ts : TSyntax `sakuraSignum := ⟨s⟩
       `(expandSignum $ts)

@@ -3,7 +3,6 @@
 -- \\f[...] タグの全コンストゥルクトルをまとめた歸納型にゃ
 
 import Signaculum.Sakura.Typi
-import Signaculum.Sakura.Fundamentum
 
 namespace Signaculum.Sakura
 

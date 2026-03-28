@@ -458,29 +458,39 @@ def OptionesMutationis.toString (o : OptionesMutationis) : String :=
 def OptionesMutationis.cumExcitaEventu (o : OptionesMutationis) : OptionesMutationis :=
   { o with excitaEventum := true }
 
-/-- `\\![open,X]`（追加引數なし）で開けるウィンドウの種類にゃん。
-    `aperi` 關數に渡すにゃ。
-    - `console`              : コンソール
-    - `arcaCommunicationis`  : コミュニケートボックス
-    - `arcaDoctrinae`        : 教育ボックス
-    - `arcaFabricationis`    : 作成ボックス
-    - `exploratorFantasmatis`: ゴースト探索ダイアローグス
-    - `exploratorTegumenti`  : シェル探索ダイアローグス
-    - `exploratorBullae`     : 吹出し探索ダイアローグス
-    - `probatioSuperficiei`  : 表面テスト
-    - `exploratorHeadlineae` : ヘッドラインセンサー探索
-    - `exploratorModulorum`  : プラグイン探索
-    - `graphumUsus`          : 使用率グラフ
-    - `graphumUsusBullae`    : 吹出し使用率グラフ
-    - `graphumUsusTotal`     : 總合使用率グラフ
-    - `calendarium`          : カレンダー
-    - `nuntium`              : メッセンジャー
-    - `readme`               : README
-    - `conditiones`          : 利用規約
-    - `graphumAI`            : AI グラフ
-    - `palettaDeveloper`     : 開發者パレット
-    - `petitioShiori`        : SHIORI リクエストビューワー
-    - `exploratorDressupi`   : 着せ替え探索 -/
+-- ════════════════════════════════════════════════════
+--  遁走關數 (Functiones Evasionis)
+--  FenestraAperibilis.toString 等で使ふので此處に置くにゃん♪
+-- ════════════════════════════════════════════════════
+
+/-- 文字列中の特殊文字（\\、%、]）を全て遁走して表示用に安全な形にするにゃん。
+    loqui 等の表示系關數はこれを通すから、お嬢樣は氣にしにゃくていいにゃ♪ -/
+def evadeTextus (s : String) : String :=
+  s.foldl (fun acc c =>
+    match c with
+    | '\\' => acc ++ "\\"
+    | '%'  => acc ++ "\\%"
+    | ']'  => acc ++ "\\]"
+    | _    => acc.push c
+  ) ""
+
+/-- タグ引數内の特殊文字（\\、%、]）を遁走し、`,` や `"` を含む場合は `"..."` 括りにするにゃん。
+    ukadoc 仕樣: `"..."` 括りが公式で、`\,` は未定義にゃ。
+    括り内では `"` → `""` に二重化するにゃ♪ -/
+def evadeArgumentum (s : String) : String :=
+  let s1 := s.foldl (fun acc c =>
+    match c with
+    | '\\' => acc ++ "\\\\"
+    | ']'  => acc ++ "\\]"
+    | '%'  => acc ++ "\\%"
+    | _    => acc.push c
+  ) ""
+  if s1.any (fun c => c == ',' || c == '"') then
+    "\"" ++ s1.replace "\"" "\"\"" ++ "\""
+  else
+    s1
+
+/-- `\\![open,X]` で開けるウィンドウの種類にゃん。`aperi` 關數に渡すにゃ -/
 inductive FenestraAperibilis where
   | console
   | arcaCommunicationis
@@ -510,6 +520,35 @@ inductive FenestraAperibilis where
   | fasciculum   (via    : String)
   | auxilium     (id     : String)
   deriving Repr
+
+def FenestraAperibilis.toString : FenestraAperibilis → String
+  | .console               => "console"
+  | .arcaCommunicationis   => "communicatebox"
+  | .arcaDoctrinae         => "teachbox"
+  | .arcaFabricationis     => "makebox"
+  | .exploratorFantasmatis => "ghostexplorer"
+  | .exploratorTegumenti   => "shellexplorer"
+  | .exploratorBullae      => "balloonexplorer"
+  | .probatioSuperficiei   => "surfacetest"
+  | .exploratorHeadlineae  => "headlinesensorexplorer"
+  | .exploratorModulorum   => "pluginexplorer"
+  | .graphumUsus           => "rateofusegraph"
+  | .graphumUsusBullae     => "rateofusegraphballoon"
+  | .graphumUsusTotal      => "rateofusegraphtotal"
+  | .calendarium           => "calendar"
+  | .nuntium               => "messenger"
+  | .readme                => "readme"
+  | .conditiones           => "terms"
+  | .graphumAI             => "aigraph"
+  | .palettaDeveloper      => "developer"
+  | .petitioShiori         => "shiorirequest"
+  | .exploratorDressupi    => "dressupexplorer"
+  | .navigator    nexus    => s!"browser,{evadeArgumentum nexus}"
+  | .nuntiatorem  param    => s!"mailer,{evadeArgumentum param}"
+  | .explorator   via      => s!"explorer,{evadeArgumentum via}"
+  | .configuratio id       => s!"configurationdialog,{evadeArgumentum id}"
+  | .fasciculum   via      => s!"file,{evadeArgumentum via}"
+  | .auxilium     id       => s!"help,{evadeArgumentum id}"
 
 /-- `\\![close,X]`（追加引數なし）で閉ぢられるウィンドウの種類にゃん。
     `claude` 關數に渡すにゃ。
@@ -918,37 +957,5 @@ def diesInMense (annus mensis : Nat) : Nat :=
   | 3 => 31 | 4 => 30 | 5 => 31 | 6 => 30
   | 7 => 31 | 8 => 31 | 9 => 30 | 10 => 31
   | 11 => 30 | 12 => 31 | _ => 0
-
--- ════════════════════════════════════════════════════
---  遁走關數 (Functiones Evasionis)
---  循環依存を避けるためにこゝに置くにゃん♪
--- ════════════════════════════════════════════════════
-
-/-- 文字列中の特殊文字（\\、%、]）を全て遁走して表示用に安全な形にするにゃん。
-    loqui 等の表示系關數はこれを通すから、お嬢樣は氣にしにゃくていいにゃ♪ -/
-def evadeTextus (s : String) : String :=
-  s.foldl (fun acc c =>
-    match c with
-    | '\\' => acc ++ "\\"
-    | '%'  => acc ++ "\\%"
-    | ']'  => acc ++ "\\]"
-    | _    => acc.push c
-  ) ""
-
-/-- タグ引數内の特殊文字（\\、%、]）を遁走し、`,` や `"` を含む場合は `"..."` 括りにするにゃん。
-    ukadoc 仕樣: `"..."` 括りが公式で、`\,` は未定義にゃ。
-    括り内では `"` → `""` に二重化するにゃ♪ -/
-def evadeArgumentum (s : String) : String :=
-  let s1 := s.foldl (fun acc c =>
-    match c with
-    | '\\' => acc ++ "\\\\"
-    | ']'  => acc ++ "\\]"
-    | '%'  => acc ++ "\\%"
-    | _    => acc.push c
-  ) ""
-  if s1.any (fun c => c == ',' || c == '"') then
-    "\"" ++ s1.replace "\"" "\"\"" ++ "\""
-  else
-    s1
 
 end Signaculum.Sakura

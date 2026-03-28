@@ -310,23 +310,23 @@ def togglaSupra {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.imper
 
 /-- アニメーションにオーバーレイを追加するにゃん（\\![anim,add,overlay,id]）-/
 def animaAddOverlay {m : Type → Type} [Monad m] (animId : Nat) : SakuraM m Unit :=
-  emitte (.imperii (.animaAddOverlay animId))
+  emitte (.animationis (.animaAddOverlay animId))
 
 /-- アニメーションにオーバーレイを座標指定で追加するにゃん（\\![anim,add,overlay,id,x,y]）-/
 def animaAddOverlayPos {m : Type → Type} [Monad m] (animId : Nat) (x y : Int) : SakuraM m Unit :=
-  emitte (.imperii (.animaAddOverlayPos animId x y))
+  emitte (.animationis (.animaAddOverlayPos animId x y))
 
 /-- アニメーションのベース表面を変更するにゃん（\\![anim,add,base,id]）-/
 def animaAddBase {m : Type → Type} [Monad m] (animId : Nat) : SakuraM m Unit :=
-  emitte (.imperii (.animaAddBase animId))
+  emitte (.animationis (.animaAddBase animId))
 
 /-- アニメーションを移動するにゃん（\\![anim,add,move,x,y]）-/
 def animaAddMove {m : Type → Type} [Monad m] (x y : Int) : SakuraM m Unit :=
-  emitte (.imperii (.animaAddMove x y))
+  emitte (.animationis (.animaAddMove x y))
 
 /-- 高速オーバーレイを追加するにゃん（\\![anim,add,overlayfast,id]）-/
 def animaAddOverlayFast {m : Type → Type} [Monad m] (animId : Nat) : SakuraM m Unit :=
-  emitte (.imperii (.animaAddOverlayFast animId))
+  emitte (.animationis (.animaAddOverlayFast animId))
 
 -- ════════════════════════════════════════════════════
 --  他ゴースト設定 (Configuratio Aliorum)
@@ -345,7 +345,7 @@ def configuraAliasSuperficies {m : Type → Type} [Monad m] (b : Bool) : SakuraM
     optio: `center`/`tile`/`stretch`/`stretch-x`/`stretch-y`/`span` にゃ -/
 def configuraTapete {m : Type → Type} [Monad m]
     (via : String) (optio : Option ModusTapetis := none) : SakuraM m Unit :=
-  emitte (.proprietatis (.configuraTapete via optio))
+  emitte (.fenestrae (.configuraTapete via optio))
 
 -- ════════════════════════════════════════════════════
 --  音響拡張2 (Extensio Soni II)
@@ -595,12 +595,12 @@ def animaAddTextum {m : Type → Type} [Monad m]
     (x y latitudo altitudo : Int) (textus : String) (tempus : Nat)
     (r g b : Nat) (_hr : r ≤ 255 := by omega) (_hg : g ≤ 255 := by omega) (_hb : b ≤ 255 := by omega)
     (magnitudo : Nat) (fons : String := "") : SakuraM m Unit :=
-  emitte (.imperii (.animaAddTextum x y latitudo altitudo textus tempus r g b magnitudo fons))
+  emitte (.animationis (.animaAddTextum x y latitudo altitudo textus tempus r g b magnitudo fons))
 
 /-- タイミング付きオーバーレイ動畫にゃん（\\![anim,add,overlay,ID,x,y,time,options]）-/
 def animaAddOverlayAnimatum {m : Type → Type} [Monad m]
     (animId : Nat) (x y : Int) (tempus : Nat) (optiones : String := "") : SakuraM m Unit :=
-  emitte (.imperii (.animaAddOverlayAnimatum animId x y tempus optiones))
+  emitte (.animationis (.animaAddOverlayAnimatum animId x y tempus optiones))
 
 -- ════════════════════════════════════════════════════
 --  音聲合成 (Synthesis Vocis)

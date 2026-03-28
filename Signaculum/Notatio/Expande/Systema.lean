@@ -36,10 +36,9 @@ private def extractIdentValSystema (s : Lean.Syntax) : Option String :=
 /-- 文字列リテラルを期待して取り出すにゃん -/
 private def expectaStrLitSys (s : Lean.Syntax) (nomenSigni : String)
     : TermElabM (Lean.TSyntax `str) := do
-  if s.isStrLit? then
-    pure ⟨s⟩
-  else
-    throwErrorAt s s!"{nomenSigni}: 文字列が期待されてゐますにゃ"
+  match s.isStrLit? with
+  | some _ => pure ⟨s⟩
+  | none   => throwErrorAt s s!"{nomenSigni}: 文字列が期待されてゐますにゃ"
 
 -- ════════════════════════════════════════════════════
 --  主ディスパッチ函數 (Functio Principalis Dispatchonis Systematis)

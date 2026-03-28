@@ -64,7 +64,7 @@ def tracta (s : Shiori) (rogatio : Rogatio) : IO Responsum := do
       match rogatio.methodus with
       | .pete     => return {
           status           := .ok
-          valor            := some status.scriptum
+          valor            := some (Signaculum.Sakura.adCatenamLista status.scriptum)
           marker           := status.marker
           balloonOffset    := status.balloonOffset
           errorLevel       := status.errorLevel

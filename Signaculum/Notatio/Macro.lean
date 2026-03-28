@@ -159,7 +159,7 @@ def withInitioLineae : Lean.Parser.Parser → Lean.Parser.Parser :=
 -- SakuraScript タグ開始文字にゃ（これらに遭遇したら停止して categoryParser に委ねるにゃん）
 -- \ → タグ接頭辭、" → 文字列リテラル、{ } → 式埋込、% → 環境變數、) ] → 括弧閉ぢ
 private def estInitiumTagi (ch : Char) : Bool :=
-  ch == '\\' || ch == '"' || ch == '\'' || ch == '{' || ch == '}' || ch == '%' ||
+  ch == '\\' || ch == '"' || ch == '{' || ch == '}' || ch == '%' ||
   ch == ')' || ch == ']'
 
 -- scriptum ブロック內の裸テクストゥスを讀むにゃん♪

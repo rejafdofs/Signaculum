@@ -373,4 +373,12 @@ example : Id.run (currereScriptum (scriptum! \f[cursormethod, copypen]))
 example : Id.run (currereScriptum (scriptum! \f[cursormethod, notmaskpen]))
         = "\\f[cursormethod,notmaskpen]" := by native_decide
 
+-- ════════════════════════════════════════════════════
+--  シングルクォートの検證にゃん
+-- ════════════════════════════════════════════════════
+
+-- シングルクォートを含む裸テクストゥスが分斷されずに讀めるにゃん
+example : Id.run (currereScriptum (scriptum! \h it's \e))
+        = "\\hit's\\e" := by native_decide
+
 end Signaculum.Notatio.Verificatio

@@ -287,7 +287,9 @@ def elabScriptum : TermElab := fun stx expectedType? => do
       let textus := match s with
         | .ident _ rawVal _ _ => rawVal.toString
         | _ => s.getId.toString  -- 到達しにゃいはずにゃが安全策にゃ
-      `(Signaculum.Sakura.loqui $(Lean.Syntax.mkStrLit textus))
+      -- 元の ident のソース位置を loqui 呼出し構文に轉寫して hover を有效化するにゃ
+      let stx ← `(Signaculum.Sakura.loqui $(Lean.Syntax.mkStrLit textus))
+      return ⟨stx.raw.setHeadInfo (s.getHeadInfo)⟩
     else
       let ts : TSyntax `sakuraSignum := ⟨s⟩
       `(expandSignum $ts)

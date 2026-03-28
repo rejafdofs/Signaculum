@@ -63,17 +63,17 @@ def reseraRepictura {m : Type → Type} [Monad m] : SakuraM m Unit :=
 
 /-- 吹出しの自動スクロールを設定するにゃん（\\![set,autoscroll,on/off]）-/
 def configuraAutoScroll {m : Type → Type} [Monad m] (b : Bool) : SakuraM m Unit :=
-  emitte s!"\\![set,autoscroll,{if b then "on" else "off"}]"
+  emitte (.fenestrae (.configuraAutoScroll b))
 
 /-- 吹出しのオフセットを設定するにゃん（\\![set,balloonoffset,target,x,y]）。
     scopus に `ScopusBullae.sakura` か `ScopusBullae.kero` を指定するにゃ -/
 def configuraBullaeOffset {m : Type → Type} [Monad m]
     (scopus : ScopusBullae) (x y : Int) : SakuraM m Unit :=
-  emitte s!"\\![set,balloonoffset,{scopus.toString},{x},{y}]"
+  emitte (.fenestrae (.configuraBullaeOffset scopus x y))
 
 /-- クイックセッションの有效/無效を設定するにゃん（\\![quicksession,true/false]）-/
 def sessioRapida {m : Type → Type} [Monad m] (b : Bool) : SakuraM m Unit :=
-  emitte s!"\\![quicksession,{if b then "true" else "false"}]"
+  emitte (.fenestrae (.sessioRapida b))
 
 -- ════════════════════════════════════════════════════
 --  入力 (Ingressus)

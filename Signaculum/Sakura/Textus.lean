@@ -136,29 +136,29 @@ def mutaGhost {m : Type → Type} [Monad m] : SakuraM m Unit := emitte (.imperii
 
 /-- 太字の切替（\\f[bold,b]）にゃん -/
 def audax {m : Type → Type} [Monad m] (b : Bool := true) : SakuraM m Unit :=
-  emitte s!"\\f[bold,{if b then "true" else "false"}]"
+  emitte (.formae (.audax b))
 
 /-- 斜體の切替（\\f[italic,b]）にゃん -/
 def obliquus {m : Type → Type} [Monad m] (b : Bool := true) : SakuraM m Unit :=
-  emitte s!"\\f[italic,{if b then "true" else "false"}]"
+  emitte (.formae (.obliquus b))
 
 /-- 下線の切替（\\f[underline,b]）にゃん -/
 def sublinea {m : Type → Type} [Monad m] (b : Bool := true) : SakuraM m Unit :=
-  emitte s!"\\f[underline,{if b then "true" else "false"}]"
+  emitte (.formae (.sublinea b))
 
 /-- 取消線の切替（\\f[strike,b]）にゃん -/
 def deletura {m : Type → Type} [Monad m] (b : Bool := true) : SakuraM m Unit :=
-  emitte s!"\\f[strike,{if b then "true" else "false"}]"
+  emitte (.formae (.deletura b))
 
 /-- 文字色の設定（\\f[color,色]）にゃん。
     `Coloris.rgb 255 0 0`、`Coloris.hex "#FF0000"`、`Coloris.nomen "red"` 全部使へるにゃ -/
 def color {m : Type → Type} [Monad m] (c : Coloris) : SakuraM m Unit :=
-  emitte s!"\\f[color,{c.toString}]"
+  emitte (.formae (.color c))
 
 /-- 文字の大きさ（\\f[height,...]）にゃん。
     絕對ピクセル、相對（+/−）、百分率、default が指定できるにゃ -/
 def altitudoLitterarum {m : Type → Type} [Monad m] (mag : MagnitudoLitterarum) : SakuraM m Unit :=
-  emitte s!"\\f[height,{mag.toString}]"
+  emitte (.formae (.altitudoLitterarum mag))
 
 /-- 書體名の設定（\\f[name,font]）にゃん -/
 def nomenFontis {m : Type → Type} [Monad m] (nomen : String) : SakuraM m Unit :=

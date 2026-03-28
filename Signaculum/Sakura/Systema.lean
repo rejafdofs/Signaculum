@@ -11,11 +11,11 @@ namespace Signaculum.Sakura
 
 /-- 音聲を再生する（\\_v[file]）にゃん -/
 def sonus {m : Type → Type} [Monad m] (via : String) : SakuraM m Unit :=
-  emitte s!"\\_v[{evadeArgumentum via}]"
+  emitte (.soni (.sonus via))
 
 /-- 音聲の終了を待つ（\\_V）にゃん -/
 def expectaSonum {m : Type → Type} [Monad m] : SakuraM m Unit :=
-  emitte "\\_V"
+  emitte (.soni .expectaSonum)
 
 -- ════════════════════════════════════════════════════
 --  事象 (Eventum)
@@ -24,26 +24,17 @@ def expectaSonum {m : Type → Type} [Monad m] : SakuraM m Unit :=
 /-- 事象を發生させる（\\![raise,event,r0,...]）にゃん -/
 def excita {m : Type → Type} [Monad m]
     (eventum : String) (citationes : List String := []) : SakuraM m Unit :=
-  let catenaCitationis := match citationes with
-    | [] => ""
-    | res => "," ++ ",".intercalate (res.map evadeArgumentum)
-  emitte s!"\\![raise,{evadeArgumentum eventum}{catenaCitationis}]"
+  emitte (.eventuum (.excita eventum citationes))
 
 /-- 事象の結果をその場に埋め込む（\\![embed,event,r0,...]）にゃん -/
 def insere {m : Type → Type} [Monad m]
     (eventum : String) (citationes : List String := []) : SakuraM m Unit :=
-  let catenaCitationis := match citationes with
-    | [] => ""
-    | res => "," ++ ",".intercalate (res.map evadeArgumentum)
-  emitte s!"\\![embed,{evadeArgumentum eventum}{catenaCitationis}]"
+  emitte (.eventuum (.insere eventum citationes))
 
 /-- 通知事象（\\![notify,event,r0,...]）にゃん -/
 def notifica {m : Type → Type} [Monad m]
     (eventum : String) (citationes : List String := []) : SakuraM m Unit :=
-  let catenaCitationis := match citationes with
-    | [] => ""
-    | res => "," ++ ",".intercalate (res.map evadeArgumentum)
-  emitte s!"\\![notify,{evadeArgumentum eventum}{catenaCitationis}]"
+  emitte (.eventuum (.notifica eventum citationes))
 
 -- ════════════════════════════════════════════════════
 --  表面拡張 (Extensio Superficiei)

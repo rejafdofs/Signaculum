@@ -16,7 +16,7 @@ open Lean Elab Term
 /-- 識別子やアトムから文字列値を取り出すにゃん -/
 private def extractIdentValAnimatio (s : Lean.Syntax) : Option String :=
   if s.isIdent then
-    some s.getId.toString
+    some (s.getId.toString (escape := false))
   else match s.isAtom with
   | true  => some s.getAtomVal
   | false => none

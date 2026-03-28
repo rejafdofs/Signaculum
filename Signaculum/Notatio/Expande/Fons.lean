@@ -16,7 +16,7 @@ open Lean Elab Term
 /-- 識別子やアトムから文字列値を取り出すにゃん -/
 private def extractIdentVal (s : Lean.Syntax) : Option String :=
   if s.isIdent then
-    some s.getId.toString
+    some (s.getId.toString (escape := false))
   else match s.isAtom with
   | true  => some s.getAtomVal
   | false => none
@@ -37,13 +37,17 @@ private def expectaStrLit (s : Lean.Syntax) (nomenSigni : String)
   else
     throwErrorAt s s!"{nomenSigni}: 文字列が期待されてゐますにゃ"
 
-/-- 括弧に包まれた term を取り出すにゃん。
-    ノードが `group` で子が `(` term `)` の形なら term を返すにゃ -/
+/-- 括弧附き term か、ident/numLit/strLit でない構文ノードを term として取り出すにゃん。
+    カスタムパーサーは (expr) の括弧を剥がして中身だけ積むから、
+    paren ノードではなく直接 term ノードが來るにゃ -/
 private def extractaTermParenthesatum (s : Lean.Syntax) : Option Lean.Syntax :=
+  -- paren ノードならその中身にゃ
   if s.getKind == ``Lean.Parser.Term.paren then
-    -- `(` term `)` — 中身は args[1] にゃん
     let args := s.getArgs
     if args.size >= 2 then some args[1]! else none
+  -- ident でも numLit でも strLit でもなければ term として扱ふにゃ
+  else if !s.isIdent && s.isNatLit?.isNone && s.isStrLit?.isNone && !s.isAtom then
+    some s
   else
     none
 
@@ -105,9 +109,15 @@ private def interpretaColoris (valores : Array Lean.Syntax) (stx : Lean.Syntax)
       return ← `(Signaculum.Sakura.Coloris.hex $s)
     -- 識別子にゃん
     match extractIdentVal v with
-    | some "none"    => return ← `(Signaculum.Sakura.Coloris.nullus)
-    | some "default" => return ← `(Signaculum.Sakura.Coloris.praefinitus)
-    | some "disable" => return ← `(Signaculum.Sakura.Coloris.inhabilis)
+    | some "none"                  => return ← `(Signaculum.Sakura.Coloris.nullus)
+    | some "default"               => return ← `(Signaculum.Sakura.Coloris.praefinitus)
+    | some "disable"               => return ← `(Signaculum.Sakura.Coloris.inhabilis)
+    | some "default.anchor"        => return ← `(Signaculum.Sakura.Coloris.praefinitusAncorae)
+    | some "default.anchornotselect" => return ← `(Signaculum.Sakura.Coloris.praefinitusAncoraeNonElectae)
+    | some "default.anchorvisited" => return ← `(Signaculum.Sakura.Coloris.praefinitusAncoraeVisae)
+    | some "default.cursor"        => return ← `(Signaculum.Sakura.Coloris.praefinitusCursoris)
+    | some "default.cursornotselect" => return ← `(Signaculum.Sakura.Coloris.praefinitusCursorisNonElecti)
+    | some "default.plain"         => return ← `(Signaculum.Sakura.Coloris.praefinitusPlanus)
     | some name      => return ← `(Signaculum.Sakura.Coloris.nomen $(Lean.Syntax.mkStrLit name))
     | none           => pure ()
   throwErrorAt stx "\\f[...]: 色の指定が不正にゃ"

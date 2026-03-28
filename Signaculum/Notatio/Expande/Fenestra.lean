@@ -201,14 +201,14 @@ def expandeSignumFenestrae (imperium : String) (args : Array Lean.Syntax) (stx :
 def expandeSignumFenestraeBasicum (nomen : String) (args : Array Lean.Syntax) (stx : Lean.Syntax)
     : Lean.Elab.Term.TermElabM (Option (Lean.TSyntax `term)) := do
   match nomen with
-  | "z" =>
+  | "\\z" =>
     -- \z[n] → zoom n にゃん
     if args.size == 1 then
       let n := args[0]!
       some <$> `(Signaculum.Sakura.zoom $(⟨n⟩))
     else
       throwErrorAt stx "\\z[n] は引數1つ（倍率）が必要にゃ"
-  | "_b" =>
+  | "\\_b" =>
     -- \_b[v, x, y] / \_b[v, x, y, opaque] / \_b[v, inline] / \_b[v, inline, opaque]
     match args.size with
     | 2 =>

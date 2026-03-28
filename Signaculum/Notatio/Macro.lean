@@ -287,7 +287,9 @@ def elabScriptum : TermElab := fun stx expectedType? => do
       let textus := match s with
         | .ident _ rawVal _ _ => rawVal.toString
         | _ => s.getId.toString  -- 到達しにゃいはずにゃが安全策にゃ
-      `(Signaculum.Sakura.loqui $(Lean.Syntax.mkStrLit textus))
+      -- 元の ident のソース位置を loqui 呼出し構文に轉寫して hover を有效化するにゃ
+      let stx ← `(Signaculum.Sakura.loqui $(Lean.Syntax.mkStrLit textus))
+      return ⟨stx.raw.setHeadInfo (s.getHeadInfo)⟩
     else
       let ts : TSyntax `sakuraSignum := ⟨s⟩
       `(expandSignum $ts)
@@ -314,17 +316,6 @@ def elabScriptum : TermElab := fun stx expectedType? => do
       let next ← genTerm s
       body ← `(Bind.bind $body fun () => $next)
       lineaPrior := lineaCurrens
-    let result ← elabTerm body expectedType?
-    -- ポスト・エラボレーション: 各タグにホバー情報を登録するにゃん♪
-    -- 一括 elabTerm でモナドパラメータが解決した後なので、resultType を期待型として
-    -- 渡すことで個別タグのエラボレーションでも同じモナドが使はれるにゃ
-    let resultType ← inferType result
-    for s in ss do
-      try
-        let termStx ← genTerm s
-        let tagExpr ← elabTerm termStx (some resultType)
-        addTermInfo s tagExpr
-      catch _ => pure ()
-    return result
+    elabTerm body expectedType?
   else
     elabTerm (← `(pure ())) expectedType?

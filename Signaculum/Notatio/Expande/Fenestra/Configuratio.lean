@@ -187,7 +187,7 @@ private def resolveBind (args : Array Syntax) (stx : Syntax)
   | 2 =>
     -- \![bind, cat, part] — 値省略にゃん
     let c := args[0]!; let p := args[1]!
-    some <$> `(Signaculum.Sakura.nexaDressup $c $p Option.none)
+    some <$> `(Signaculum.Sakura.nexaDressup $(⟨c⟩) $(⟨p⟩) Option.none)
   | 3 =>
     -- \![bind, cat, part, 0/1] にゃん
     let c := args[0]!; let p := args[1]!; let v := args[2]!
@@ -195,17 +195,15 @@ private def resolveBind (args : Array Syntax) (stx : Syntax)
     match v with
     | Syntax.node _ ``Lean.Parser.Term.num #[Syntax.atom _ digits] =>
       match digits.toNat? with
-      | some 1 => some <$> `(Signaculum.Sakura.nexaDressup $c $p (Option.some Bool.true))
-      | some 0 => some <$> `(Signaculum.Sakura.nexaDressup $c $p (Option.some Bool.false))
+      | some 1 => some <$> `(Signaculum.Sakura.nexaDressup $(⟨c⟩) $(⟨p⟩) (Option.some Bool.true))
+      | some 0 => some <$> `(Signaculum.Sakura.nexaDressup $(⟨c⟩) $(⟨p⟩) (Option.some Bool.false))
       | _      => throwErrorAt stx "\\![bind,...] の值は 0 か 1 のみにゃ"
     | _ =>
       -- num リテラルでない場合、numLit を直接確認にゃん
-      if v.isNatLit? then
-        match v.isNatLit?? with
-        | some 1 => some <$> `(Signaculum.Sakura.nexaDressup $c $p (Option.some Bool.true))
-        | some 0 => some <$> `(Signaculum.Sakura.nexaDressup $c $p (Option.some Bool.false))
-        | _      => throwErrorAt stx "\\![bind,...] の值は 0 か 1 のみにゃ"
-      else
+      match v.isNatLit? with
+      | some 1 => some <$> `(Signaculum.Sakura.nexaDressup $(⟨c⟩) $(⟨p⟩) (Option.some Bool.true))
+      | some 0 => some <$> `(Signaculum.Sakura.nexaDressup $(⟨c⟩) $(⟨p⟩) (Option.some Bool.false))
+      | _      =>
         -- 式として渡す — 實行時に檢證されるにゃ
         throwErrorAt stx "\\![bind,...] の值は 0 か 1 のみにゃ"
   | _ => throwErrorAt stx "\\![bind,...] は引數2〜3つ (cat,part[,0/1]) にゃ"

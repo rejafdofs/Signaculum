@@ -194,10 +194,12 @@ private def genTermLexema (s : Lean.Syntax) : TermElabM (TSyntax `term) := do
     return ⟨stx.raw.setHeadInfo (s.getHeadInfo)⟩
   -- 文字列リテラルにゃ
   if kind == lexemaTextusLit then
-    return ← `(Signaculum.Sakura.loqui $(⟨s[0]⟩ : TSyntax `str))
+    let strStx : TSyntax `str := ⟨s[0]⟩
+    return ← `(Signaculum.Sakura.loqui $strStx)
   -- 式埋込にゃ
   if kind == lexemaExpressio then
-    return ← `(($(⟨s[0]⟩ : TSyntax `term) : Signaculum.Sakura.SakuraM _ Unit))
+    let termStx : TSyntax `term := ⟨s[0]⟩
+    return ← `(($termStx : Signaculum.Sakura.SakuraM _ Unit))
   -- 環境變數にゃ
   if kind == lexemaVariabilis then
     let nomen := match s[0] with

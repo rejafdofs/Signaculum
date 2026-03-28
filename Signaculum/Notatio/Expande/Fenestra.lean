@@ -24,7 +24,7 @@ private def argAdNomen (arg : Syntax) : Option String :=
   else match arg with
   | Syntax.node _ ``Lean.Parser.Term.str #[Syntax.atom _ v] =>
     -- 文字列リテラルから引用符を剥ぐにゃ
-    let s := v.drop 1 |>.dropRight 1
+    let s := (v.drop 1 |>.dropEnd 1).toString
     some s
   | _ => none
 
@@ -39,7 +39,7 @@ private def expandeMoveEtc (imperium : String) (args : Array Syntax) (stx : Synt
   | "move" =>
     if h : args.size = 4 then
       let sx := args[0]; let sy := args[1]; let kx := args[2]; let ky := args[3]
-      some <$> `(Signaculum.Sakura.movere $sx $sy $kx $ky)
+      some <$> `(Signaculum.Sakura.movere $(⟨sx⟩) $(⟨sy⟩) $(⟨kx⟩) $(⟨ky⟩))
     else
       throwErrorAt stx "\\![move,...] は引數4つ (sx,sy,kx,ky) が必要にゃ"
   | "moveasync" =>
@@ -51,7 +51,7 @@ private def expandeMoveEtc (imperium : String) (args : Array Syntax) (stx : Synt
         throwErrorAt stx "\\![moveasync,...] は 4引數 か cancel にゃ"
     else if h : args.size = 4 then
       let sx := args[0]; let sy := args[1]; let kx := args[2]; let ky := args[3]
-      some <$> `(Signaculum.Sakura.movereAsync $sx $sy $kx $ky)
+      some <$> `(Signaculum.Sakura.movereAsync $(⟨sx⟩) $(⟨sy⟩) $(⟨kx⟩) $(⟨ky⟩))
     else
       throwErrorAt stx "\\![moveasync,...] は引數4つ (sx,sy,kx,ky) か cancel にゃ"
   | "vanish" =>
@@ -61,7 +61,7 @@ private def expandeMoveEtc (imperium : String) (args : Array Syntax) (stx : Synt
     if args.size == 0 then some <$> `(Signaculum.Sakura.restituere)
     else if args.size == 1 then
       let n := args[0]!
-      some <$> `(Signaculum.Sakura.restituere $n)
+      some <$> `(Signaculum.Sakura.restituere $(⟨n⟩))
     else throwErrorAt stx "\\![restore] は引數0か1にゃ"
   | "reboot" =>
     if args.size == 0 then some <$> `(Signaculum.Sakura.renovaGhost)
@@ -69,12 +69,12 @@ private def expandeMoveEtc (imperium : String) (args : Array Syntax) (stx : Synt
   | "quicksession" =>
     if args.size == 1 then
       let b := args[0]!
-      some <$> `(Signaculum.Sakura.sessioRapida $b)
+      some <$> `(Signaculum.Sakura.sessioRapida $(⟨b⟩))
     else throwErrorAt stx "\\![quicksession,...] は引數1つにゃ"
   | "quicksection" =>
     if args.size == 1 then
       let b := args[0]!
-      some <$> `(Signaculum.Sakura.sectionCeler $b)
+      some <$> `(Signaculum.Sakura.sectionCeler $(⟨b⟩))
     else throwErrorAt stx "\\![quicksection,...] は引數1つにゃ"
   | "create" =>
     if args.size == 1 then
@@ -145,7 +145,7 @@ private def expandeModusEtc (imperium : String) (args : Array Syntax) (stx : Syn
     | some "rect" =>
       if args.size ≥ 3 then
         let c := args[2]!
-        some <$> `(Signaculum.Sakura.ingredereModumSelectionis .rectus $c)
+        some <$> `(Signaculum.Sakura.ingredereModumSelectionis .rectus $(⟨c⟩))
       else throwErrorAt stx "\\![enter,selectmode,rect,...] はコリジョン名が必要にゃ"
     | _ => throwErrorAt stx "\\![enter,selectmode,...] は rect のみ對應にゃ"
   | "leave", some "selectmode" => some <$> `(Signaculum.Sakura.egrediereModumSelectionis)
@@ -205,7 +205,7 @@ def expandeSignumFenestraeBasicum (nomen : String) (args : Array Lean.Syntax) (s
     -- \z[n] → zoom n にゃん
     if args.size == 1 then
       let n := args[0]!
-      some <$> `(Signaculum.Sakura.zoom $n)
+      some <$> `(Signaculum.Sakura.zoom $(⟨n⟩))
     else
       throwErrorAt stx "\\z[n] は引數1つ（倍率）が必要にゃ"
   | "_b" =>
@@ -215,7 +215,7 @@ def expandeSignumFenestraeBasicum (nomen : String) (args : Array Lean.Syntax) (s
       -- \_b[v, inline] にゃん
       let v := args[0]!
       match argAdNomen args[1]! with
-      | some "inline" => some <$> `(Signaculum.Sakura.imagoBullaeInlineata $v)
+      | some "inline" => some <$> `(Signaculum.Sakura.imagoBullaeInlineata $(⟨v⟩))
       | _ => throwErrorAt stx "\\_b[v,...] の第2引數は座標か inline にゃ"
     | 3 =>
       let v := args[0]!
@@ -223,17 +223,17 @@ def expandeSignumFenestraeBasicum (nomen : String) (args : Array Lean.Syntax) (s
       | some "inline" =>
         -- \_b[v, inline, opaque] にゃん
         match argAdNomen args[2]! with
-        | some "opaque" => some <$> `(Signaculum.Sakura.imagoBullaeInlineataOpaca $v)
+        | some "opaque" => some <$> `(Signaculum.Sakura.imagoBullaeInlineataOpaca $(⟨v⟩))
         | _ => throwErrorAt stx "\\_b[v, inline, ...] は opaque のみにゃ"
       | _ =>
         -- \_b[v, x, y] にゃん
         let x := args[1]!; let y := args[2]!
-        some <$> `(Signaculum.Sakura.imagoBullae $v $x $y)
+        some <$> `(Signaculum.Sakura.imagoBullae $(⟨v⟩) $(⟨x⟩) $(⟨y⟩))
     | 4 =>
       -- \_b[v, x, y, opaque] にゃん
       let v := args[0]!; let x := args[1]!; let y := args[2]!
       match argAdNomen args[3]! with
-      | some "opaque" => some <$> `(Signaculum.Sakura.imagoBullaeOpaca $v $x $y)
+      | some "opaque" => some <$> `(Signaculum.Sakura.imagoBullaeOpaca $(⟨v⟩) $(⟨x⟩) $(⟨y⟩))
       | _ => throwErrorAt stx "\\_b[v, x, y, ...] の第4引數は opaque のみにゃ"
     | _ => throwErrorAt stx "\\_b[...] は引數2〜4つにゃ"
   | _ => return none

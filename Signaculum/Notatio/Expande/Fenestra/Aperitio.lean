@@ -15,7 +15,7 @@ private def argAdNomenA (arg : Syntax) : Option String :=
     some (arg.getId.toString false)
   else match arg with
   | Syntax.node _ ``Lean.Parser.Term.str #[Syntax.atom _ v] =>
-    let s := v.drop 1 |>.dropRight 1
+    let s := (v.drop 1 |>.dropEnd 1).toString
     some s
   | _ => none
 
@@ -60,71 +60,71 @@ private def resolveOpenCumArgs (subCmd : String) (rest : Array Syntax) (stx : Sy
   | "browser" =>
     if rest.size == 1 then
       let u := rest[0]!
-      some <$> `(Signaculum.Sakura.aperi (.navigator $u))
+      some <$> `(Signaculum.Sakura.aperi (.navigator $(⟨u⟩)))
     else throwErrorAt stx "\\![open,browser,...] は URL 引數1つにゃ"
   | "mailer" =>
     if rest.size == 1 then
       let a := rest[0]!
-      some <$> `(Signaculum.Sakura.aperi (.nuntiatorem $a))
+      some <$> `(Signaculum.Sakura.aperi (.nuntiatorem $(⟨a⟩)))
     else throwErrorAt stx "\\![open,mailer,...] はアドレス引數1つにゃ"
   | "explorer" =>
     if rest.size == 1 then
       let v := rest[0]!
-      some <$> `(Signaculum.Sakura.aperi (.explorator $v))
+      some <$> `(Signaculum.Sakura.aperi (.explorator $(⟨v⟩)))
     else throwErrorAt stx "\\![open,explorer,...] はパス引數1つにゃ"
   | "configurationdialog" =>
     if rest.size == 1 then
       let i := rest[0]!
-      some <$> `(Signaculum.Sakura.aperi (.configuratio $i))
+      some <$> `(Signaculum.Sakura.aperi (.configuratio $(⟨i⟩)))
     else throwErrorAt stx "\\![open,configurationdialog,...] は ID 引數1つにゃ"
   | "file" =>
     if rest.size == 1 then
       let v := rest[0]!
-      some <$> `(Signaculum.Sakura.aperi (.fasciculum $v))
+      some <$> `(Signaculum.Sakura.aperi (.fasciculum $(⟨v⟩)))
     else throwErrorAt stx "\\![open,file,...] はパス引數1つにゃ"
   | "help" =>
     if rest.size == 1 then
       let i := rest[0]!
-      some <$> `(Signaculum.Sakura.aperi (.auxilium $i))
+      some <$> `(Signaculum.Sakura.aperi (.auxilium $(⟨i⟩)))
     else throwErrorAt stx "\\![open,help,...] は ID 引數1つにゃ"
   | "dialog" =>
     if rest.size == 1 then
       let m := rest[0]!
-      some <$> `(Signaculum.Sakura.aperiDialogum $m)
+      some <$> `(Signaculum.Sakura.aperiDialogum $(⟨m⟩))
     else throwErrorAt stx "\\![open,dialog,...] は引數1つにゃ"
   | "editor" =>
     match rest.size with
     | 1 =>
       let v := rest[0]!
-      some <$> `(Signaculum.Sakura.aperiEditorem $v)
+      some <$> `(Signaculum.Sakura.aperiEditorem $(⟨v⟩))
     | 2 =>
       let v := rest[0]!; let l := rest[1]!
-      some <$> `(Signaculum.Sakura.aperiEditorem $v $l)
+      some <$> `(Signaculum.Sakura.aperiEditorem $(⟨v⟩) $(⟨l⟩))
     | _ => throwErrorAt stx "\\![open,editor,...] は引數1〜2つにゃ"
   -- 入力ダイアログ拡張にゃん♪ (Extensio Ingressuum)
   | "dateinput" =>
     if rest.size == 5 then
       let cb := rest[0]!; let title := rest[1]!
       let y := rest[2]!; let m := rest[3]!; let d := rest[4]!
-      some <$> `(Signaculum.Sakura.aperiInputumDiei (show String from $cb) (show String from $title) $y $m $d)
+      some <$> `(Signaculum.Sakura.aperiInputumDiei (show String from $(⟨cb⟩)) (show String from $(⟨title⟩)) $(⟨y⟩) $(⟨m⟩) $(⟨d⟩))
     else throwErrorAt stx "\\![open,dateinput,...] は引數5つ (cb,title,y,m,d) にゃ"
   | "timeinput" =>
     if rest.size == 5 then
       let cb := rest[0]!; let title := rest[1]!
       let h := rest[2]!; let m := rest[3]!; let s := rest[4]!
-      some <$> `(Signaculum.Sakura.aperiInputumTemporis (show String from $cb) (show String from $title) $h $m $s)
+      some <$> `(Signaculum.Sakura.aperiInputumTemporis (show String from $(⟨cb⟩)) (show String from $(⟨title⟩)) $(⟨h⟩) $(⟨m⟩) $(⟨s⟩))
     else throwErrorAt stx "\\![open,timeinput,...] は引數5つ (cb,title,h,m,s) にゃ"
   | "sliderinput" =>
     if rest.size == 5 then
       let cb := rest[0]!; let title := rest[1]!
       let mn := rest[2]!; let mx := rest[3]!; let init := rest[4]!
-      some <$> `(Signaculum.Sakura.aperiInputumGradus (show String from $cb) (show String from $title) $mn $mx $init)
+      some <$> `(Signaculum.Sakura.aperiInputumGradus (show String from $(⟨cb⟩)) (show String from $(⟨title⟩)) $(⟨mn⟩) $(⟨mx⟩) $(⟨init⟩))
     else throwErrorAt stx "\\![open,sliderinput,...] は引數5つ (cb,title,min,max,init) にゃ"
   | "ipinput" =>
     if rest.size == 6 then
       let cb := rest[0]!; let title := rest[1]!
       let a := rest[2]!; let b := rest[3]!; let c := rest[4]!; let d := rest[5]!
-      some <$> `(Signaculum.Sakura.aperiInputumIP (show String from $cb) (show String from $title) $a $b $c $d)
+      some <$> `(Signaculum.Sakura.aperiInputumIP (show String from $(⟨cb⟩)) (show String from $(⟨title⟩)) $(⟨a⟩) $(⟨b⟩) $(⟨c⟩) $(⟨d⟩))
     else throwErrorAt stx "\\![open,ipinput,...] は引數6つ (cb,title,a,b,c,d) にゃ"
   | _ => return none
 
@@ -143,7 +143,7 @@ private def resolveClose (subCmd : String) (rest : Array Syntax) (stx : Syntax)
   | "dialog" =>
     if rest.size == 1 then
       let i := rest[0]!
-      some <$> `(Signaculum.Sakura.claudeDialogum $i)
+      some <$> `(Signaculum.Sakura.claudeDialogum $(⟨i⟩))
     else throwErrorAt stx "\\![close,dialog,...] は ID 引數1つにゃ"
   | _ => return none
 

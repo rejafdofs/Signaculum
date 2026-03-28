@@ -24,7 +24,7 @@ private def extractIdentVal (s : Lean.Syntax) : Option String :=
 /-- 數値リテラルかどうか確認して取り出すにゃん -/
 private def expectaNatLit (s : Lean.Syntax) (nomenSigni : String)
     : TermElabM (Lean.TSyntax `num) := do
-  if s.isNatLit then
+  if s.isNatLit? then
     pure ⟨s⟩
   else
     throwErrorAt s s!"{nomenSigni}: []の中には数字が期待されてゐますにゃ"
@@ -32,7 +32,7 @@ private def expectaNatLit (s : Lean.Syntax) (nomenSigni : String)
 /-- 文字列リテラルかどうか確認して取り出すにゃん -/
 private def expectaStrLit (s : Lean.Syntax) (nomenSigni : String)
     : TermElabM (Lean.TSyntax `str) := do
-  if s.isStrLit then
+  if s.isStrLit? then
     pure ⟨s⟩
   else
     throwErrorAt s s!"{nomenSigni}: []の中には文字列が期待されてゐますにゃ"
@@ -48,9 +48,9 @@ private def estNegativusUnus (args : Array Lean.Syntax) : Bool :=
   else if args.size == 2 then
     match extractIdentVal args[0]! with
     | some "-" =>
-      match args[1]!.isNatLit with
+      match args[1]!.isNatLit? with
       | true  =>
-        match args[1]!.isNatLit, args[1]!.raw.isLit `num with
+        match args[1]!.isNatLit?, args[1]!.raw.isLit `num with
         | true, true => args[1]!.raw.getAtomVal == "1"
         | _, _       => false
       | false => false

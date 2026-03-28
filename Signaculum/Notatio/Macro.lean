@@ -1,31 +1,13 @@
 -- Signaculum.Notatio.Macro
--- scriptum! マクロ本體にゃん♪ 裸テクストゥスパーサもこゝにゐるにゃ
+-- scriptum! マクロ本體にゃん♪ カスタムパーサー經由で全トークンを處理するにゃ
 
-import Signaculum.Notatio.Categoria
-import Signaculum.Notatio.Textus
-import Signaculum.Notatio.Fons
-import Signaculum.Notatio.Fenestra
-import Signaculum.Notatio.Systema
+import Signaculum.Notatio.Parsitor
+import Signaculum.Notatio.Expande
 
 namespace Signaculum.Notatio
 
 open Lean Elab Term
-
--- ════════════════════════════════════════════════════
---  文字列リテラルス → loqui (Textus Citatus)
--- ════════════════════════════════════════════════════
-
--- 「"..."」で圍まれた文字列をテクストゥスとして表示にゃん
-syntax (priority := 50) str : sakuraSignum
-macro_rules | `(expandSignum $s:str) => `(Signaculum.Sakura.loqui $s)
-
--- クォートなし識別子をテクストゥスとして表示にゃん（例: scriptum! こんにちは）
-syntax (priority := 40) ident : sakuraSignum
-macro_rules | `(expandSignum $i:ident) => `(Signaculum.Sakura.loqui $(Lean.Syntax.mkStrLit i.getId.toString))
-
--- ════════════════════════════════════════════════════
---  式埋込 (Expressio Inserta) — (expr)
--- ════════════════════════════════════════════════════
+open Signaculum.Notatio.Parsitor
 
 -- ════════════════════════════════════════════════════
 --  表示可能型クラス (Classis Exhibibilis)
@@ -109,40 +91,20 @@ instance {α : Type u} {m : Type → Type} [Monad m] [Exhibibilis α m] (a : α)
     CoeDep α a (Signaculum.Sakura.SakuraM m Unit) where
   coe := Exhibibilis.exhibe a
 
--- 中括弧で圍んだ Lean の式を直接埋め込むにゃん
--- show で期待型を明示することで IO α 等のモナド値の CoeDep 強制変換を起動するにゃ
-syntax (priority := 50) "{" term "}" : sakuraSignum
-macro_rules | `(expandSignum {$e}) => `(($e : Signaculum.Sakura.SakuraM _ Unit))
-
--- \{ \} で中括弧文字をエスケープにゃん
-syntax (priority := 60) "\\{" : sakuraSignum
-macro_rules | `(expandSignum \{) => `(Signaculum.Sakura.loqui "{")
-syntax (priority := 60) "\\}" : sakuraSignum
-macro_rules | `(expandSignum \}) => `(Signaculum.Sakura.loqui "}")
-
--- % 環境變數參照にゃん（SSP が展開する %month 等）
--- `loqui` は `%` をエスケープしてしまふから專用構文が要るにゃ
-syntax (priority := 60) "%" ident : sakuraSignum
-macro_rules | `(expandSignum %$i:ident) => `(Signaculum.Sakura.variabilisAmbientis $(Lean.Syntax.mkStrLit i.getId.toString))
-
 -- ════════════════════════════════════════════════════
 --  行先頭位置コンビナートル (Combinatrix Initii Lineae)
 -- ════════════════════════════════════════════════════
 
--- withPosition と同じ構造で、行先頭位置を savedPos? に入れるにゃん
--- 型注釋を避けて s.pos から型推論させるにゃ
 def withInitioLineae : Lean.Parser.Parser → Lean.Parser.Parser :=
   Lean.Parser.withFn fun f c s =>
     let leadPos := Id.run do
       let input := c.fileMap.source
       let pos   := s.pos
-      -- fileMap から行頭位置を取得にゃ（後退スキャン不要にゃ）
       let lineNum  := (c.fileMap.toPosition pos).line
       let lineStart :=
         if h : lineNum - 1 < c.fileMap.positions.size
         then c.fileMap.positions[lineNum - 1]
         else pos
-      -- 行頭から最初の非空白文字まで進むにゃ
       let mut p := lineStart
       while p.byteIdx < pos.byteIdx do
         let ch := p.get input
@@ -153,70 +115,9 @@ def withInitioLineae : Lean.Parser.Parser → Lean.Parser.Parser :=
       ({ · with savedPos? := leadPos }) f c s
 
 -- ════════════════════════════════════════════════════
---  裸テクストゥスパーサ (Parser Textus Nudus)
+--  trailing 空白スキップ
 -- ════════════════════════════════════════════════════
 
--- SakuraScript タグ開始文字にゃ（これらに遭遇したら停止して categoryParser に委ねるにゃん）
--- \ → タグ接頭辭、" → 文字列リテラル、{ } → 式埋込、% → 環境變數、) ] → 括弧閉ぢ
-private def estInitiumTagi (ch : Char) : Bool :=
-  ch == '\\' || ch == '"' || ch == '{' || ch == '}' || ch == '%' ||
-  ch == ')' || ch == ']'
-
--- scriptum ブロック內の裸テクストゥスを讀むにゃん♪
--- タグ開始文字と空白以外の全ての文字をテクストゥスとして積むにゃ
--- まづ空白を飛ばし、次にタグ開始文字でも空白でもにゃい文字を連續して讀むにゃ
--- @[sakuraSignum_parser] は使はず scriptumParserCore から <|> で呼ぶにゃ
-private def rawTextusFn
-    (c : Lean.Parser.ParserContext) (s : Lean.Parser.ParserState)
-    : Lean.Parser.ParserState :=
-  let input    := c.fileMap.source
-  -- まづ空白を飛ばすにゃん（Lean の標準トークナイザと同樣の振舞ひにゃ）
-  let wsEnd := Id.run do
-    let mut p := s.pos
-    while p.byteIdx < input.utf8ByteSize do
-      let ch := p.get input
-      if ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' then break
-      p := p.next input
-    return p
-  -- テクストゥス本體を讀むにゃ（空白・タグ開始文字で停止にゃん）
-  let startPos := wsEnd
-  let (endPos, str) := Id.run do
-    let mut p   := startPos
-    let mut acc : String := ""
-    while p.byteIdx < input.utf8ByteSize do
-      let ch := p.get input
-      if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' then break
-      if estInitiumTagi ch then break
-      acc := acc.push ch
-      p   := p.next input
-    return (p, acc)
-  if endPos == startPos then
-    -- 失敗時は元の位置（s.pos）を保つにゃん — <|> が回復できるやうにするにゃ
-    s.mkError "expected text"
-  else
-    -- ident ノードとして push するにゃ（ソース位置を付けてホバー情報が出るにゃ）
-    let identNode : Lean.Syntax :=
-      Lean.Syntax.ident (Lean.SourceInfo.synthetic startPos endPos) str.toRawSubstring (Lean.Name.mkSimple str) []
-    -- 後續空白を消費するにゃん（行跨ぎ判定は SourceInfo の位置で行ふから大丈夫にゃ）
-    let finalPos := Id.run do
-      let mut p := endPos
-      while p.byteIdx < input.utf8ByteSize do
-        let ch := p.get input
-        if ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' then break
-        p := p.next input
-      return p
-    { s with pos := finalPos, stxStack := s.stxStack.push identNode }
-
--- @[combinator_formatter/parenthesizer] で no-op 登録にゃ
--- （@[term_parser] がフォーマッタ生成を要求するゆゑ必要にゃ）
-def rawTextusSignumParser : Lean.Parser.Parser where
-  info := {}
-  fn   := rawTextusFn
-
--- many 後の trailing 空白を讀み飛ばして pos を次の非空白文字の先頭に進めるにゃ
--- stxStack には何も積まないにゃ（scriptumMacro ノードの構造を變へないにゃ）
--- many が終はった後 pos が \n（行末・高カラム）に留まるせゐで
--- doIfThenElse の else カラムチェックが失敗するのを防ぐにゃ
 private def skipTrailingWsFn : Lean.Parser.ParserFn :=
   fun c s =>
     let input  := c.fileMap.source
@@ -239,60 +140,102 @@ def skipTrailingWsParser.formatter : Lean.PrettyPrinter.Formatter := pure ()
 @[combinator_parenthesizer Signaculum.Notatio.skipTrailingWsParser]
 def skipTrailingWsParser.parenthesizer : Lean.PrettyPrinter.Parenthesizer := pure ()
 
-@[combinator_formatter Signaculum.Notatio.rawTextusSignumParser]
-def rawTextusSignumParser.formatter : Lean.PrettyPrinter.Formatter := pure ()
-
-@[combinator_parenthesizer Signaculum.Notatio.rawTextusSignumParser]
-def rawTextusSignumParser.parenthesizer : Lean.PrettyPrinter.Parenthesizer := pure ()
-
-
--- ════════════════════════════════════════════════════
---  scriptum! マクロ本體 (Corpus Macri)
--- ════════════════════════════════════════════════════
-
 end Signaculum.Notatio
 
 -- ════════════════════════════════════════════════════
 --  scriptum! パーサー + エラボレーター (ネームスペース外で宣言にゃん)
 -- ════════════════════════════════════════════════════
 
-open Lean Elab Term Signaculum.Notatio
+open Lean Elab Term Signaculum.Notatio Signaculum.Notatio.Parsitor Signaculum.Notatio.Expande
 
 /-- SakuraScript を原形タグ記法で書けるパーサにゃん。
-    行の先頭列より深いトークンだけ取り込むにゃ♪
+    カスタムパーサー sakuraLexemaParser で全トークンを直接パースするにゃ♪
     感嘆符あり・なし両方受け付けるにゃ（scriptum! / scriptum）-/
 private def scriptumParserCore (kw : String) : Lean.Parser.Parser :=
   withInitioLineae <|
     Lean.Parser.leadingNode `scriptumMacro Lean.Parser.maxPrec <|
       Lean.Parser.symbol kw >>
       Lean.Parser.many (Lean.Parser.checkColGt "expected indent" >>
-                        (Signaculum.Notatio.rawTextusSignumParser <|>
-                         Lean.Parser.categoryParser `sakuraSignum 0)) >>
+                        sakuraLexemaParser) >>
       skipTrailingWsParser
 
 @[term_parser 1001] def scriptumTermParser  : Lean.Parser.Parser := scriptumParserCore "scriptum!"
 @[term_parser 1001] def scriptumTermParser2 : Lean.Parser.Parser := scriptumParserCore "scriptum"
 
--- scriptumMacro ノードを展開するエラボレーターにゃん（カインドは flat `scriptumMacro にゃ）
--- stx[1] が sakuraSignum* の null ノードにゃ
--- rawTextusFn が積んだ生 ident ノード（isIdent = true）は直接 loqui に変換にゃ
--- sakuraSignum ラッパーを持つ正規ノードは expandSignum 経由にゃ
+-- ════════════════════════════════════════════════════
+--  LexemaSakurae ノード → term 變換補助
+-- ════════════════════════════════════════════════════
+
+/-- ノードの子から引數配列を取るにゃん（子[1] が nullKind ノードにゃ） -/
+private def extractArgs (s : Lean.Syntax) : Array Lean.Syntax :=
+  if s.getNumArgs > 1 then s[1].getArgs else #[]
+
+/-- ノードの子[0] の atom 値を取るにゃん（タグ名・コマンド名にゃ） -/
+private def extractLabel (s : Lean.Syntax) : String :=
+  match s[0] with
+  | .atom _ val => val
+  | _ => ""
+
+-- ════════════════════════════════════════════════════
+--  scriptumMacro エラボレーター
+-- ════════════════════════════════════════════════════
+
+/-- LexemaSakurae ノードを term 構文に變換するにゃん♪
+    ノードカインドでディスパッチしてから Expande 關數に委ねるにゃ -/
+private def genTermLexema (s : Lean.Syntax) : TermElabM (TSyntax `term) := do
+  let kind := s.getKind
+  -- 裸テクストゥスにゃ
+  if kind == lexemaTextusNudus then
+    let identNode := s[0]
+    let textus := match identNode with
+      | .ident _ rawVal _ _ => rawVal.toString
+      | _ => identNode.getId.toString
+    let stx ← `(Signaculum.Sakura.loqui $(Lean.Syntax.mkStrLit textus))
+    return ⟨stx.raw.setHeadInfo (s.getHeadInfo)⟩
+  -- 文字列リテラルにゃ
+  if kind == lexemaTextusLit then
+    return ← `(Signaculum.Sakura.loqui $(⟨s[0]⟩ : TSyntax `str))
+  -- 式埋込にゃ
+  if kind == lexemaExpressio then
+    return ← `(($(⟨s[0]⟩ : TSyntax `term) : Signaculum.Sakura.SakuraM _ Unit))
+  -- 環境變數にゃ
+  if kind == lexemaVariabilis then
+    let nomen := match s[0] with
+      | .ident _ rawVal _ _ => rawVal.toString
+      | _ => s[0].getId.toString
+    return ← `(Signaculum.Sakura.variabilisAmbientis $(Lean.Syntax.mkStrLit nomen))
+  -- バックスラッシュタグにゃ
+  if kind == lexemaSignum then
+    let nomen := extractLabel s
+    let args := extractArgs s
+    -- Textus ディスパッチにゃ
+    if let some t ← expandeSignumTextus nomen args s then return t
+    -- Fenestra basicum ディスパッチにゃ（\z, \_b 等）
+    if let some t ← expandeSignumFenestraeBasicum nomen args s then return t
+    -- Systema basicum ディスパッチにゃ（\_v, \8, \m, \__v 等）
+    if let some t ← expandeSignumSystematisBasicum nomen args s then return t
+    throwErrorAt s s!"未知のサクラスクリプトタグにゃ: {nomen}"
+  -- 感嘆符タグにゃ
+  if kind == lexemaSignumExcl then
+    let imperium := extractLabel s
+    let args := extractArgs s
+    -- Fenestra ディスパッチにゃ
+    if let some t ← expandeSignumFenestrae imperium args s then return t
+    -- Systema ディスパッチにゃ
+    if let some t ← expandeSignumSystematis imperium args s then return t
+    throwErrorAt s s!"未知の \\![...] コマンドにゃ: {imperium}"
+  -- 書體タグにゃ
+  if kind == lexemaFontis then
+    let clavis := extractLabel s
+    let valores := extractArgs s
+    if let some t ← expandeFons clavis valores s then return t
+    throwErrorAt s s!"未知の \\f[...] キーにゃ: {clavis}"
+  -- 未知のノードにゃ
+  throwErrorAt s "未知のレクセマにゃ"
+
 @[term_elab scriptumMacro]
 def elabScriptum : TermElab := fun stx expectedType? => do
   let ss := stx[1].getArgs
-  -- 各シグナムノードを term 構文に變換するにゃ
-  let genTerm (s : Lean.Syntax) : Lean.Elab.Term.TermElabM (TSyntax `term) := do
-    if s.isIdent then
-      -- rawTextusFn 由來の裸 ident にゃ → rawVal から直接文字列を取るにゃん（guillemet 回避）
-      let textus := match s with
-        | .ident _ rawVal _ _ => rawVal.toString
-        | _ => s.getId.toString  -- 到達しにゃいはずにゃが安全策にゃ
-      -- 元の ident のソース位置を loqui 呼出し構文に轉寫して hover を有效化するにゃ
-      let stx ← `(Signaculum.Sakura.loqui $(Lean.Syntax.mkStrLit textus))
-      return ⟨stx.raw.setHeadInfo (s.getHeadInfo)⟩
-    else
-      let ts : TSyntax `sakuraSignum := ⟨s⟩
-      `(expandSignum $ts)
   if h : 0 < ss.size then
     -- フォンティスのタブラから行番號を得るにゃん♪
     -- 異なる行のシグナム間に自動で linea（\n）を挿入するにゃ
@@ -303,7 +246,7 @@ def elabScriptum : TermElab := fun stx expectedType? => do
         | .synthetic (pos := p) .. => some p
         | .none => Option.none
       pos?.map fun pos => (tabulaFontis.toPosition pos).line
-    let mut body ← genTerm (ss[0]'h)
+    let mut body ← genTermLexema (ss[0]'h)
     let mut lineaPrior := lineamSigni (ss[0]'h)
     for s in ss[1:] do
       -- 前のシグナムと行が違ったら \n を挾むにゃ
@@ -313,7 +256,7 @@ def elabScriptum : TermElab := fun stx expectedType? => do
         if lc > lp then
           body ← `(Bind.bind $body fun () => Signaculum.Sakura.linea)
       | _, _ => pure ()
-      let next ← genTerm s
+      let next ← genTermLexema s
       body ← `(Bind.bind $body fun () => $next)
       lineaPrior := lineaCurrens
     elabTerm body expectedType?

@@ -24,7 +24,7 @@ private def extractIdentVal (s : Lean.Syntax) : Option String :=
 /-- 數値リテラルかどうか確認して取り出すにゃん -/
 private def expectaNatLit (s : Lean.Syntax) (nomenSigni : String)
     : TermElabM (Lean.TSyntax `num) := do
-  if s.isNatLit then
+  if s.isNatLit? then
     pure ⟨s⟩
   else
     throwErrorAt s s!"{nomenSigni}: 數字が期待されてゐますにゃ"
@@ -32,7 +32,7 @@ private def expectaNatLit (s : Lean.Syntax) (nomenSigni : String)
 /-- 文字列リテラルかどうか確認して取り出すにゃん -/
 private def expectaStrLit (s : Lean.Syntax) (nomenSigni : String)
     : TermElabM (Lean.TSyntax `str) := do
-  if s.isStrLit then
+  if s.isStrLit? then
     pure ⟨s⟩
   else
     throwErrorAt s s!"{nomenSigni}: 文字列が期待されてゐますにゃ"
@@ -64,7 +64,7 @@ private def interpretaColoris (valores : Array Lean.Syntax) (stx : Lean.Syntax)
     : TermElabM (Lean.TSyntax `term) := do
   -- RGB 三つ組にゃん
   if valores.size == 3 then
-    if valores[0]!.isNatLit && valores[1]!.isNatLit && valores[2]!.isNatLit then
+    if valores[0]!.isNatLit? && valores[1]!.isNatLit? && valores[2]!.isNatLit? then
       let r : TSyntax `num := ⟨valores[0]!⟩
       let g : TSyntax `num := ⟨valores[1]!⟩
       let b : TSyntax `num := ⟨valores[2]!⟩
@@ -100,7 +100,7 @@ private def interpretaColoris (valores : Array Lean.Syntax) (stx : Lean.Syntax)
     | some e => return ⟨e⟩
     | none   => pure ()
     -- 文字列リテラル（hex 色）にゃん
-    if v.isStrLit then
+    if v.isStrLit? then
       let s : TSyntax `str := ⟨v⟩
       return ← `(Signaculum.Sakura.Coloris.hex $s)
     -- 識別子にゃん
@@ -132,7 +132,7 @@ private def interpretaMagnitudinem (valores : Array Lean.Syntax) (stx : Lean.Syn
       return ← `(Signaculum.Sakura.MagnitudoLitterarum.relativa (- $n))
     | _ => pure ()
     -- n % にゃん
-    if valores[0]!.isNatLit then
+    if valores[0]!.isNatLit? then
       match extractIdentVal valores[1]! with
       | some "%" =>
         let n : TSyntax `num := ⟨valores[0]!⟩
@@ -150,7 +150,7 @@ private def interpretaMagnitudinem (valores : Array Lean.Syntax) (stx : Lean.Syn
     | some "default" => return ← `(Signaculum.Sakura.MagnitudoLitterarum.praefinita)
     | _ => pure ()
     -- 數値（絕對）にゃん
-    if v.isNatLit then
+    if v.isNatLit? then
       let n : TSyntax `num := ⟨v⟩
       return ← `(Signaculum.Sakura.MagnitudoLitterarum.absoluta $n)
   throwErrorAt stx "\\f[height]: サイズ指定が不正にゃ"

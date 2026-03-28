@@ -200,8 +200,8 @@ private def resolveBind (args : Array Syntax) (stx : Syntax)
       | _      => throwErrorAt stx "\\![bind,...] の值は 0 か 1 のみにゃ"
     | _ =>
       -- num リテラルでない場合、numLit を直接確認にゃん
-      if v.isNatLit then
-        match v.isNatLit? with
+      if v.isNatLit? then
+        match v.isNatLit?? with
         | some 1 => some <$> `(Signaculum.Sakura.nexaDressup $c $p (Option.some Bool.true))
         | some 0 => some <$> `(Signaculum.Sakura.nexaDressup $c $p (Option.some Bool.false))
         | _      => throwErrorAt stx "\\![bind,...] の值は 0 か 1 のみにゃ"

@@ -24,14 +24,14 @@ private def extractIdentValReliqua (s : Lean.Syntax) : Option String :=
 /-- 文字列リテラルを期待して取り出すにゃん -/
 private def expectaStrLitReliqua (s : Lean.Syntax) (nomenSigni : String)
     : TermElabM (Lean.TSyntax `str) := do
-  if s.isStrLit then
+  if s.isStrLit? then
     pure ⟨s⟩
   else
     throwErrorAt s s!"{nomenSigni}: 文字列が期待されてゐますにゃ"
 
 /-- 數値リテラルを取得するにゃん -/
 private def getNatValReliqua (s : Lean.Syntax) : Option Nat :=
-  if s.isNatLit then
+  if s.isNatLit? then
     s.isLit? `num |>.bind (·.toNat?)
   else
     none

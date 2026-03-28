@@ -16,7 +16,7 @@ open Lean Elab Term
 /-- 構文ノードから文字列リテラルを期待して取り出すにゃん -/
 private def expectaStrLitSystema (s : Lean.Syntax) (nomenSigni : String)
     : TermElabM (Lean.TSyntax `str) := do
-  if s.isStrLit then
+  if s.isStrLit? then
     pure ⟨s⟩
   else
     throwErrorAt s s!"{nomenSigni}: 文字列が期待されてゐますにゃ"

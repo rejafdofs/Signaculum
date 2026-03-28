@@ -24,7 +24,7 @@ private def extractIdentValSonus (s : Lean.Syntax) : Option String :=
 /-- 文字列リテラルを期待して取り出すにゃん -/
 private def expectaStrLitSonus (s : Lean.Syntax) (nomenSigni : String)
     : TermElabM (Lean.TSyntax `str) := do
-  if s.isStrLit then
+  if s.isStrLit? then
     pure ⟨s⟩
   else
     throwErrorAt s s!"{nomenSigni}: 文字列が期待されてゐますにゃ"

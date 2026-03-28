@@ -256,7 +256,7 @@ end Signaculum.Notatio
 --  scriptum! パーサー + エラボレーター (ネームスペース外で宣言にゃん)
 -- ════════════════════════════════════════════════════
 
-open Lean Elab Term Meta Signaculum.Notatio
+open Lean Elab Term Signaculum.Notatio
 
 /-- SakuraScript を原形タグ記法で書けるパーサにゃん。
     行の先頭列より深いトークンだけ取り込むにゃ♪
@@ -277,19 +277,11 @@ private def scriptumParserCore (kw : String) : Lean.Parser.Parser :=
 -- stx[1] が sakuraSignum* の null ノードにゃ
 -- rawTextusFn が積んだ生 ident ノード（isIdent = true）は直接 loqui に変換にゃ
 -- sakuraSignum ラッパーを持つ正規ノードは expandSignum 経由にゃ
--- 各タグを個別にエラボレートしてホバー情報を登録するにゃん♪
-
-/-- 二つの SakuraM アクションを順次結合する Expr を作るにゃん。
-    Bind.bind a (fun () => b) に相當するにゃ -/
-private def mkSequentia (a b : Expr) : TermElabM Expr := do
-  let lam := Expr.lam `_ (mkConst ``Unit) b .default
-  mkAppM ``Bind.bind #[a, lam]
-
 @[term_elab scriptumMacro]
 def elabScriptum : TermElab := fun stx expectedType? => do
   let ss := stx[1].getArgs
   -- 各シグナムノードを term 構文に變換するにゃ
-  let genTermStx (s : Lean.Syntax) : Lean.Elab.Term.TermElabM (TSyntax `term) := do
+  let genTerm (s : Lean.Syntax) : Lean.Elab.Term.TermElabM (TSyntax `term) := do
     if s.isIdent then
       -- rawTextusFn 由來の裸 ident にゃ → rawVal から直接文字列を取るにゃん（guillemet 回避）
       let textus := match s with
@@ -299,13 +291,6 @@ def elabScriptum : TermElab := fun stx expectedType? => do
     else
       let ts : TSyntax `sakuraSignum := ⟨s⟩
       `(expandSignum $ts)
-  -- 單一シグナムをエラボレートしてホバー情報を登録するにゃん
-  -- withRef で元のタグ構文の位置を參照點にし、addTermInfo でホバーを紐づけるにゃ
-  let elabUnum (s : Lean.Syntax) : TermElabM Expr := do
-    let termStx ← genTermStx s
-    let expr ← withRef s <| elabTerm termStx none
-    addTermInfo s expr
-    return expr
   if h : 0 < ss.size then
     -- フォンティスのタブラから行番號を得るにゃん♪
     -- 異なる行のシグナム間に自動で linea（\n）を挿入するにゃ
@@ -316,7 +301,7 @@ def elabScriptum : TermElab := fun stx expectedType? => do
         | .synthetic (pos := p) .. => some p
         | .none => Option.none
       pos?.map fun pos => (tabulaFontis.toPosition pos).line
-    let mut result ← elabUnum (ss[0]'h)
+    let mut body ← genTerm (ss[0]'h)
     let mut lineaPrior := lineamSigni (ss[0]'h)
     for s in ss[1:] do
       -- 前のシグナムと行が違ったら \n を挾むにゃ
@@ -324,14 +309,11 @@ def elabScriptum : TermElab := fun stx expectedType? => do
       match lineaPrior, lineaCurrens with
       | some lp, some lc =>
         if lc > lp then
-          let lineaExpr ← elabTerm (← `(Signaculum.Sakura.linea)) none
-          result ← mkSequentia result lineaExpr
+          body ← `(Bind.bind $body fun () => Signaculum.Sakura.linea)
       | _, _ => pure ()
-      let nextExpr ← elabUnum s
-      result ← mkSequentia result nextExpr
+      let next ← genTerm s
+      body ← `(Bind.bind $body fun () => $next)
       lineaPrior := lineaCurrens
-    match expectedType? with
-    | some t => ensureHasType t result
-    | none   => return result
+    elabTerm body expectedType?
   else
     elabTerm (← `(pure ())) expectedType?

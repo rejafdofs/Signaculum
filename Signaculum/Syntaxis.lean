@@ -518,7 +518,7 @@ elab "construe" : command => do
       initialize (Signaculum.Nucleus.registraShiori [$pariaTractatorum,*])
     ))
     -- ゴーストの主循環エントリーポイントを自動定義するにゃ
-    elabCommand (← `(def main : IO Unit := Signaculum.loopPrincipalis))
+    elabCommand (← `(def main : IO Unit := Signaculum.Nucleus.loopPrincipalis))
   else
     let elementaOnerandi : Array (TSyntax `term) ← variaePermanentes.mapM fun v => do
       let identVariae := mkIdent v.nomen
@@ -562,6 +562,6 @@ elab "construe" : command => do
         (some servaStatum))
     ))
   -- ゴーストの主循環エントリーポイントを自動定義するにゃ
-  elabCommand (← `(def main : IO Unit := Signaculum.loopPrincipalis))
+  elabCommand (← `(def main : IO Unit := Signaculum.Nucleus.loopPrincipalis))
 
 end Signaculum

@@ -305,7 +305,6 @@ def elabScriptum : TermElab := fun stx expectedType? => do
     let termStx ← genTermStx s
     let expr ← withRef s <| elabTerm termStx none
     addTermInfo s expr
-    return expr
   if h : 0 < ss.size then
     -- フォンティスのタブラから行番號を得るにゃん♪
     -- 異なる行のシグナム間に自動で linea（\n）を挿入するにゃ
@@ -330,8 +329,6 @@ def elabScriptum : TermElab := fun stx expectedType? => do
       let nextExpr ← elabUnum s
       result ← mkSequentia result nextExpr
       lineaPrior := lineaCurrens
-    match expectedType? with
-    | some t => ensureHasType t result
-    | none   => return result
+    ensureHasType expectedType? result
   else
     elabTerm (← `(pure ())) expectedType?

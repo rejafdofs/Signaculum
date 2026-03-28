@@ -138,7 +138,16 @@ partial def legeRestantiaArgumenta (nomenTagi : String) (c : ParserContext) (s :
     let argsNode := Syntax.node SourceInfo.none nullKind args
     { s with stxStack := s.stxStack.push argsNode }
   else
-    s.mkError s!"{nomenTagi}: , か ] が期待されてゐますにゃ"
+    -- keyword: value パターン: 直前の引數が ':' 終端の ident なら値を讀むにゃ
+    let lastArg := s.stxStack.back
+    if lastArg.isIdent && (lastArg.getId.toString (escape := false)).endsWith ":" then
+      let s := argumentumFn c s
+      if s.hasError then
+        s.mkError s!"{nomenTagi}: keyword の值が不正にゃ"
+      else
+        legeRestantiaArgumenta nomenTagi c s stackSz
+    else
+      s.mkError s!"{nomenTagi}: , か ] が期待されてゐますにゃ"
 
 /-- `[` arg1 `,` arg2 `,` ... `]` をパースして引數の nullKind ノードを積むにゃん♪
     nomenTagi はエラーメッセージ用のタグ名にゃ -/

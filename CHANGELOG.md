@@ -20,8 +20,8 @@
 - `Sakura/Literalis.lean`: OfNat 方式で none/default/left 等のキーワードを期待型に応じて自動解決する型クラス群（SakuraNullus, SakuraPraefinitus, SakuraInhabilis 等）
 - `Option α` にも `SakuraNullus` インスタンスを実装
 
-### 既知の制限
-- `\q[..., script: ...]` 構文はカスタムパーサーで未対応（TODO）
+### script: 構文サポート
+- `\q["title", script: "content"]` 構文をカスタムパーサーで對應（`optioScriptum` を生成）
 
 ## v0.4.1 (2026-03-28) — scriptum パーサ堅牢化 & lean-toolchain 安定版移行
 

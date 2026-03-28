@@ -278,26 +278,24 @@ def expandeSignumTextus (nomen : String) (args : Array Lean.Syntax) (stx : Lean.
   | "\\q" =>
     if args.size == 2 then
       let t ← expectaStrLit args[0]! "\\q"
-      -- script: プレフィクスの特別處理にゃん
-      match extractIdentVal args[1]! with
-      | some idVal =>
-        if idVal.startsWith "script:" then
-          -- "script:..." 形式の場合、ident として來てゐるかもにゃ
-          -- ただし通常はパーサーが分離するので strLit を先に試すにゃん
-          throwErrorAt stx "\\q: script: 形式は專用構文を使つてにゃ"
-        else
-          let id ← expectaStrLit args[1]! "\\q"
-          pure <| some (← `(Signaculum.Sakura.optio $t $id))
-      | none =>
-        -- 第2引數が strLit の場合にゃん
-        let id ← expectaStrLit args[1]! "\\q"
-        pure <| some (← `(Signaculum.Sakura.optio $t $id))
+      let id ← expectaStrLit args[1]! "\\q"
+      pure <| some (← `(Signaculum.Sakura.optio $t $id))
     else if args.size >= 3 then
       let t ← expectaStrLit args[0]! "\\q"
-      -- script: プレフィクスの檢出にゃん
-      if args.size == 2 then
-        -- ここには來ないにゃ（上で處理濟み）
-        pure none
+      -- script: キーワード附き選擇肢にゃん (\q[t, script: sc])
+      if args.size == 3 then
+        match extractIdentVal args[1]! with
+        | some "script:" =>
+          let sc ← expectaStrLit args[2]! "\\q"
+          pure <| some (← `(Signaculum.Sakura.optioScriptum $t $sc))
+        | _ =>
+          -- \\q[t, e, rs...] — イヴェントゥム附き選擇肢にゃん
+          let e ← expectaStrLit args[1]! "\\q"
+          let mut termElems : Array (TSyntax `term) := #[]
+          for h : idx in [2:args.size] do
+            let r ← expectaStrLit args[idx] "\\q"
+            termElems := termElems.push (← `(term| $r))
+          pure <| some (← `(Signaculum.Sakura.optioEventum $t $e [$termElems,*]))
       else
         -- \\q[t, e, rs...] — イヴェントゥム附き選擇肢にゃん
         let e ← expectaStrLit args[1]! "\\q"

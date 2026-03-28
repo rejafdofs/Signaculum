@@ -41,6 +41,12 @@ private def legeIdentFn (c : ParserContext) (s : ParserState) : ParserState :=
         p := p.next input
       else break
     return p
+  -- ident の直後に ':' があれば接尾辞として含めるにゃ（script: 等のキーワード引數用）
+  let endPos :=
+    if endPos.byteIdx < input.utf8ByteSize && endPos.get input == ':' then
+      endPos.next input
+    else
+      endPos
   if endPos == startPos then
     s.mkError "引數が期待されてゐますにゃ"
   else

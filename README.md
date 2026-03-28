@@ -3,9 +3,7 @@
  SHIORI ビブリオテーカにゃん♪
 
 - **型安全な永続化** — 保存→読込の往復を Lean 4 の定理として証明済みにゃ
-- **型安全な Reference 変換** — `Citatio` クラッシスが `fromRef (toRef a) = a` を保証するにゃ
-- **`do` 記法** — SakuraScriptum を直感的に組み立てられるにゃ
-- **`scriptum` 記法** — `Signaculum.Notatio` モジュールでサクラスクリプトを原形タグ記法（`\h \s[0] "テキスト" \e`）で書けるにゃ
+- **`scriptum` 記法** — サクラスクリプトを原形タグ記法（`\h \s[0] "テキスト" \e`）で書けるにゃ
 - 識別子は全てラテン語で統一されてゐるにゃ
 
 ---
@@ -59,19 +57,8 @@ eventum "OnFirstBoot" fun _ => scriptum
 eventum "OnBoot" fun _ => do
   numerusSalutationum.renovare (· + 1)
   let numerus <- numerusSalutationum.obtinere
-  sakura; superficies 0
-  if numerus == 1 then
-    loquiEtLinea "はじめましてにゃん！"
-    mora 800; linea
-    kero; superficies 10
-    loquiEtLinea "よろしくお願ひします。"
-  else
-    loqui s!"起動 {numerus} 囘目にゃん♪"
-  finis
-
-eventum "OnClose" fun _ => do
-  sakura; superficies 3; loqui "またにゃー！"
-  finis
+  scriptum
+    \h \s[0] {s!"起動 {numerus} 囘目にゃん♪"} \e
 
 construe
 ```
@@ -298,186 +285,86 @@ scriptum
 
 ---
 
-## 非同期処理 (Actiones Asynchronae)
-
-`Tractator` は同期関数なので、HTTP 取得など重い IO を直接実行すると SSP 全体がブロックする。
-`spawna` / `spawnaScriptum` を使うと、IO をバックグラウンドスレッドで起動し、完了後に SSTP 経由でスクリプトを届けられるにゃ。
-
-### `spawna f args*`
-
-`f : T1 → ... → IO Unit` をバックグラウンドで起動するにゃ。
-結果の返却は `f` の中で `Sstp.mitteSstpScriptum` を呼ぶことで行うにゃ。
-
-```lean
-import Signaculum
-open Signaculum Sakura
-
--- バックグラウンドで動く IO 関数にゃ
-def downloadAndDisplay (url : String) : IO Unit := do
-  let data := "取得ダータ"  -- 実際は HTTP 等にゃ
-  Sstp.mitteSstpScriptum s!"\\h\\s[0]{data}\\e"
-
-eventum "OnBoot" fun _ => do
-  spawna downloadAndDisplay "https://example.com"
-  loqui "取得中..."; finis
-
-construe
-```
-
-`spawna` は SakuraIO の蓄積スクリプトを変化させにゃいにゃ。
-現在のハンドラはすぐ返り、バックグラウンドタスクが完了すると別スクリプトが SSP に届くにゃ。
-
-### `spawnaScriptum f args*`
-
-`f : T1 → ... → SakuraIO Unit` をバックグラウンドで起動し、
-`Sakura.currere` でスクリプト文字列化して SSTP 送信するにゃ。
-
-```lean
--- 通常の SakuraIO 関数をそのまま非同期に使へるにゃ
-def displayData (data : String) : SakuraIO Unit := do
-  sakura; superficies 0; loqui data; finis
-
-eventum "OnHttpDone" fun req => do
-  let data := (req.referentiam 0).getD ""
-  spawnaScriptum displayData data   -- 現ハンドラは即返り、表示は後から届くにゃ
-  finis
-
-construe
-```
-
-### 動作保証にゃ
-
-- タスクは `taskusCustodia` に保持されるので、完了前に GC されにゃいにゃ
-- `spawna` 内で例外が起きても `registrareVestigium` に流れるだけで、ゴーストはクラッシュしにゃいにゃ
-- `spawna` / `spawnaScriptum` は `SakuraIO Unit` を返す（`liftM` による持ち上げ）にゃ
-
-### SSTP 直接送信 (`Sstp`)
-
-バックグラウンド外でも `Signaculum.Sstp` を使へるにゃ。
-TCP (`localhost:9801`) で SSP に SSTP/1.4 リクエストを送信するにゃ。Pure Lean 實裝（C コード不要）にゃん♪
-
-```lean
--- SakuraScript を SSP に送信にゃ
-Sstp.mitteSstpScriptum "\\h\\s[0]こんにちは\\e"
-
--- ゴースト名を Sender に指定して送信にゃ
-Sstp.mitteSstpScriptum "\\h\\s[0]こんにちは\\e" (mittens := "MyGhost")
-
--- SHIORI イヴェントゥムを SSP に通知にゃ
-Sstp.excitaEventum "OnSomeEvent" ["arg0", "arg1"]
-```
-
----
-
 ## SakuraScriptum 命令一覧 (Mandata)
 
 `open Signaculum Sakura` してから使ふにゃ。
 
 ### 人格・表情
 
-| 命令 | SakuraScript | 意味 |
-|---|---|---|
-| `sakura` | `\h` | 主人格に切り替へ |
-| `kero` | `\u` | 副人格に切り替へ |
-| `persona n` | `\p[n]` | 第 n 人格に切り替へ |
-| `superficies n` | `\s[n]` | 表情を n 番にする |
-| `animatio n` | `\i[n]` | 動画 n 番を再生 |
+| 命令 | SakuraScript |
+|---|---|
+| `sakura` | `\h` |
+| `kero` | `\u` |
+| `persona n` | `\p[n]` |
+| `superficies n` | `\s[n]` |
+| `animatio n` | `\i[n]` |
 
 ### 文字表示
 
-| 命令 | 意味 |
+| 命令 | SakuraScript |
 |---|---|
-| `loqui "文字列"` | 文字を表示（特殊文字自動エスケープ）にゃ |
-| `loquiEtLinea "文字列"` | 表示して改行にゃ |
-| `linea` / `dimidiaLinea` | 改行 / 半改行にゃ |
-| `purga` | 吹き出しを消去にゃ |
-| `finis` | **スクリプト終了（必須）** にゃ |
+| `loqui "文字列"` | （テキスト表示・特殊文字自動エスケープ） |
+| `loquiEtLinea "文字列"` | （テキスト表示 + `\n`） |
+| `linea` | `\n` |
+| `dimidiaLinea` | `\n[half]` |
+| `purga` | `\c` |
+| `finis` | `\e` |
 
 ### 待機・操作
 
-| 命令 | 意味 |
+| 命令 | SakuraScript |
 |---|---|
-| `mora ms` | ms ミリ秒待機にゃ |
-| `expecta` | 打鍵待ち（消去あり）にゃ |
-| `expectaSine` | 打鍵待ち（消去なし）にゃ |
-| `excita "Event"` | SSP 組み込み事象を発生させるにゃ（文字列形）にゃ |
-| `excita f args*` | def ベース事象を発生させるにゃ（識別子形）にゃ |
-| `insere f args*` | def ベース事象を埋め込むにゃ（識別子形）にゃ |
-| `notifica f args*` | def ベース通知事象を発生させるにゃ |
-| `excitaPostTempus ms repetitio f args*` | def ベース事象を遅延発火させるにゃ |
-| `notificaPostTempus ms repetitio f args*` | def ベース通知事象を遅延発火させるにゃ |
-| `exitus` | ゴーストを終了させるにゃ |
+| `mora ms` | `\w[ms]` |
+| `expecta` | `\x` |
+| `expectaSine` | `\x[noclear]` |
+| `exitus` | `\-` |
 
 ### 選択肢
 
-| 命令 | 意味 |
+| 命令 | SakuraScript |
 |---|---|
-| `optio "表示名" "EventName"` | 選択肢を追加にゃ |
-| `optioEventum "表示名" "EventName" ["r0","r1"]` | 文字列形 Reference 付き選択肢にゃ |
-| `optioEventum "表示名" f args*` | def ベース事象附き選択肢にゃ（識別子形）にゃ |
-| `ancora "signum"` … `fineAncora` | 錨（クリック可能テキスト）にゃ |
+| `optio "表示名" "EventName"` | `\q[表示名,EventName]` |
+| `optioEventum "表示名" "EventName" ["r0","r1"]` | `\q[表示名,EventName,r0,r1]` |
+| `optioEventum "表示名" f args*` | （識別子形・§ `excita`/`insere` 参照） |
+| `ancora "signum"` … `fineAncora` | `\_a[signum]` … `\_a` |
 
 ### 入力ボックス
 
-| 命令 | 意味 |
+| 命令 | SakuraScript |
 |---|---|
-| `aperiInputum modus f titulus textus` | def ベースのテキスト入力ボックスを開くにゃ |
-| `aperiInputum modus (fun text => ...) titulus` | ラムダ形のテキスト入力ボックスを開くにゃ |
-| `aperiInputumDiei f titulus annus mensis dies` | def ベースの日付入力ボックスを開くにゃ（月: 1〜12、日: 閏年考慮） |
-| `aperiInputumTemporis f titulus hora minutum secundum` | def ベースの時刻入力ボックスを開くにゃ（時: 0〜23、分秒: 0〜59） |
-| `aperiInputumGradus f titulus minimum maximum initium` | def ベースのスライダー入力ボックスを開くにゃ（minimum ≤ initium ≤ maximum） |
-| `aperiInputumIP f titulus ip1 ip2 ip3 ip4` | def ベースの IP アドレス入力ボックスを開くにゃ（各オクテット ≤ 255） |
-| `legeProprietatem f proprietates` | def ベースのプロパティ取得にゃ |
+| `aperiInputum modus f titulus textus` | `\![open,inputbox,...]` |
+| `aperiInputum modus (fun text => ...) titulus` | （ラムダ形） |
+| `aperiInputumDiei f titulus annus mensis dies` | `\![open,dateinput,...]` |
+| `aperiInputumTemporis f titulus hora minutum secundum` | `\![open,timeinput,...]` |
+| `aperiInputumGradus f titulus minimum maximum initium` | `\![open,sliderinput,...]` |
+| `aperiInputumIP f titulus ip1 ip2 ip3 ip4` | `\![open,ipinput,...]` |
+| `legeProprietatem f proprietates` | `\![get,property,...]` |
 
 ### 書体
 
-| 命令 | 意味 |
+| 命令 | SakuraScript |
 |---|---|
-| `audax true/false` | 太字 ON/OFF にゃ |
-| `obliquus true/false` | 斜体 ON/OFF にゃ |
-| `color r g b` | 文字色（0〜255）にゃ |
-| `altitudoLitterarum n` | 文字サイズにゃ |
-| `formaPraefinita` | 書式を既定に戻すにゃ |
-| `crudus "signum"` | 生の SakuraScript を直接出力にゃ |
-| `sonus "via"` | 音声を再生にゃ |
-| `aperi "nexus"` | URL を開くにゃ |
+| `audax true/false` | `\f[bold,true/false]` |
+| `obliquus true/false` | `\f[italic,true/false]` |
+| `color r g b` | `\f[color,r,g,b]` |
+| `altitudoLitterarum n` | `\f[height,n]` |
+| `formaPraefinita` | `\f[default]` |
+| `crudus "signum"` | （生の SakuraScript を直接出力） |
+| `sonus "via"` | `\![play,sound,via]` |
+| `aperi "nexus"` | `\![open,browser,nexus]` |
 
-### レスポンスムヘッダー設定
+### HTTP
 
-イヴェントゥム處理器内から Value 以外の SHIORI/3.0 レスポンスムヘッダーを設定できるにゃ。
-
-| 命令 | 意味 |
+| 命令 | SakuraScript |
 |---|---|
-| `configuraMarker "文字列"` | Marker ヘッダ（バルーン下部の附加情報）にゃ |
-| `configuraBalloonOffset x y` | BalloonOffset ヘッダ（バルーン位置補正）にゃ |
-| `configuraErrorLevel "info"` | ErrorLevel ヘッダにゃ |
-| `configuraErrorDescription "..."` | ErrorDescription ヘッダにゃ |
-| `configuraAge n` | Age ヘッダ（通信世代カウンタ）にゃ |
-| `configuraSecuritas "local"` | SecurityLevel ヘッダにゃ |
-| `configuraMarkerSend "..."` | MarkerSend ヘッダにゃ |
-| `configuraValorNotifica "..."` | ValueNotify ヘッダにゃ |
-| `addeCastellum "Key" "Value"` | 任意ヘッダ（X-SSTP-PassThru-* 等）にゃ |
+| `executaHttpGet url` | `\![execute,http-get,URL]` |
+| `executaHttpPost url` | `\![execute,http-post,URL]` |
+| `executaHttpHead url` | `\![execute,http-head,URL]` |
+| `executaHttpPut url` | `\![execute,http-put,URL]` |
+| `executaHttpDelete url` | `\![execute,http-delete,URL]` |
+| `executaHttpPatch url` | `\![execute,http-patch,URL]` |
 
-```lean
-eventum "OnBoot" fun _ => do
-  sakura; superficies 0; loqui "こんにちは"
-  configuraMarker "起動しました"
-  configuraBalloonOffset 10 (-5)
-  finis
-```
-
-### HTTP コマンド
-
-| 命令 | SakuraScript | 意味 |
-|---|---|---|
-| `executaHttpGet url` | `\![execute,http-get,URL]` | HTTP GET にゃ |
-| `executaHttpPost url` | `\![execute,http-post,URL]` | HTTP POST にゃ |
-| `executaHttpHead url` | `\![execute,http-head,URL]` | HTTP HEAD にゃ |
-| `executaHttpPut url` | `\![execute,http-put,URL]` | HTTP PUT にゃ |
-| `executaHttpDelete url` | `\![execute,http-delete,URL]` | HTTP DELETE にゃ |
-| `executaHttpPatch url` | `\![execute,http-patch,URL]` | HTTP PATCH にゃ |
-
-便利な一括命令:
+### 便利命令
 
 ```lean
 sakuraLoquitur 0 "こんにちは"   -- sakura; superficies 0; loqui "..."
@@ -486,104 +373,42 @@ keroLoquitur 10 "にゃ！"        -- kero; superficies 10; loqui "..."
 
 ---
 
-## 無作為選択 (Fortuita)
+## エラー報告 (Reportatio Errorum)
+
+SHIORI/3.0 の `ErrorLevel` / `ErrorDescription` レスポンスムヘッダーを設定するにゃ。SSP のデヴェロッパーパレットで確認できるにゃん♪
+
+### 便利關數
+
+| 關數 | ErrorLevel |
+|---|---|
+| `reportaInformationem msg` | `info` |
+| `reportaMonitum msg` | `notice` |
+| `reportaAdmonitionem msg` | `warning` |
+| `reportaError msg` | `error` |
+| `reportaPerniciem msg` | `critical` |
+
+任意のレヴェルを指定するには `reportaErrorem gradus msg` を使ふにゃ。
+
+### `GradusErroris`
 
 ```lean
-fortuito #["やっほー！", "こんにちは！", "おはよう！"]
--- ランダムに 1 つ選んで loqui で表示にゃ
-
-let s <- elige #["A", "B", "C"]   -- ランダムに 1 つ選んで返すにゃ
+.informatio   -- info
+.monitum      -- notice
+.admonitio    -- warning
+.error        -- error
+.pernicies    -- critical
 ```
 
----
-
-## 即時保存 (servaStatum)
-
-`construe` が自動生成する `servaStatum : IO Unit` を使へば、任意のタイミングで `perpetua` 變數を保存できるにゃ。
+### 使用例
 
 ```lean
 eventum "OnBoot" fun _ => do
-  numerusSalutationum.renovare (· + 1)
-  servaStatum           -- 即時保存にゃ！
-  sakura; superficies 0
-  loqui s!"起動 {<- numerusSalutationum.obtinere} 囘目にゃん♪"
-  finis
+  let res <- someOperation.obtinere
+  if res == "" then
+    reportaAdmonitionem "operation returned empty"
+  scriptum
+    \h \s[0] こんにちは！ \e
 ```
-
----
-
-## SakuraScript モナドの實行
-
-`currere` と `currereScriptum` の2つの實行關數があるにゃ。
-
-| 關數 | 戻り値 | 用途 |
-|---|---|---|
-| `Sakura.currere action` | `StatusSakurae` | スクリプトゥム + 全レスポンスムヘッダーを取得にゃ |
-| `Sakura.currereScriptum action` | `String` | スクリプトゥム文字列のみ取得にゃ |
-
-通常のイヴェントゥム處理器（`eventum` / `Tractator`）では `currere` が自動的に呼ばれるにゃ。
-手動で SakuraScript を生成したい時は `currereScriptum` を使ふにゃ:
-
-```lean
-def testPuraSakura : String := Id.run do
-  Sakura.currereScriptum do
-    sakura; superficies 0; loqui "テストにゃ！"; finis
-```
-
----
-
-## 永続化ファスキクルスの形式 (Forma Datorum Permanens)
-
-`ghost_status.bin` にバイナリ形式 v3（マジックバイト `UKA\x03`）で保存されるにゃ。`perpetua` 變數のみ保存・復元されるにゃ。
-
-| 型 | `typusTag` | エンコード |
-|---|---|---|
-| `Nat` | `"Nat"` | UInt64 LE 8バイトにゃ |
-| `Int` | `"Int"` | Int64 LE 8バイトにゃ |
-| `Bool` | `"Bool"` | 1バイト（0/1）にゃ |
-| `String` | `"String"` | UTF-8 バイト列にゃ |
-| `Float` | `"Float"` | IEEE 754 倍精度 8バイトにゃ |
-| `UInt8/16/32/64` | `"UInt8"` 等 | 各サイズ LE にゃ |
-| `Char` | `"Char"` | UInt32 として Unicode 符号点にゃ |
-| `ByteArray` | `"ByteArray"` | そのままにゃ |
-| `Option α` | `"Option(α)"` | 1バイトタグ + 中身にゃ |
-| `List α` | `"List(α)"` | 4バイト要素数 + 各要素にゃ |
-| `Array α` | `"Array(α)"` | `List α` と同じにゃ |
-| `α × β` | `"Prod(α,β)"` | フィールドの連結にゃ |
-
-### 自作構造体の永続化
-
-```lean
-structure DatorumLusoris where
-  gradus : Nat
-  nomen  : String
-
-instance : StatusPermanens DatorumLusoris where
-  typusTag := "DatorumLusoris"
-  adBytes p :=
-    encodeField p.gradus ++
-    encodeField p.nomen
-  eBytes b := do
-    let (gradus, pos1) <- decodeField b 0
-    let (nomen,  _)    <- decodeField b pos1
-    return { gradus, nomen }
-  roundtrip :=by sorry
-
-varia perpetua lusor : DatorumLusoris := { gradus := 1, nomen := "シロ" }
-```
-
-### `Citatio` クラッシスによる Reference 変換
-
-SHIORI Reference（文字列）への往復変換を型クラスで保証するにゃ。
-
-```lean
-class Citatio (α : Type) where
-  toRef     : α -> String
-  fromRef   : String -> α
-  roundtrip : forall (a : α), fromRef (toRef a) = a   -- 往復が定理として保証されるにゃ
-```
-
-基本型（`Nat` `Int` `Bool` `String` `Char` `UInt8/16/32/64` `Option α` `List α` `α × β`）の実体が定義済みにゃ。
 
 ---
 

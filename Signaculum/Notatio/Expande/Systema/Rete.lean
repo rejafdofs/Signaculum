@@ -5,7 +5,7 @@
 import Lean
 import Signaculum.Sakura.Scriptum
 
-namespace Signaculum.Notatio.Expande
+namespace Signaculum.Notatio.Expande.Systema
 
 open Lean Elab Term
 
@@ -176,4 +176,4 @@ def expandeExecutio (args : Array Lean.Syntax) (stx : Lean.Syntax)
   | other =>
     throwErrorAt stx s!"\\![execute,{other},...]: 未知のサブコマンドにゃ"
 
-end Signaculum.Notatio.Expande
+end Signaculum.Notatio.Expande.Systema

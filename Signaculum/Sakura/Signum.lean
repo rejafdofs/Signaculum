@@ -20,6 +20,7 @@ import Signaculum.Sakura.Signum.Modorum
 import Signaculum.Sakura.Signum.Proprietatis
 
 namespace Signaculum.Sakura
+open Signaculum.Sakura.Signum
 
 /-- サクラスクリプトの構造化タグにゃん。
     全てのサクラスクリプトタグをカテゴリー別の子帰納型でラップするにゃ。

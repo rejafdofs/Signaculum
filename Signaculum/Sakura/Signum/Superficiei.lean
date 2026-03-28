@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 表面制御のシグヌムにゃん。\\s[n] / \\i[n] に對應するにゃ -/
 inductive SignumSuperficiei where
@@ -19,4 +19,4 @@ def SignumSuperficiei.adCatenam : SignumSuperficiei → String
   | .animatio n          => s!"\\i[{n}]"
   | .animatioExpecta n   => s!"\\i[{n},wait]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

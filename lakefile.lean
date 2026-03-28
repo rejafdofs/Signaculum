@@ -8,8 +8,6 @@ package Signaculum where
   keywords := #["ukagaka", "shiori", "ghost", "sakura-script"]
   leanOptions := #[⟨`autoImplicit, false⟩, ⟨`pp.unicode.fun, true⟩]
 
-require "leanprover-community" / batteries @ git "main"
-
 require LemmaGeneralis from git "https://github.com/rejafdofs/LemmaGeneralis"@"main"
 
 lean_lib Signaculum where globs := #[.one `Signaculum, .submodules `Signaculum]

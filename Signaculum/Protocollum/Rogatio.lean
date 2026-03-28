@@ -3,7 +3,7 @@
 
 import Signaculum.Protocollum.Typi
 
-namespace Signaculum
+namespace Signaculum.Protocollum
 
 /-- SHIORI/3.0 要求を表す構造體にゃん -/
 structure Rogatio where
@@ -151,4 +151,4 @@ def interpreta (s : String) : Except String Rogatio := do
 
 end Rogatio
 
-end Signaculum
+end Signaculum.Protocollum

@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 事象制御のシグヌムにゃん。raise / embed / notify 等のイヴェントゥム系タグに對應するにゃ -/
 inductive SignumEventuum where
@@ -108,4 +108,4 @@ def SignumEventuum.adCatenam : SignumEventuum → String
     let o := if o.isEmpty then "" else s!",{o}"
     s!"\\![call,ghost,{evadeArgumentum nm}{o}]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

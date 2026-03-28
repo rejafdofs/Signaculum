@@ -9,7 +9,7 @@ namespace Signaculum.Memoria
     `typusTag` で型の文字列識別子を提供するにゃ。
     ゴーストの更新で變數の型が變はった時でも、タグが不一致なら讀み飛ばすにゃ♪
     `adBytes` で ByteArray にセリアーリザーティオー、`eBytes` で復元するにゃ。
-    自作構造體も `encodeField`/`decodeField` を使へばインスタンティアを書けるにゃん♪ -/
+    自作構造體も `codificaAgrum`/`decodificaAgrum` を使へばインスタンティアを書けるにゃん♪ -/
 class StatusPermanens (α : Type) where
   /-- 型の文字列識別子にゃん。バージョン更新時の型チェックに使ふにゃ。
       例: `"Nat"`, `"String"`, `"List(Nat)"` 等にゃ -/

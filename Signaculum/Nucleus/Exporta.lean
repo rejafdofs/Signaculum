@@ -5,7 +5,8 @@
 import Signaculum.Nucleus.Nuculum
 import Signaculum.Protocollum.Responsum
 
-namespace Signaculum
+namespace Signaculum.Nucleus
+open Signaculum.Protocollum
 
 /-- ログ出力用（depurgatio）關數にゃん。現在は無效化（inactivatus）してゐるにゃ -/
 def registrareVestigium (_nuntius : String) : IO Unit := do
@@ -123,4 +124,4 @@ def spawnaMunitus (actio : IO Unit) : IO Unit := do
   if arr'.size > maximumMunera then arr' := arr'.extract (maximumMunera / 2) arr'.size
   taskusCustodia.set arr'
 
-end Signaculum
+end Signaculum.Nucleus

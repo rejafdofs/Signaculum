@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- モード制御のシグヌムにゃん。\\![enter,...] / \\![leave,...] 等に對應するにゃ。
     パッシヴモードやスティッキーやら、ボクが全部まとめたにゃ♪ -/
@@ -46,4 +46,4 @@ def SignumModorum.adCatenam : SignumModorum → String
   | .ingredereModumNonInterruptum     => "\\![enter,nouserbreakmode]"
   | .egrediereModumNonInterruptum     => "\\![leave,nouserbreakmode]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

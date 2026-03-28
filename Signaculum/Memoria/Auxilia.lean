@@ -1,6 +1,6 @@
 -- Signaculum.Memoria.Auxilia
 -- StatusPermanens クラスに關聯する補助關數・コーディフィカーティオー・シリアーリザーティオーにゃん♪
--- LE/LEB128 エンコード、encodeField/decodeField、ビーナーリウム讀み書きを提供するにゃ
+-- LE/LEB128 エンコード、codificaAgrum/decodificaAgrum、ビーナーリウム讀み書きを提供するにゃ
 
 import Std.Tactic.BVDecide
 import LemmaGeneralis
@@ -32,14 +32,14 @@ def u64LE (n : UInt64) : ByteArray :=
         ((n >>> 56) &&& 0xFF).toUInt8]
 
 -- (値, 次の位置) を返すにゃ
-def readU16LE (b : ByteArray) (positio : Nat) : Option (UInt16 × Nat) :=
+def legeU16LE (b : ByteArray) (positio : Nat) : Option (UInt16 × Nat) :=
   if h : positio + 2 ≤ b.size then some (
     (b[positio]'(by omega)).toUInt16 |||
     ((b[positio+1]'(by omega)).toUInt16 <<< 8),
     positio + 2)
   else none
 
-def readU32LE (b : ByteArray) (positio : Nat) : Option (UInt32 × Nat) :=
+def legeU32LE (b : ByteArray) (positio : Nat) : Option (UInt32 × Nat) :=
   if h : positio + 4 ≤ b.size then some (
     (b[positio]'(by omega)).toUInt32 |||
     ((b[positio+1]'(by omega)).toUInt32 <<< 8)  |||
@@ -48,7 +48,7 @@ def readU32LE (b : ByteArray) (positio : Nat) : Option (UInt32 × Nat) :=
     positio + 4)
   else none
 
-def readU64LE (b : ByteArray) (positio : Nat) : Option (UInt64 × Nat) :=
+def legeU64LE (b : ByteArray) (positio : Nat) : Option (UInt64 × Nat) :=
   if h : positio + 8 ≤ b.size then some (
     (b[positio]'(by omega)).toUInt64 |||
     ((b[positio+1]'(by omega)).toUInt64 <<< 8)  |||
@@ -67,9 +67,9 @@ def readU64LE (b : ByteArray) (positio : Nat) : Option (UInt64 × Nat) :=
 -- ═══════════════════════════════════════════════════
 
 /-- LEB128 コーディフィカーティオー: 7 ビットずつ、続きあり = 最上位ビット 1 にゃ -/
-def lebEncode (n : Nat) : ByteArray :=
+def lebCodifica (n : Nat) : ByteArray :=
   if n < 128 then .mk #[n.toUInt8]
-  else .mk #[((n % 128 + 128).toUInt8)] ++ lebEncode (n / 128)
+  else .mk #[((n % 128 + 128).toUInt8)] ++ lebCodifica (n / 128)
 termination_by n
 decreasing_by
   apply Nat.div_lt_self
@@ -77,18 +77,18 @@ decreasing_by
   · decide
 
 /-- LEB128 デコーディフィカーティオー補助（燃料附き）にゃ -/
-private def lebDecodeLoop : Nat → ByteArray → Nat → Nat → Nat → Option (Nat × Nat)
+private def lebDecodificaCirculum : Nat → ByteArray → Nat → Nat → Nat → Option (Nat × Nat)
   | 0,        _, _,   _,   _    => none
   | fuel + 1, b, pos, acc, mult =>
     if h : pos < b.size then
       let byte := (b[pos]).toNat
       if byte < 128 then some (acc + byte * mult, pos + 1)
-      else lebDecodeLoop fuel b (pos + 1) (acc + (byte - 128) * mult) (mult * 128)
+      else lebDecodificaCirculum fuel b (pos + 1) (acc + (byte - 128) * mult) (mult * 128)
     else none
 
 /-- LEB128 デコーディフィカーティオー: `pos` から読み出して `(値, 次の位置)` を返すにゃ -/
-def lebDecode (b : ByteArray) (pos : Nat) : Option (Nat × Nat) :=
-  lebDecodeLoop (b.size - pos + 1) b pos 0 1
+def lebDecodifica (b : ByteArray) (pos : Nat) : Option (Nat × Nat) :=
+  lebDecodificaCirculum (b.size - pos + 1) b pos 0 1
 
 -- ═══════════════════════════════════════════════════
 -- LEB128 証明補題にゃん
@@ -126,14 +126,14 @@ private theorem elementumInPrefixo2 (pre : ByteArray) (x : UInt8) (mid suf : Byt
 private theorem uInt8AdNat (n : Nat) (h : n < 256) : n.toUInt8.toNat = n := by
   show (UInt8.ofNat n).toNat = n; simp [UInt8.ofNat, UInt8.toNat]; omega
 
-/-- lebEncode は必ず 1 バイト以上を返すにゃん -/
-theorem longitudoLebEncodePositiva (n : Nat) : 0 < (lebEncode n).size := by
+/-- lebCodifica は必ず 1 バイト以上を返すにゃん -/
+theorem longitudoLebEncodePositiva (n : Nat) : 0 < (lebCodifica n).size := by
   induction n using Nat.strongRecOn with
   | ind n ih =>
   cases Nat.lt_or_ge n 128 with
-  | inl h => rw [lebEncode, if_pos h]; simp
+  | inl h => rw [lebCodifica, if_pos h]; simp
   | inr h =>
-    rw [lebEncode, if_neg (Nat.not_lt.mpr h), ByteArray.size_append]
+    rw [lebCodifica, if_neg (Nat.not_lt.mpr h), ByteArray.size_append]
     have := ih (n / 128) (Nat.div_lt_self (by omega) (by decide)); simp; omega
 
 private theorem arithmeticaMultipla (acc n mult : Nat) :
@@ -147,22 +147,22 @@ private theorem arithmeticaMultipla (acc n mult : Nat) :
         mult * (n % 128 + 128 * (n / 128)) from (Nat.mul_add mult _ _).symm,
       Nat.add_comm, key, Nat.mul_comm]
 
-private theorem lebDecodeIteratioRecta (n : Nat) :
+private theorem lebDecodificaIteratioRecta (n : Nat) :
     forall (fuel : Nat) (pre suf : ByteArray) (acc mult : Nat),
-    (lebEncode n).size <= fuel ->
-    lebDecodeLoop fuel (pre ++ lebEncode n ++ suf) pre.size acc mult =
-      some (Prod.mk (acc + n * mult) (pre.size + (lebEncode n).size)) := by
+    (lebCodifica n).size <= fuel ->
+    lebDecodificaCirculum fuel (pre ++ lebCodifica n ++ suf) pre.size acc mult =
+      some (Prod.mk (acc + n * mult) (pre.size + (lebCodifica n).size)) := by
   induction n using Nat.strongRecOn with
   | ind n ih =>
     intro fuel pre suf acc mult hfuel
     cases fuel with
     | zero => exfalso; have := longitudoLebEncodePositiva n; omega
     | succ fuel' =>
-    simp only [lebDecodeLoop]
+    simp only [lebDecodificaCirculum]
     cases Nat.lt_or_ge n 128 with
     | inl hn =>
-      have henc : lebEncode n = ByteArray.mk #[n.toUInt8] := by
-        rw [lebEncode]; simp only [if_pos hn]
+      have henc : lebCodifica n = ByteArray.mk #[n.toUInt8] := by
+        rw [lebCodifica]; simp only [if_pos hn]
       rw [henc]
       simp only [dif_pos (show pre.size < (pre ++ ByteArray.mk #[n.toUInt8] ++ suf).size by
         simp [ByteArray.size_append]; omega)]
@@ -170,26 +170,26 @@ private theorem lebDecodeIteratioRecta (n : Nat) :
         rw [elementumInPrefixo]; exact uInt8AdNat n (by omega)]
       simp only [if_pos hn, longitudoMk1]
     | inr hn =>
-      have henc : lebEncode n =
-          ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebEncode (n / 128) := by
-        rw [lebEncode]; simp only [if_neg (Nat.not_lt.mpr hn)]
+      have henc : lebCodifica n =
+          ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebCodifica (n / 128) := by
+        rw [lebCodifica]; simp only [if_neg (Nat.not_lt.mpr hn)]
       rw [henc]
-      have henc_sz : (lebEncode n).size = 1 + (lebEncode (n / 128)).size := by
+      have henc_sz : (lebCodifica n).size = 1 + (lebCodifica (n / 128)).size := by
         rw [henc, ByteArray.size_append]; simp
-      have hfuel' : (lebEncode (n / 128)).size <= fuel' := by omega
+      have hfuel' : (lebCodifica (n / 128)).size <= fuel' := by omega
       simp only [dif_pos (show pre.size <
-            (pre ++ (ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebEncode (n / 128)) ++ suf).size by
+            (pre ++ (ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebCodifica (n / 128)) ++ suf).size by
           simp [ByteArray.size_append]
           have := longitudoLebEncodePositiva (n / 128); omega)]
-      rw [show (pre ++ (ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebEncode (n / 128)) ++ suf)[pre.size].toNat
+      rw [show (pre ++ (ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebCodifica (n / 128)) ++ suf)[pre.size].toNat
           = n % 128 + 128 from by
         rw [elementumInPrefixo2]; exact uInt8AdNat _ (by omega)]
       simp only [if_neg (show Not (n % 128 + 128 < 128) by omega)]
       rw [show n % 128 + 128 - 128 = n % 128 from by omega]
-      rw [show pre ++ (ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebEncode (n / 128)) ++ suf =
-            (pre ++ ByteArray.mk #[((n % 128 + 128).toUInt8)]) ++ lebEncode (n / 128) ++ suf from by
-        rw [show pre ++ (ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebEncode (n / 128)) =
-              pre ++ ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebEncode (n / 128) from
+      rw [show pre ++ (ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebCodifica (n / 128)) ++ suf =
+            (pre ++ ByteArray.mk #[((n % 128 + 128).toUInt8)]) ++ lebCodifica (n / 128) ++ suf from by
+        rw [show pre ++ (ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebCodifica (n / 128)) =
+              pre ++ ByteArray.mk #[((n % 128 + 128).toUInt8)] ++ lebCodifica (n / 128) from
           ByteArray.append_assoc.symm]]
       rw [show pre.size + 1 = (pre ++ ByteArray.mk #[((n % 128 + 128).toUInt8)]).size from by
         simp [ByteArray.size_append]]
@@ -210,13 +210,13 @@ private theorem elementumDextriObliquum (pre dat : ByteArray) (pos : Nat)
         (h := by simp [ByteArray.size_append]; omega)]
   simp [Nat.add_sub_cancel_left]
 
-private theorem lebDecodeIteratioPraefixo (fuel : Nat) (pre dat : ByteArray) (pos acc mult : Nat) :
-    lebDecodeLoop fuel (pre ++ dat) (pre.size + pos) acc mult =
-      (lebDecodeLoop fuel dat pos acc mult).map (fun p => Prod.mk p.1 (pre.size + p.2)) := by
+private theorem lebDecodificaIteratioPraefixo (fuel : Nat) (pre dat : ByteArray) (pos acc mult : Nat) :
+    lebDecodificaCirculum fuel (pre ++ dat) (pre.size + pos) acc mult =
+      (lebDecodificaCirculum fuel dat pos acc mult).map (fun p => Prod.mk p.1 (pre.size + p.2)) := by
   induction fuel generalizing pos acc mult with
-  | zero => simp [lebDecodeLoop]
+  | zero => simp [lebDecodificaCirculum]
   | succ fuel' ih =>
-    simp only [lebDecodeLoop]
+    simp only [lebDecodificaCirculum]
     cases Nat.lt_or_ge pos dat.size with
     | inl hpos =>
       have hpos' : pre.size + pos < (pre ++ dat).size := by simp [ByteArray.size_append]; omega
@@ -234,13 +234,13 @@ private theorem lebDecodeIteratioPraefixo (fuel : Nat) (pre dat : ByteArray) (po
         simp [ByteArray.size_append]; omega
       simp only [dif_neg hpos', dif_neg (Nat.not_lt.mpr hpos), Option.map_none]
 
-theorem lebDecodeAdPraefixumGen (pre dat : ByteArray) (pos : Nat) :
-    lebDecode (pre ++ dat) (pre.size + pos) =
-      (lebDecode dat pos).map (fun p => Prod.mk p.1 (pre.size + p.2)) := by
-  unfold lebDecode
+theorem lebDecodificaAdPraefixumGen (pre dat : ByteArray) (pos : Nat) :
+    lebDecodifica (pre ++ dat) (pre.size + pos) =
+      (lebDecodifica dat pos).map (fun p => Prod.mk p.1 (pre.size + p.2)) := by
+  unfold lebDecodifica
   rw [show (pre ++ dat).size - (pre.size + pos) + 1 = dat.size - pos + 1 from by
     simp [ByteArray.size_append]; omega]
-  exact lebDecodeIteratioPraefixo (dat.size - pos + 1) pre dat pos 0 1
+  exact lebDecodificaIteratioPraefixo (dat.size - pos + 1) pre dat pos 0 1
 
 private theorem extractioArrayPraefixo (pre dat : Array UInt8) (a b : Nat) :
     (pre ++ dat).extract (pre.size + a) (pre.size + b) = dat.extract a b := by
@@ -267,13 +267,13 @@ theorem extractioPraefixo (pre dat : ByteArray) (a b : Nat) :
     simp only [h1, h2, Nat.add_zero]
     simp [Array.ext_iff, Array.size_extract]
 
-/-- lebDecode と lebEncode はレクルススするにゃん -/
-theorem lebDecodeEncodeRecursus (n : Nat) (rest : ByteArray) :
-    lebDecode (lebEncode n ++ rest) 0 = some (n, (lebEncode n).size) := by
-  simp only [lebDecode]
-  have hfuel : (lebEncode n).size <= (lebEncode n ++ rest).size - 0 + 1 := by
+/-- lebDecodifica と lebCodifica はレクルススするにゃん -/
+theorem lebDecodificaCodificaRecursus (n : Nat) (rest : ByteArray) :
+    lebDecodifica (lebCodifica n ++ rest) 0 = some (n, (lebCodifica n).size) := by
+  simp only [lebDecodifica]
+  have hfuel : (lebCodifica n).size <= (lebCodifica n ++ rest).size - 0 + 1 := by
     rw [ByteArray.size_append]; omega
-  have key := lebDecodeIteratioRecta n _ ByteArray.empty rest 0 1 hfuel
+  have key := lebDecodificaIteratioRecta n _ ByteArray.empty rest 0 1 hfuel
   simp only [ByteArray.empty_append, ByteArray.size_empty, Nat.zero_add, Nat.mul_one] at key
   exact key
 
@@ -285,25 +285,25 @@ theorem lebDecodeEncodeRecursus (n : Nat) (rest : ByteArray) :
 /-- 1フィールドを「LEB128 長 + 本體」の形でコーディフィカーティオーするにゃん。
     自作構造體の `adBytes` 實裝に使ふにゃ:
     ```
-    adBytes s := encodeField s.gradus ++ encodeField s.nomen
+    adBytes s := codificaAgrum s.gradus ++ codificaAgrum s.nomen
     ```
     -/
-def encodeField {α : Type} [StatusPermanens α] (v : α) : ByteArray :=
+def codificaAgrum {α : Type} [StatusPermanens α] (v : α) : ByteArray :=
   let b := StatusPermanens.adBytes v
-  lebEncode b.size ++ b
+  lebCodifica b.size ++ b
 
 /-- `positio` 位置から1フィールドを復元して `(値, 次の位置)` を返すにゃん。
     自作構造體の `eBytes` 實裝に使ふにゃ:
     ```
     eBytes b := do
-      let (gradus, pos1) ← decodeField b 0
-      let (nomen,  pos2) ← decodeField b pos1
+      let (gradus, pos1) ← decodificaAgrum b 0
+      let (nomen,  pos2) ← decodificaAgrum b pos1
       return { gradus, nomen }
     ```
     -/
-def decodeField {α : Type} [StatusPermanens α]
+def decodificaAgrum {α : Type} [StatusPermanens α]
     (b : ByteArray) (positio : Nat) : Option (α × Nat) := do
-  let (longitudo, pos') ← lebDecode b positio
+  let (longitudo, pos') ← lebDecodifica b positio
   let sectio := b.extract pos' (pos' + longitudo)
   let v ← StatusPermanens.eBytes sectio
   return (v, pos' + longitudo)
@@ -320,8 +320,8 @@ private theorem uint16OctetiRecursus (n : UInt16) :
   bv_decide
 
 theorem legereU16LERecursus (n : UInt16) (rest : ByteArray) :
-    readU16LE (u16LE n ++ rest) 0 = some (n, 2) := by
-  unfold readU16LE u16LE
+    legeU16LE (u16LE n ++ rest) 0 = some (n, 2) := by
+  unfold legeU16LE u16LE
   have hsize : (ByteArray.mk #[(n &&& 0xFF).toUInt8,
       ((n >>> 8) &&& 0xFF).toUInt8] ++ rest).size = 2 + rest.size := by
     rw [ByteArray.size_append]; rfl
@@ -341,8 +341,8 @@ private theorem uint32OctetiRecursus (n : UInt32) :
   bv_decide
 
 theorem legereU32LERecursus (n : UInt32) (rest : ByteArray) :
-    readU32LE (u32LE n ++ rest) 0 = some (n, 4) := by
-  unfold readU32LE u32LE
+    legeU32LE (u32LE n ++ rest) 0 = some (n, 4) := by
+  unfold legeU32LE u32LE
   have hsize : (ByteArray.mk #[(n &&& 0xFF).toUInt8,
       ((n >>> 8) &&& 0xFF).toUInt8, ((n >>> 16) &&& 0xFF).toUInt8,
       ((n >>> 24) &&& 0xFF).toUInt8] ++ rest).size = 4 + rest.size := by
@@ -368,8 +368,8 @@ private theorem uint64OctetiRecursus (n : UInt64) :
   bv_decide
 
 theorem legereU64LERecursus (n : UInt64) (rest : ByteArray) :
-    readU64LE (u64LE n ++ rest) 0 = some (n, 8) := by
-  unfold readU64LE u64LE
+    legeU64LE (u64LE n ++ rest) 0 = some (n, 8) := by
+  unfold legeU64LE u64LE
   have hsize : (ByteArray.mk #[(n &&& 0xFF).toUInt8,
       ((n >>> 8) &&& 0xFF).toUInt8, ((n >>> 16) &&& 0xFF).toUInt8,
       ((n >>> 24) &&& 0xFF).toUInt8, ((n >>> 32) &&& 0xFF).toUInt8,
@@ -392,19 +392,19 @@ theorem legereU64LERecursus (n : UInt64) (rest : ByteArray) :
 -- ═══════════════════════════════════════════════════
 
 -- マーギクムバイト: "UKA\x04"（v4: LEB128 長さフィールド形式にゃ）
-def magicBytes : ByteArray := .mk #[0x55, 0x4B, 0x41, 0x04]
+def octetiMagici : ByteArray := .mk #[0x55, 0x4B, 0x41, 0x04]
 
 -- 1エントリ (鍵, タグ, 値) をセリアーリザーティオーするにゃ
-def serializeEntrada (k tag : String) (v : ByteArray) : ByteArray :=
+def ordinaIntroitum (k tag : String) (v : ByteArray) : ByteArray :=
   let ok := k.toUTF8; let ot := tag.toUTF8
-  lebEncode ok.size ++ ok
-  ++ lebEncode ot.size ++ ot
-  ++ lebEncode v.size ++ v
+  lebCodifica ok.size ++ ok
+  ++ lebCodifica ot.size ++ ot
+  ++ lebCodifica v.size ++ v
 
 -- エントリ列を再帰的にセリアーリザーティオーするにゃ（証明のための再帰形）
-def serializeParia : List (String × String × ByteArray) → ByteArray
+def ordinaParia : List (String × String × ByteArray) → ByteArray
   | []              => .empty
-  | (k, tag, v) :: rest => serializeEntrada k tag v ++ serializeParia rest
+  | (k, tag, v) :: rest => ordinaIntroitum k tag v ++ ordinaParia rest
 
 -- ビーナーリウムから (名前, 型タグ, オクテートゥス列) の三つ組を再帰的に讀むにゃ
 def legereParia
@@ -414,21 +414,21 @@ def legereParia
   | 0     => some ([], positio)
   | n + 1 => do
     -- キー名にゃ
-    let (longitudoNominis, pos1) ← lebDecode b positio
+    let (longitudoNominis, pos1) ← lebDecodifica b positio
     if pos1 + longitudoNominis > b.size then none
     else do
       let octetiNominis := b.extract pos1 (pos1 + longitudoNominis)
       let nomenEntriae  ← String.fromUTF8? octetiNominis
       let pos2          := pos1 + longitudoNominis
       -- 型タグにゃ
-      let (longitudoTypi, pos3) ← lebDecode b pos2
+      let (longitudoTypi, pos3) ← lebDecodifica b pos2
       if pos3 + longitudoTypi > b.size then none
       else do
         let octetiTypi := b.extract pos3 (pos3 + longitudoTypi)
         let tag        ← String.fromUTF8? octetiTypi
         let pos4       := pos3 + longitudoTypi
         -- 値にゃ
-        let (longitudoValorum, pos5) ← lebDecode b pos4
+        let (longitudoValorum, pos5) ← lebDecodifica b pos4
         if pos5 + longitudoValorum > b.size then none
         else do
           let valor      := b.extract pos5 (pos5 + longitudoValorum)
@@ -441,16 +441,16 @@ def legereParia
 -- ─────────────────────────────────────────────────────────────────────────
 
 /-- `(名前, 型タグ, ByteArray)` の三つ組のリストをビーナーリウムにセリアーリザーティオーするにゃん（純粋）♪ -/
-def serializeMappam (paria : List (String × String × ByteArray)) : ByteArray :=
-  magicBytes ++ lebEncode paria.length ++ serializeParia paria
+def ordinaMappam (paria : List (String × String × ByteArray)) : ByteArray :=
+  octetiMagici ++ lebCodifica paria.length ++ ordinaParia paria
 
 /-- ビーナーリウムから `(名前, 型タグ, ByteArray)` の三つ組を復元するにゃん（純粋）♪
     不正なオクテートゥス列の場合は `none` を返すにゃ -/
-def deserializeMappam (b : ByteArray) : Option (List (String × String × ByteArray)) := do
+def resolveMappam (b : ByteArray) : Option (List (String × String × ByteArray)) := do
   -- 最低5バイト必要にゃ（マーギクム4 + LEB128 最低1バイト）
   if b.size < 5 then failure
-  if b.extract 0 4 != magicBytes then failure
-  let (numerus, positio) ← lebDecode b 4
+  if b.extract 0 4 != octetiMagici then failure
+  let (numerus, positio) ← lebDecodifica b 4
   let (paria, _)         ← legereParia b numerus positio
   return paria
 
@@ -459,7 +459,7 @@ def deserializeMappam (b : ByteArray) : Option (List (String × String × ByteAr
 def legereMappam (via : String) : IO (List (String × String × ByteArray)) :=
   try
     IO.FS.readBinFile via >>= fun b =>
-      return (deserializeMappam b).getD []
+      return (resolveMappam b).getD []
   catch _ =>
     return []
 
@@ -467,7 +467,7 @@ def legereMappam (via : String) : IO (List (String × String × ByteArray)) :=
 def scribeMappam
     (via : String)
     (paria : List (String × String × ByteArray)) : IO Unit :=
-  IO.FS.writeBinFile via (serializeMappam paria)
+  IO.FS.writeBinFile via (ordinaMappam paria)
 
 /-- 名前→設定器の一覽を使って一括復元するにゃん。
     保存データに含まれる項目のうち **typusTag が一致するもの** だけを復元するにゃ♪

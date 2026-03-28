@@ -4,7 +4,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- \\f[...] 書體・スタイルのシグヌムにゃん。
     基本書體、カーソルスタイル（選擇中・未選擇）、
@@ -123,4 +123,4 @@ def SignumFormae.adCatenam : SignumFormae → String
   | .colorFontisAncoraeVisae c     => s!"\\f[anchorvisitedfontcolor,{c.toString}]"
   | .methodusAncoraeVisae m        => s!"\\f[anchorvisitedmethod,{m.toString}]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

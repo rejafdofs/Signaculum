@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 窓制御のシグヌムにゃん。移動・ロック・設定・開閉等ぜんぶ入つてるにゃ -/
 inductive SignumFenestrae where
@@ -135,4 +135,4 @@ def SignumFenestrae.adCatenam : SignumFenestrae → String
   | .configuraTapete v none       => s!"\\![set,wallpaper,{evadeArgumentum v}]"
   | .configuraTapete v (some m)   => s!"\\![set,wallpaper,{evadeArgumentum v},{m.toString}]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

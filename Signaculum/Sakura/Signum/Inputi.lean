@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 入力ダイアローグスのシグヌムにゃん。各種入力ボックスの開閉に對應するにゃ -/
 inductive SignumInputi where
@@ -69,4 +69,4 @@ def SignumInputi.adCatenam : SignumInputi → String
   | .claudeDialogum dialogId =>
     s!"\\![close,dialog,{evadeArgumentum dialogId}]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

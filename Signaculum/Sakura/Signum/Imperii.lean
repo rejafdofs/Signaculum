@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 制御のシグヌムにゃん。\e / \_q / \- 等に對應するにゃ -/
 inductive SignumImperii where
@@ -43,4 +43,4 @@ def SignumImperii.adCatenam : SignumImperii → String
   | .inhibeTagas      => "\\_?"
   | .sectionCeler b   => s!"\\![quicksection,{if b then "true" else "false"}]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

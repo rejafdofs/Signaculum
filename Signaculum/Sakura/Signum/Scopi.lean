@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 範圍制御のシグヌムにゃん。\\h / \\u / \\p[n] に對應するにゃ -/
 inductive SignumScopi where
@@ -17,4 +17,4 @@ def SignumScopi.adCatenam : SignumScopi → String
   | .kero      => "\\u"
   | .persona n => s!"\\p[{n}]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

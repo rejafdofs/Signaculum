@@ -1,7 +1,7 @@
 -- Signaculum.Protocollum.Typi
 -- SHIORI/3.0 プロトコッルムの共通型と定數にゃん
 
-namespace Signaculum
+namespace Signaculum.Protocollum
 
 /-- SHIORI 要求の手法(methodus)にゃん。GET は應答を期待し、NOTIFY は通知のみにゃ -/
 inductive Methodus where
@@ -70,4 +70,4 @@ def crlf : String := "\r\n"
 def purgaCrlf (s : String) : String :=
   s.foldl (fun acc c => if c != '\r' && c != '\n' then acc.push c else acc) ""
 
-end Signaculum
+end Signaculum.Protocollum

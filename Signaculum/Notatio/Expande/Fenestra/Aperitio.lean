@@ -5,7 +5,7 @@
 import Lean
 import Signaculum.Sakura.Scriptum
 
-namespace Signaculum.Notatio.Expande
+namespace Signaculum.Notatio.Expande.Fenestra
 
 open Lean Elab Term
 
@@ -178,4 +178,4 @@ def expandeApertioEtc (imperium : String) (args : Array Syntax) (stx : Syntax)
       resolveClose sc rest stx
   | _ => return none
 
-end Signaculum.Notatio.Expande
+end Signaculum.Notatio.Expande.Fenestra

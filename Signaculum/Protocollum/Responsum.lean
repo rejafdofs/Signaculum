@@ -4,7 +4,7 @@
 import Signaculum.Protocollum.Typi
 import Signaculum.Sakura.Typi
 
-namespace Signaculum
+namespace Signaculum.Protocollum
 
 /-- SHIORI/3.0 應答を表す構造體にゃん。
     Value 以外のレスポンスムヘッダーも型安全に設定できるにゃ♪ -/
@@ -88,4 +88,4 @@ def adProtocollum (r : Responsum) : String :=
 
 end Responsum
 
-end Signaculum
+end Signaculum.Protocollum

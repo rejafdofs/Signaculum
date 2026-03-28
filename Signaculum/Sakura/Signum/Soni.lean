@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 音聲制御のシグヌムにゃん。\_v / \8 / \![sound,...] / \__v に對應するにゃ -/
 inductive SignumSoni where
@@ -47,4 +47,4 @@ def SignumSoni.adCatenam : SignumSoni → String
     else s!"\\![sound,option,{evadeArgumentum via},{s}]"
   | .synthesisVocis opt     => s!"\\__v[{evadeArgumentum opt}]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 變更・再讀込のシグヌムにゃん。change / reboot / reload 等のタグに對應するにゃ -/
 inductive SignumMutationis where
@@ -54,4 +54,4 @@ def SignumMutationis.adCatenam : SignumMutationis → String
   | .oneraMakoto          => "\\![load,makoto]"
   | .configuraShioriDebug => "\\![set,shioridebugmode]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

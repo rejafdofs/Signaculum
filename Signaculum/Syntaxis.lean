@@ -7,7 +7,7 @@ import Lean
 import Signaculum.Memoria.Citationes
 import Signaculum.Memoria.StatusPermanens
 import Signaculum.Nucleus.Exporta
-import Signaculum.Nucleus.Loop
+import Signaculum.Nucleus.Circulus
 import Signaculum.Sstp
 
 open Lean Elab Command Term Meta
@@ -96,7 +96,7 @@ elab "eventum" nomenEventi:str body:term : command => do
   let nomen := nomenEventi.getString
   let nomenBasisTractatorum := "_tractator_" ++ nomen
   let identTractatorum := mkIdent (Name.mkSimple nomenBasisTractatorum)
-  elabCommand (← `(def $identTractatorum : Signaculum.Tractator := $body))
+  elabCommand (← `(def $identTractatorum : Signaculum.Nucleus.Tractator := $body))
   let ns ← getCurrNamespace
   let nomenPlenumTractatorum := ns ++ Name.mkSimple nomenBasisTractatorum
   modifyEnv fun env =>
@@ -444,7 +444,7 @@ elab "legeProprietatem" f:ident proprietates:term : term => do
 elab "spawna" f:ident args:term* : term => do
   let callTerm ← `($f $args*)
   elabTerm
-    (← `(liftM (Signaculum.spawnaMunitus $callTerm)))
+    (← `(liftM (Signaculum.Nucleus.spawnaMunitus $callTerm)))
     none
 
 /-- `spawnaScriptum f arg1 arg2 ...` — SakuraIO Unit アクシオーをバックグラウンドで起動するにゃん♪
@@ -453,7 +453,7 @@ elab "spawna" f:ident args:term* : term => do
 elab "spawnaScriptum" f:ident args:term* : term => do
   let callTerm ← `($f $args*)
   elabTerm
-    (← `(liftM (Signaculum.spawnaMunitus do
+    (← `(liftM (Signaculum.Nucleus.spawnaMunitus do
       let _st ← Signaculum.Sakura.currere $callTerm
       Signaculum.Sstp.mitteSstpScriptum (Signaculum.Sakura.adCatenamLista _st.scriptum))))
     none
@@ -489,7 +489,7 @@ elab "construe" : command => do
       let lamTerm : TSyntax `term := ⟨lamStx⟩
       if e.paramCount == 0 then
         -- 引數なしにゃ: ラムダを Tractator として直接定義するにゃ
-        elabCommand (← `(def $tractorIdent : Signaculum.Tractator := $lamTerm))
+        elabCommand (← `(def $tractorIdent : Signaculum.Nucleus.Tractator := $lamTerm))
       else
         -- 引數ありにゃ: Reference 抽出ラッパーを生成するにゃ
         -- fun req => $lamTerm (fromRef (req.referentiam 0)) ...
@@ -497,7 +497,7 @@ elab "construe" : command => do
           let idx := Syntax.mkNumLit (toString i)
           `(Signaculum.Memoria.Citatio.fromRef ((req.referentiam $idx).getD ""))
         elabCommand (← `(
-          def $tractorIdent : Signaculum.Tractator := fun req => $lamTerm $argExprs*))
+          def $tractorIdent : Signaculum.Nucleus.Tractator := fun req => $lamTerm $argExprs*))
     | none =>
       -- ident 形にゃ: Reference 抽出ラッパーを生成するにゃ
       -- def _tractator_lazy_... : Tractator := fun req =>
@@ -507,7 +507,7 @@ elab "construe" : command => do
         let idx := Syntax.mkNumLit (toString i)
         `(Signaculum.Memoria.Citatio.fromRef ((req.referentiam $idx).getD ""))
       elabCommand (← `(
-        def $tractorIdent : Signaculum.Tractator := fun req => $declIdent $argExprs*))
+        def $tractorIdent : Signaculum.Nucleus.Tractator := fun req => $declIdent $argExprs*))
 
     let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit e.nomenEventi⟩
     pariaTractatorum := pariaTractatorum.push (← `(($signumNominis, $tractorIdent)))
@@ -515,7 +515,7 @@ elab "construe" : command => do
   if variaePermanentes.isEmpty then
     elabCommand (← `(def servaStatum : IO Unit := pure ()))
     elabCommand (← `(
-      initialize (Signaculum.registraShiori [$pariaTractatorum,*])
+      initialize (Signaculum.Nucleus.registraShiori [$pariaTractatorum,*])
     ))
     -- ゴーストの主循環エントリーポイントを自動定義するにゃ
     elabCommand (← `(def main : IO Unit := Signaculum.loopPrincipalis))
@@ -545,13 +545,13 @@ elab "construe" : command => do
 
     elabCommand (← `(
       def servaStatum : IO Unit := do
-        let _domus ← Signaculum.domusObtinere
+        let _domus ← Signaculum.Nucleus.domusObtinere
         let _via := _domus ++ "/ghost_status.bin"
         let _paria ← Signaculum.Memoria.executareScripturam $terminusServandi
         Signaculum.Memoria.scribeMappam _via _paria))
 
     elabCommand (← `(
-      initialize (Signaculum.registraShioriEx
+      initialize (Signaculum.Nucleus.registraShioriEx
         $terminusTractatorum
         (some (fun _domus => do
           let _via := _domus ++ "/ghost_status.bin"

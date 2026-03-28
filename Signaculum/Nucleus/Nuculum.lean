@@ -7,7 +7,8 @@ import Signaculum.Protocollum.Rogatio
 import Signaculum.Protocollum.Responsum
 import Std.Data.HashMap
 
-namespace Signaculum
+namespace Signaculum.Nucleus
+open Signaculum.Protocollum
 open Signaculum.Sakura
 
 /-- 事象處理器の型にゃん。
@@ -16,7 +17,7 @@ open Signaculum.Sakura
 def Tractator := Rogatio → SakuraIO Unit
 
 /-- 栞の狀態にゃん -/
-structure ShioriStatus where
+structure StatusShiori where
   /-- 家ディレクトーリウム（ゴーストのフォルダーにゃ）-/
   domus : String := ""
   deriving Repr, Inhabited
@@ -26,7 +27,7 @@ structure Shiori where
   /-- 事象名と處理器の對應表にゃん（HashMap で O(1) 探索にゃ）-/
   tractatores : Std.HashMap String Tractator
   /-- 栞の可變狀態にゃ -/
-  status : IO.Ref ShioriStatus
+  status : IO.Ref StatusShiori
   /-- 讀込(load)時に呼ばれるフックにゃん。domus（家ディレクトーリウム）を受け取るにゃ -/
   onOnerare : Option (String → IO Unit) := none
   /-- 書出(unload)時に呼ばれるフックにゃん -/
@@ -38,7 +39,7 @@ namespace Shiori
 def creare (tractatores : List (String × Tractator))
     (onOnerare : Option (String → IO Unit) := none)
     (onExire   : Option (IO Unit)          := none) : IO Shiori := do
-  let status ← IO.mkRef ({} : ShioriStatus)
+  let status ← IO.mkRef ({} : StatusShiori)
   let mappa := Std.HashMap.ofList tractatores
   return { tractatores := mappa, status, onOnerare, onExire }
 
@@ -103,4 +104,4 @@ def tractaCatenam (s : Shiori) (catenaRogationis : String) : IO String := do
 
 end Shiori
 
-end Signaculum
+end Signaculum.Nucleus

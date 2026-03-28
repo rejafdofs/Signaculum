@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 動畫制御のシグヌムにゃん。\![anim,...] に對應するにゃ -/
 inductive SignumAnimationis where
@@ -48,4 +48,4 @@ def SignumAnimationis.adCatenam : SignumAnimationis → String
     let optPars := if optiones.isEmpty then "" else s!",{evadeArgumentum optiones}"
     s!"\\![anim,add,overlay,{animId},{x},{y},{tempus}{optPars}]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

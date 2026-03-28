@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- プロパティ・環境・更新系のシグヌムにゃん。\\![set,property,...] / %property[...] 等に對應するにゃ。
     設定も取得も效果もぜんぶボクがまとめてあげたにゃん♪ -/
@@ -78,4 +78,4 @@ def SignumProprietatis.adCatenam : SignumProprietatis → String
   | .creaViam =>
     "\\![create,shortcut]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

@@ -5,7 +5,7 @@
 import Lean
 import Signaculum.Sakura.Scriptum
 
-namespace Signaculum.Notatio.Expande
+namespace Signaculum.Notatio.Expande.Systema
 
 open Lean Elab Term
 
@@ -189,10 +189,10 @@ def expandeEventum (imperium : String) (args : Array Lean.Syntax) (stx : Lean.Sy
     if args.size < 1 then
       throwErrorAt stx "\\![async,...]: term が1つ必要にゃ"
     let app : TSyntax `term := ⟨args[0]!⟩
-    pure <| some (← `(liftM (Signaculum.spawnaMunitus do
+    pure <| some (← `(liftM (Signaculum.Nucleus.spawnaMunitus do
         let _st ← Signaculum.Sakura.currere $app
         Signaculum.Sstp.mitteSstpScriptum (Signaculum.Sakura.adCatenamLista _st.scriptum))))
 
   | _ => pure none
 
-end Signaculum.Notatio.Expande
+end Signaculum.Notatio.Expande.Systema

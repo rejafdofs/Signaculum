@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- テクストゥス表示のシグヌムにゃん。表示文字列や改行、淸掃等に對應するにゃ -/
 inductive SignumExhibitionis where
@@ -41,4 +41,4 @@ def SignumExhibitionis.adCatenam : SignumExhibitionis → String
   | .saltum nexus              => s!"\\j[{evadeArgumentum nexus}]"
   | .linearisAbrogatur         => "\\_n"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

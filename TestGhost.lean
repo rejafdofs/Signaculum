@@ -8,13 +8,14 @@ import Signaculum.Sstp
 import Signaculum.Elementa.Varia
 
 open Signaculum
+open Signaculum.Nucleus
 open Signaculum.Sakura
 
 -- ═══════════════════════════════════════════════════
 -- 事象處理器を直接定義するにゃん（DSL マクロなし版）
 -- ═══════════════════════════════════════════════════
 
-def tractatorOnBoot : Tractator := fun _req => do
+def tractatorInInceptione : Tractator := fun _req => do
   sakura
   superficies 0
   loqui "起動にゃ！テストゴーストにゃん♪"
@@ -25,7 +26,7 @@ def tractatorOnBoot : Tractator := fun _req => do
   loqui "よろしくにゃ。"
   finis
 
-def tractatorOnClose : Tractator := fun _req => do
+def tractatorInClausura : Tractator := fun _req => do
   sakura
   superficies 0
   loqui "またにゃ〜♪"
@@ -34,7 +35,7 @@ def tractatorOnClose : Tractator := fun _req => do
   loqui "\\-"
   finis
 
-def tractatorOnMouseDoubleClick : Tractator := fun req => do
+def tractatorMusDupliciPulsu : Tractator := fun req => do
   let scopus := (req.referentiam 3).getD ""
   sakura
   superficies 5
@@ -49,10 +50,10 @@ def tractatorOnMouseDoubleClick : Tractator := fun req => do
 -- 栞を登錄するにゃん（construe マクロの代はりに手動登錄）
 -- ═══════════════════════════════════════════════════
 
-initialize (Signaculum.registraShiori [
-  ("OnBoot", tractatorOnBoot),
-  ("OnClose", tractatorOnClose),
-  ("OnMouseDoubleClick", tractatorOnMouseDoubleClick)
+initialize (Signaculum.Nucleus.registraShiori [
+  ("OnBoot", tractatorInInceptione),
+  ("OnClose", tractatorInClausura),
+  ("OnMouseDoubleClick", tractatorMusDupliciPulsu)
 ])
 
 -- ═══════════════════════════════════════════════════
@@ -60,7 +61,7 @@ initialize (Signaculum.registraShiori [
 -- ═══════════════════════════════════════════════════
 
 /-- 純粹な SakuraScript 生成のテストにゃん -/
-def testPuraSakura : String := Id.run do
+def testumPurumSakura : String := Id.run do
   Sakura.currereScriptum do
     sakura
     superficies 0
@@ -77,7 +78,7 @@ def testPuraSakura : String := Id.run do
 
 def main : IO Unit := do
   IO.println "=== TestGhost ==="
-  IO.println s!"SakuraScript 生成テスト:\n{testPuraSakura}"
-  let registrata ← Signaculum.estRegistrata
+  IO.println s!"SakuraScript 生成テスト:\n{testumPurumSakura}"
+  let registrata ← Signaculum.Nucleus.estRegistrata
   IO.println s!"栞登錄狀態: {registrata}"
 

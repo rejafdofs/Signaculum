@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 待機・タイミングのシグヌムにゃん。\_w / \w / \x 等に對應するにゃ -/
 inductive SignumMorae where
@@ -25,4 +25,4 @@ def SignumMorae.adCatenam : SignumMorae → String
   | .expecta              => "\\x"
   | .expectaSine          => "\\x[noclear]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

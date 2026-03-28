@@ -16,15 +16,15 @@ private theorem byteArrayExtractionPostPraefixum (a b : ByteArray) :
 
 private theorem decodeCampiAdPraefixum {α : Type} [StatusPermanens α]
     (pre dat : ByteArray) (pos : Nat) :
-    decodeField (pre ++ dat) (pre.size + pos) =
-      ((decodeField dat pos : Option (α × Nat)).map (fun vp => (vp.1, pre.size + vp.2))) := by
-  rcases h_leb : lebDecode dat pos with _ | ⟨longitudo, pos'⟩
-  · have h_pre : lebDecode (pre ++ dat) (pre.size + pos) = none := by
-      rw [lebDecodeAdPraefixumGen, h_leb]; rfl
-    simp [decodeField, bind, Option.bind, h_pre, h_leb, Option.map]
-  · have h_pre : lebDecode (pre ++ dat) (pre.size + pos) = some (longitudo, pre.size + pos') := by
-      rw [lebDecodeAdPraefixumGen, h_leb]; rfl
-    simp only [decodeField, bind, Option.bind, h_pre, h_leb]
+    decodificaAgrum (pre ++ dat) (pre.size + pos) =
+      ((decodificaAgrum dat pos : Option (α × Nat)).map (fun vp => (vp.1, pre.size + vp.2))) := by
+  rcases h_leb : lebDecodifica dat pos with _ | ⟨longitudo, pos'⟩
+  · have h_pre : lebDecodifica (pre ++ dat) (pre.size + pos) = none := by
+      rw [lebDecodificaAdPraefixumGen, h_leb]; rfl
+    simp [decodificaAgrum, bind, Option.bind, h_pre, h_leb, Option.map]
+  · have h_pre : lebDecodifica (pre ++ dat) (pre.size + pos) = some (longitudo, pre.size + pos') := by
+      rw [lebDecodificaAdPraefixumGen, h_leb]; rfl
+    simp only [decodificaAgrum, bind, Option.bind, h_pre, h_leb]
     rw [show pre.size + pos' + longitudo = pre.size + (pos' + longitudo) from by omega]
     rw [extractioPraefixo pre dat pos' (pos' + longitudo)]
     rcases StatusPermanens.eBytes (dat.extract pos' (pos' + longitudo)) with _ | v
@@ -33,19 +33,19 @@ private theorem decodeCampiAdPraefixum {α : Type} [StatusPermanens α]
 
 private theorem decodeCampiCodicampi {α : Type} [StatusPermanens α]
     (v : α) (rest : ByteArray) :
-    decodeField (encodeField v ++ rest) 0 = some (v, (encodeField v).size) := by
-  unfold decodeField encodeField
-  have h_leb := lebDecodeEncodeRecursus (StatusPermanens.adBytes v).size
+    decodificaAgrum (codificaAgrum v ++ rest) 0 = some (v, (codificaAgrum v).size) := by
+  unfold decodificaAgrum codificaAgrum
+  have h_leb := lebDecodificaCodificaRecursus (StatusPermanens.adBytes v).size
                   (StatusPermanens.adBytes v ++ rest)
   rw [← ByteArray.append_assoc] at h_leb
   simp only [h_leb, bind, Option.bind]
-  have hext : (lebEncode (StatusPermanens.adBytes v).size ++
+  have hext : (lebCodifica (StatusPermanens.adBytes v).size ++
                StatusPermanens.adBytes v ++ rest).extract
-               (lebEncode (StatusPermanens.adBytes v).size).size
-               ((lebEncode (StatusPermanens.adBytes v).size).size +
+               (lebCodifica (StatusPermanens.adBytes v).size).size
+               ((lebCodifica (StatusPermanens.adBytes v).size).size +
                 (StatusPermanens.adBytes v).size) =
               StatusPermanens.adBytes v :=
-    byteArray_extract_middle (lebEncode _) (StatusPermanens.adBytes v) rest
+    byteArray_extract_middle (lebCodifica _) (StatusPermanens.adBytes v) rest
   rw [hext, StatusPermanens.roundtrip v]
   simp [ByteArray.size_append]
 
@@ -92,7 +92,7 @@ instance : StatusPermanens UInt8 where
 instance : StatusPermanens UInt16 where
   typusTag := "UInt16"
   adBytes n := u16LE n
-  eBytes  b := readU16LE b 0 |>.map (fun (v, _) => v)
+  eBytes  b := legeU16LE b 0 |>.map (fun (v, _) => v)
   roundtrip n := by
     have h := legereU16LERecursus n .empty
     simp [ByteArray.append_empty] at h
@@ -101,7 +101,7 @@ instance : StatusPermanens UInt16 where
 instance : StatusPermanens UInt32 where
   typusTag := "UInt32"
   adBytes n := u32LE n
-  eBytes  b := readU32LE b 0 |>.map (fun (v, _) => v)
+  eBytes  b := legeU32LE b 0 |>.map (fun (v, _) => v)
   roundtrip n := by
     have h := legereU32LERecursus n .empty
     simp [ByteArray.append_empty] at h
@@ -110,7 +110,7 @@ instance : StatusPermanens UInt32 where
 instance : StatusPermanens UInt64 where
   typusTag := "UInt64"
   adBytes n := u64LE n
-  eBytes  b := readU64LE b 0 |>.map (fun (v, _) => v)
+  eBytes  b := legeU64LE b 0 |>.map (fun (v, _) => v)
   roundtrip n := by
     have h := legereU64LERecursus n .empty
     simp [ByteArray.append_empty] at h
@@ -120,7 +120,7 @@ instance : StatusPermanens Char where
   typusTag := "Char"
   adBytes c := u32LE c.val
   eBytes  b := do
-    let (n, _) ← readU32LE b 0
+    let (n, _) ← legeU32LE b 0
     if h : n.isValidChar then some ⟨n, h⟩ else none
   roundtrip c := by
     have h := legereU32LERecursus c.val .empty
@@ -165,7 +165,7 @@ private def decodePluraIteratio {α : Type} [StatusPermanens α]
   match n with
   | 0     => some ([], positio)
   | n + 1 => do
-    let (v, pos') ← decodeField b positio
+    let (v, pos') ← decodificaAgrum b positio
     let (residuum, positioFinalis) ← decodePluraIteratio b n pos'
     return (v :: residuum, positioFinalis)
 
@@ -173,7 +173,7 @@ private def encodePluraIteratio {α : Type} [StatusPermanens α]
     (xs : List α) : ByteArray :=
   match xs with
   | []      => .empty
-  | x :: xs => encodeField x ++ encodePluraIteratio xs
+  | x :: xs => codificaAgrum x ++ encodePluraIteratio xs
 
 private theorem decodePluraIteratioIgnoraPraefixum (α : Type) [StatusPermanens α]
     (n pos : Nat) (pre dat : ByteArray) :
@@ -185,7 +185,7 @@ private theorem decodePluraIteratioIgnoraPraefixum (α : Type) [StatusPermanens 
   | succ n ih =>
     simp [decodePluraIteratio]
     rw [decodeCampiAdPraefixum (α := α) pre dat pos]
-    cases hdf : (decodeField dat pos : Option (α × Nat)) with
+    cases hdf : (decodificaAgrum dat pos : Option (α × Nat)) with
     | none => simp
     | some vp =>
       rcases vp with ⟨v, pos'⟩
@@ -207,7 +207,7 @@ private theorem decodePluraIteratioEncodeRecursus (α : Type) [StatusPermanens �
     rw [decodeCampiCodicampi x (encodePluraIteratio xs ++ rest)]
     simp
     have hpfx := decodePluraIteratioIgnoraPraefixum α xs.length 0
-                   (encodeField x) (encodePluraIteratio xs ++ rest)
+                   (codificaAgrum x) (encodePluraIteratio xs ++ rest)
     simp only [Nat.add_zero] at hpfx
     rw [hpfx, ih]
     simp only [Option.map_some]
@@ -215,17 +215,17 @@ private theorem decodePluraIteratioEncodeRecursus (α : Type) [StatusPermanens �
 
 instance {α : Type} [StatusPermanens α] : StatusPermanens (List α) where
   typusTag := "List(" ++ StatusPermanens.typusTag (α := α) ++ ")"
-  adBytes xs := lebEncode xs.length ++ encodePluraIteratio xs
+  adBytes xs := lebCodifica xs.length ++ encodePluraIteratio xs
   eBytes b := do
-    let (numerus, positio) ← lebDecode b 0
+    let (numerus, positio) ← lebDecodifica b 0
     let (xs, _) ← decodePluraIteratio b numerus positio
     return xs
   roundtrip xs := by
     simp only []
-    have h_leb := lebDecodeEncodeRecursus xs.length (encodePluraIteratio xs)
+    have h_leb := lebDecodificaCodificaRecursus xs.length (encodePluraIteratio xs)
     simp only [bind, Option.bind, h_leb]
     have hml := decodePluraIteratioIgnoraPraefixum α xs.length 0
-      (lebEncode xs.length) (encodePluraIteratio xs)
+      (lebCodifica xs.length) (encodePluraIteratio xs)
     simp only [Nat.add_zero] at hml
     rw [hml]
     have henc := decodePluraIteratioEncodeRecursus α xs .empty
@@ -245,41 +245,41 @@ instance {α β : Type} [StatusPermanens α] [StatusPermanens β]
     : StatusPermanens (α × β) where
   typusTag := "Prod(" ++ StatusPermanens.typusTag (α := α) ++ "," ++
               StatusPermanens.typusTag (α := β) ++ ")"
-  adBytes p := encodeField p.1 ++ encodeField p.2
+  adBytes p := codificaAgrum p.1 ++ codificaAgrum p.2
   eBytes b := do
-    let (a, positio) ← decodeField b 0
-    let (secundum, _) ← decodeField b positio
+    let (a, positio) ← decodificaAgrum b 0
+    let (secundum, _) ← decodificaAgrum b positio
     return (a, secundum)
   roundtrip p := by
     obtain ⟨a, b⟩ := p
     simp only []
-    have ha := decodeCampiCodicampi a (encodeField b)
+    have ha := decodeCampiCodicampi a (codificaAgrum b)
     simp only [ha, bind, Option.bind]
-    have hbe : decodeField (encodeField b) 0 = some (b, (encodeField b).size) := by
+    have hbe : decodificaAgrum (codificaAgrum b) 0 = some (b, (codificaAgrum b).size) := by
       have h := decodeCampiCodicampi b ByteArray.empty
       simp only [ByteArray.append_empty] at h
       exact h
-    have hb : decodeField (encodeField a ++ encodeField b) (encodeField a).size =
-              some (b, (encodeField a).size + (encodeField b).size) := by
-      have h := (decodeCampiAdPraefixum (α := β) (encodeField a) (encodeField b) 0)
+    have hb : decodificaAgrum (codificaAgrum a ++ codificaAgrum b) (codificaAgrum a).size =
+              some (b, (codificaAgrum a).size + (codificaAgrum b).size) := by
+      have h := (decodeCampiAdPraefixum (α := β) (codificaAgrum a) (codificaAgrum b) 0)
       simp only [Nat.add_zero] at h
       rw [h, hbe]
       simp [Option.map]
     simp [hb]
 
 -- ═══════════════════════════════════════════════════
--- serializeMappam 關連の補題にゃん
+-- ordinaMappam 關連の補題にゃん
 -- ═══════════════════════════════════════════════════
 
-/-- プラエフィクスムを前置しても lebDecode の結果は位置だけずれるにゃん -/
-theorem lebDecodeAdPraefixum (pre : ByteArray) (n : Nat) (rest : ByteArray) :
-    lebDecode (pre ++ lebEncode n ++ rest) pre.size =
-      some (n, pre.size + (lebEncode n).size) := by
+/-- プラエフィクスムを前置しても lebDecodifica の結果は位置だけずれるにゃん -/
+theorem lebDecodificaAdPraefixum (pre : ByteArray) (n : Nat) (rest : ByteArray) :
+    lebDecodifica (pre ++ lebCodifica n ++ rest) pre.size =
+      some (n, pre.size + (lebCodifica n).size) := by
   rw [show pre.size = pre.size + 0 from by omega]
   rw [ByteArray.append_assoc]
-  rw [lebDecodeAdPraefixumGen pre (lebEncode n ++ rest) 0]
+  rw [lebDecodificaAdPraefixumGen pre (lebCodifica n ++ rest) 0]
   simp only [Nat.add_zero]
-  rw [lebDecodeEncodeRecursus n rest]
+  rw [lebDecodificaCodificaRecursus n rest]
   simp [Option.map]
 
 /-- プラエフィクスムを前置しても legereParia の結果は位置だけずれるにゃん -/
@@ -290,8 +290,8 @@ theorem legereParia_at_prefix (cnt pos : Nat) (pre dat : ByteArray) :
   | zero => simp [legereParia]
   | succ n ih =>
     simp only [legereParia, bind, Option.bind]
-    rw [lebDecodeAdPraefixumGen pre dat pos]
-    rcases lebDecode dat pos with _ | ⟨longitudoNominis, pos1⟩
+    rw [lebDecodificaAdPraefixumGen pre dat pos]
+    rcases lebDecodifica dat pos with _ | ⟨longitudoNominis, pos1⟩
     · simp [Option.map]
     · simp only [Option.map_some]
       simp only [ByteArray.size_append]
@@ -304,8 +304,8 @@ theorem legereParia_at_prefix (cnt pos : Nat) (pre dat : ByteArray) :
         rw [extractioPraefixo pre dat pos1 (pos1 + longitudoNominis)]
         rcases String.fromUTF8? (dat.extract pos1 (pos1 + longitudoNominis)) with _ | nomenEntriae
         · simp [Option.map]
-        · rw [lebDecodeAdPraefixumGen pre dat (pos1 + longitudoNominis)]
-          rcases lebDecode dat (pos1 + longitudoNominis) with _ | ⟨longitudoTypi, pos3⟩
+        · rw [lebDecodificaAdPraefixumGen pre dat (pos1 + longitudoNominis)]
+          rcases lebDecodifica dat (pos1 + longitudoNominis) with _ | ⟨longitudoTypi, pos3⟩
           · simp [Option.map]
           · simp only [Option.map_some]
             by_cases hbnd2 : pos3 + longitudoTypi > dat.size
@@ -317,8 +317,8 @@ theorem legereParia_at_prefix (cnt pos : Nat) (pre dat : ByteArray) :
               rw [extractioPraefixo pre dat pos3 (pos3 + longitudoTypi)]
               rcases String.fromUTF8? (dat.extract pos3 (pos3 + longitudoTypi)) with _ | tag
               · simp [Option.map]
-              · rw [lebDecodeAdPraefixumGen pre dat (pos3 + longitudoTypi)]
-                rcases lebDecode dat (pos3 + longitudoTypi) with _ | ⟨longitudoValorum, pos5⟩
+              · rw [lebDecodificaAdPraefixumGen pre dat (pos3 + longitudoTypi)]
+                rcases lebDecodifica dat (pos3 + longitudoTypi) with _ | ⟨longitudoValorum, pos5⟩
                 · simp [Option.map]
                 · simp only [Option.map_some]
                   by_cases hbnd3 : pos5 + longitudoValorum > dat.size
@@ -333,197 +333,197 @@ theorem legereParia_at_prefix (cnt pos : Nat) (pre dat : ByteArray) :
                     · simp [Option.map]
                     · simp [Option.map]
 
-/-- serializeEntrada を一つ讀んで残りに legereParia を適用すると正しく復元するにゃん -/
+/-- ordinaIntroitum を一つ讀んで残りに legereParia を適用すると正しく復元するにゃん -/
 private theorem legereParia_cons
     (k tag : String) (v : ByteArray) (rest' : List (String × String × ByteArray))
     (rest : ByteArray)
-    (ih : legereParia (serializeParia rest' ++ rest) rest'.length 0 =
-          some (rest', (serializeParia rest').size)) :
-    legereParia (serializeEntrada k tag v ++ serializeParia rest' ++ rest)
+    (ih : legereParia (ordinaParia rest' ++ rest) rest'.length 0 =
+          some (rest', (ordinaParia rest').size)) :
+    legereParia (ordinaIntroitum k tag v ++ ordinaParia rest' ++ rest)
       (rest'.length + 1) 0 =
       some ((k, tag, v) :: rest',
-            (serializeEntrada k tag v).size + (serializeParia rest').size) := by
-  simp only [serializeEntrada]
+            (ordinaIntroitum k tag v).size + (ordinaParia rest').size) := by
+  simp only [ordinaIntroitum]
   simp only [legereParia]
-  have hread1 : lebDecode (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-      lebEncode v.size ++ v ++ serializeParia rest' ++ rest) 0 =
-      some (k.toUTF8.size, (lebEncode k.toUTF8.size).size) := by
-    rw [show (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-        lebEncode v.size ++ v ++ serializeParia rest' ++ rest) =
-        lebEncode k.toUTF8.size ++ (k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-        lebEncode v.size ++ v ++ serializeParia rest' ++ rest) from by
+  have hread1 : lebDecodifica (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+      lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) 0 =
+      some (k.toUTF8.size, (lebCodifica k.toUTF8.size).size) := by
+    rw [show (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+        lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) =
+        lebCodifica k.toUTF8.size ++ (k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+        lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) from by
       simp [ByteArray.append_assoc]]
-    exact lebDecodeEncodeRecursus k.toUTF8.size _
+    exact lebDecodificaCodificaRecursus k.toUTF8.size _
   rw [hread1]
   simp only [bind, Option.bind]
-  have hbound1 : ¬ ((lebEncode k.toUTF8.size).size + k.toUTF8.size >
-      (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-       lebEncode v.size ++ v ++ serializeParia rest' ++ rest).size) := by
+  have hbound1 : ¬ ((lebCodifica k.toUTF8.size).size + k.toUTF8.size >
+      (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+       lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest).size) := by
     simp only [ByteArray.size_append]; omega
   simp only [if_neg hbound1]
-  have hextract1 : (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-      lebEncode v.size ++ v ++ serializeParia rest' ++ rest).extract
-      (lebEncode k.toUTF8.size).size ((lebEncode k.toUTF8.size).size + k.toUTF8.size) = k.toUTF8 := by
-    rw [show (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-        lebEncode v.size ++ v ++ serializeParia rest' ++ rest) =
-        lebEncode k.toUTF8.size ++ k.toUTF8 ++
-        (lebEncode tag.toUTF8.size ++ tag.toUTF8 ++ lebEncode v.size ++ v ++ serializeParia rest' ++ rest) from by
+  have hextract1 : (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+      lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest).extract
+      (lebCodifica k.toUTF8.size).size ((lebCodifica k.toUTF8.size).size + k.toUTF8.size) = k.toUTF8 := by
+    rw [show (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+        lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) =
+        lebCodifica k.toUTF8.size ++ k.toUTF8 ++
+        (lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++ lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) from by
       simp [ByteArray.append_assoc]]
-    exact byteArray_extract_middle (lebEncode k.toUTF8.size) k.toUTF8
-      (lebEncode tag.toUTF8.size ++ tag.toUTF8 ++ lebEncode v.size ++ v ++ serializeParia rest' ++ rest)
+    exact byteArray_extract_middle (lebCodifica k.toUTF8.size) k.toUTF8
+      (lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++ lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest)
   rw [hextract1, String.fromUTF8?_toUTF8]
-  have hread2 : lebDecode (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-      lebEncode v.size ++ v ++ serializeParia rest' ++ rest)
-      ((lebEncode k.toUTF8.size).size + k.toUTF8.size) =
-      some (tag.toUTF8.size, (lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size) := by
-    have hpre2_size : (lebEncode k.toUTF8.size ++ k.toUTF8).size = (lebEncode k.toUTF8.size).size + k.toUTF8.size := by
+  have hread2 : lebDecodifica (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+      lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest)
+      ((lebCodifica k.toUTF8.size).size + k.toUTF8.size) =
+      some (tag.toUTF8.size, (lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size) := by
+    have hpre2_size : (lebCodifica k.toUTF8.size ++ k.toUTF8).size = (lebCodifica k.toUTF8.size).size + k.toUTF8.size := by
       simp [ByteArray.size_append]
-    rw [show (lebEncode k.toUTF8.size).size + k.toUTF8.size =
-        (lebEncode k.toUTF8.size ++ k.toUTF8).size from hpre2_size.symm]
-    rw [show (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-        lebEncode v.size ++ v ++ serializeParia rest' ++ rest) =
-        (lebEncode k.toUTF8.size ++ k.toUTF8) ++ (lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-        lebEncode v.size ++ v ++ serializeParia rest' ++ rest) from by
+    rw [show (lebCodifica k.toUTF8.size).size + k.toUTF8.size =
+        (lebCodifica k.toUTF8.size ++ k.toUTF8).size from hpre2_size.symm]
+    rw [show (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+        lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) =
+        (lebCodifica k.toUTF8.size ++ k.toUTF8) ++ (lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+        lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) from by
       simp [ByteArray.append_assoc]]
-    rw [show (lebEncode k.toUTF8.size ++ k.toUTF8).size = (lebEncode k.toUTF8.size ++ k.toUTF8).size + 0 from by omega]
-    rw [lebDecodeAdPraefixumGen]
-    rw [show (lebEncode tag.toUTF8.size ++ tag.toUTF8 ++ lebEncode v.size ++ v ++ serializeParia rest' ++ rest) =
-        lebEncode tag.toUTF8.size ++ (tag.toUTF8 ++ lebEncode v.size ++ v ++ serializeParia rest' ++ rest) from by
+    rw [show (lebCodifica k.toUTF8.size ++ k.toUTF8).size = (lebCodifica k.toUTF8.size ++ k.toUTF8).size + 0 from by omega]
+    rw [lebDecodificaAdPraefixumGen]
+    rw [show (lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++ lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) =
+        lebCodifica tag.toUTF8.size ++ (tag.toUTF8 ++ lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) from by
       simp [ByteArray.append_assoc]]
-    rw [lebDecodeEncodeRecursus tag.toUTF8.size]
+    rw [lebDecodificaCodificaRecursus tag.toUTF8.size]
     simp [Option.map]
   rw [hread2]
-  have hbound2 : ¬ ((lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size >
-      (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-        lebEncode v.size ++ v ++ serializeParia rest' ++ rest).size) := by
+  have hbound2 : ¬ ((lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size >
+      (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+        lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest).size) := by
     simp only [ByteArray.size_append]; omega
   simp only [if_neg hbound2]
-  have hextract2 : (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-      lebEncode v.size ++ v ++ serializeParia rest' ++ rest).extract
-      ((lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size)
-      ((lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size) = tag.toUTF8 := by
-    have hpre3_size : (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size).size =
-        (lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size := by
+  have hextract2 : (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+      lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest).extract
+      ((lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size)
+      ((lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size) = tag.toUTF8 := by
+    have hpre3_size : (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size).size =
+        (lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size := by
       simp [ByteArray.size_append]
-    rw [show (lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size =
-        (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size).size from hpre3_size.symm]
-    rw [show (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-        lebEncode v.size ++ v ++ serializeParia rest' ++ rest) =
-        lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-        (lebEncode v.size ++ v ++ serializeParia rest' ++ rest) from by
+    rw [show (lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size =
+        (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size).size from hpre3_size.symm]
+    rw [show (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+        lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) =
+        lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+        (lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) from by
       simp [ByteArray.append_assoc]]
-    exact byteArray_extract_middle (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size) tag.toUTF8
-      (lebEncode v.size ++ v ++ serializeParia rest' ++ rest)
+    exact byteArray_extract_middle (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size) tag.toUTF8
+      (lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest)
   rw [hextract2, String.fromUTF8?_toUTF8]
-  have hread3 : lebDecode (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-      lebEncode v.size ++ v ++ serializeParia rest' ++ rest)
-      ((lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size) =
+  have hread3 : lebDecodifica (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+      lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest)
+      ((lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size) =
       some (v.size,
-            (lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size +
-            (lebEncode v.size).size) := by
-    have hpre4_size : (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8).size =
-        (lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size := by
+            (lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size +
+            (lebCodifica v.size).size) := by
+    have hpre4_size : (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8).size =
+        (lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size := by
       simp [ByteArray.size_append]
-    rw [show (lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size =
-        (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8).size from hpre4_size.symm]
-    rw [show (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++ lebEncode v.size ++ v ++
-        serializeParia rest' ++ rest) =
-        (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8) ++
-        (lebEncode v.size ++ v ++ serializeParia rest' ++ rest) from by
+    rw [show (lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size =
+        (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8).size from hpre4_size.symm]
+    rw [show (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++ lebCodifica v.size ++ v ++
+        ordinaParia rest' ++ rest) =
+        (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8) ++
+        (lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) from by
       simp [ByteArray.append_assoc]]
-    rw [show (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8).size =
-        (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8).size + 0 from by omega]
-    rw [lebDecodeAdPraefixumGen]
-    rw [show (lebEncode v.size ++ v ++ serializeParia rest' ++ rest) =
-        lebEncode v.size ++ (v ++ serializeParia rest' ++ rest) from by
+    rw [show (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8).size =
+        (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8).size + 0 from by omega]
+    rw [lebDecodificaAdPraefixumGen]
+    rw [show (lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) =
+        lebCodifica v.size ++ (v ++ ordinaParia rest' ++ rest) from by
       simp [ByteArray.append_assoc]]
-    rw [lebDecodeEncodeRecursus v.size]
+    rw [lebDecodificaCodificaRecursus v.size]
     simp [Option.map]
   rw [hread3]
-  have hbound3 : ¬ ((lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size +
-      (lebEncode v.size).size + v.size >
-      (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-        lebEncode v.size ++ v ++ serializeParia rest' ++ rest).size) := by
+  have hbound3 : ¬ ((lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size +
+      (lebCodifica v.size).size + v.size >
+      (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+        lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest).size) := by
     simp only [ByteArray.size_append]; omega
   simp only [if_neg hbound3]
-  have hextract3 : (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-      lebEncode v.size ++ v ++ serializeParia rest' ++ rest).extract
-      ((lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size +
-        (lebEncode v.size).size)
-      ((lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size +
-        (lebEncode v.size).size + v.size) = v := by
-    have hpre5_size : (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-        lebEncode v.size).size =
-        (lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size +
-        (lebEncode v.size).size := by
+  have hextract3 : (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+      lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest).extract
+      ((lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size +
+        (lebCodifica v.size).size)
+      ((lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size +
+        (lebCodifica v.size).size + v.size) = v := by
+    have hpre5_size : (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+        lebCodifica v.size).size =
+        (lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size +
+        (lebCodifica v.size).size := by
       simp [ByteArray.size_append]
-    rw [show (lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size +
-        (lebEncode v.size).size =
-        (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++ lebEncode v.size).size
+    rw [show (lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size +
+        (lebCodifica v.size).size =
+        (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++ lebCodifica v.size).size
         from hpre5_size.symm]
-    rw [show (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-        lebEncode v.size ++ v ++ serializeParia rest' ++ rest) =
-        lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-        lebEncode v.size ++ v ++ (serializeParia rest' ++ rest) from by
+    rw [show (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+        lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) =
+        lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+        lebCodifica v.size ++ v ++ (ordinaParia rest' ++ rest) from by
       simp [ByteArray.append_assoc]]
     exact byteArray_extract_middle
-      (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++ lebEncode v.size) v
-      (serializeParia rest' ++ rest)
+      (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++ lebCodifica v.size) v
+      (ordinaParia rest' ++ rest)
   rw [hextract3]
-  have hse_size : (serializeEntrada k tag v).size =
-      (lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size +
-      (lebEncode v.size).size + v.size := by
-    simp [serializeEntrada, ByteArray.size_append]
-  rw [show (lebEncode k.toUTF8.size).size + k.toUTF8.size + (lebEncode tag.toUTF8.size).size + tag.toUTF8.size +
-      (lebEncode v.size).size + v.size = (serializeEntrada k tag v).size
+  have hse_size : (ordinaIntroitum k tag v).size =
+      (lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size +
+      (lebCodifica v.size).size + v.size := by
+    simp [ordinaIntroitum, ByteArray.size_append]
+  rw [show (lebCodifica k.toUTF8.size).size + k.toUTF8.size + (lebCodifica tag.toUTF8.size).size + tag.toUTF8.size +
+      (lebCodifica v.size).size + v.size = (ordinaIntroitum k tag v).size
       from hse_size.symm]
-  rw [show (lebEncode k.toUTF8.size ++ k.toUTF8 ++ lebEncode tag.toUTF8.size ++ tag.toUTF8 ++
-      lebEncode v.size ++ v ++ serializeParia rest' ++ rest) =
-      serializeEntrada k tag v ++ (serializeParia rest' ++ rest) from by
-    simp [serializeEntrada, ByteArray.append_assoc]]
-  rw [show (serializeEntrada k tag v).size = (serializeEntrada k tag v).size + 0 from by omega]
+  rw [show (lebCodifica k.toUTF8.size ++ k.toUTF8 ++ lebCodifica tag.toUTF8.size ++ tag.toUTF8 ++
+      lebCodifica v.size ++ v ++ ordinaParia rest' ++ rest) =
+      ordinaIntroitum k tag v ++ (ordinaParia rest' ++ rest) from by
+    simp [ordinaIntroitum, ByteArray.append_assoc]]
+  rw [show (ordinaIntroitum k tag v).size = (ordinaIntroitum k tag v).size + 0 from by omega]
   rw [legereParia_at_prefix]
   rw [ih]
   simp [Option.map]
   exact hse_size
 
-/-- legereParia が serializeParia を正しく復元するにゃん -/
-theorem legereParia_serializeParia
+/-- legereParia が ordinaParia を正しく復元するにゃん -/
+theorem legereParia_ordinaParia
     (paria : List (String × String × ByteArray)) (rest : ByteArray) :
-    legereParia (serializeParia paria ++ rest) paria.length 0 =
-      some (paria, (serializeParia paria).size) := by
+    legereParia (ordinaParia paria ++ rest) paria.length 0 =
+      some (paria, (ordinaParia paria).size) := by
   induction paria with
-  | nil => simp [legereParia, serializeParia, ByteArray.size]
+  | nil => simp [legereParia, ordinaParia, ByteArray.size]
   | cons entry rest' ih =>
     obtain ⟨k, tag, v⟩ := entry
-    simp only [serializeParia, List.length_cons]
+    simp only [ordinaParia, List.length_cons]
     simp only [ByteArray.size_append]
     exact legereParia_cons k tag v rest' rest ih
 
 /-- セリアーリザーティオーしてデセリアーリザーティオーすると元のデータに戻るにゃん♪ -/
-theorem serializeMappam_roundtrip (paria : List (String × String × ByteArray)) :
-    deserializeMappam (serializeMappam paria) = some paria := by
-  have hsize : ¬ ((magicBytes ++ lebEncode paria.length ++ serializeParia paria).size < 5) := by
+theorem ordinaMappam_roundtrip (paria : List (String × String × ByteArray)) :
+    resolveMappam (ordinaMappam paria) = some paria := by
+  have hsize : ¬ ((octetiMagici ++ lebCodifica paria.length ++ ordinaParia paria).size < 5) := by
     simp only [ByteArray.size_append]
-    have h1 : magicBytes.size = 4 := rfl
-    have h2 : 0 < (lebEncode paria.length).size := longitudoLebEncodePositiva paria.length
+    have h1 : octetiMagici.size = 4 := rfl
+    have h2 : 0 < (lebCodifica paria.length).size := longitudoLebEncodePositiva paria.length
     omega
-  have hmagic : (magicBytes ++ lebEncode paria.length ++ serializeParia paria).extract 0 4 =
-      magicBytes := by
+  have hmagic : (octetiMagici ++ lebCodifica paria.length ++ ordinaParia paria).extract 0 4 =
+      octetiMagici := by
     rw [ByteArray.append_assoc]; exact ByteArray.extract_append_eq_left rfl
-  have hbne : ((magicBytes ++ lebEncode paria.length ++ serializeParia paria).extract 0 4
-      != magicBytes) = false := by rw [hmagic]; native_decide
-  have h_read := lebDecodeAdPraefixum magicBytes paria.length (serializeParia paria)
-  simp only [show magicBytes.size = 4 from rfl] at h_read
-  have h_pre_sz : (magicBytes ++ lebEncode paria.length).size =
-      4 + (lebEncode paria.length).size := by
-    simp only [ByteArray.size_append]; have h1 : magicBytes.size = 4 := rfl; omega
+  have hbne : ((octetiMagici ++ lebCodifica paria.length ++ ordinaParia paria).extract 0 4
+      != octetiMagici) = false := by rw [hmagic]; native_decide
+  have h_read := lebDecodificaAdPraefixum octetiMagici paria.length (ordinaParia paria)
+  simp only [show octetiMagici.size = 4 from rfl] at h_read
+  have h_pre_sz : (octetiMagici ++ lebCodifica paria.length).size =
+      4 + (lebCodifica paria.length).size := by
+    simp only [ByteArray.size_append]; have h1 : octetiMagici.size = 4 := rfl; omega
   have h_legere := legereParia_at_prefix paria.length 0
-    (magicBytes ++ lebEncode paria.length) (serializeParia paria)
+    (octetiMagici ++ lebCodifica paria.length) (ordinaParia paria)
   simp only [h_pre_sz, Nat.add_zero] at h_legere
-  have h_sp := legereParia_serializeParia paria .empty
+  have h_sp := legereParia_ordinaParia paria .empty
   simp only [ByteArray.append_empty] at h_sp
-  simp only [deserializeMappam, serializeMappam]
+  simp only [resolveMappam, ordinaMappam]
   rw [if_neg hsize, hbne, if_neg (by decide)]
   simp [h_read, h_legere, h_sp, Option.map_some]
 

@@ -10,6 +10,7 @@ import Signaculum.Notatio.Expande.Fenestra.Configuratio
 
 namespace Signaculum.Notatio.Expande
 
+open Signaculum.Notatio.Expande.Fenestra
 open Lean Elab Term
 
 -- ════════════════════════════════════════════════════

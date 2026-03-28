@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 通信・ファイル操作のシグヌムにゃん。execute 系の HTTP / ネットワーク / ファイルタグに對應するにゃ -/
 inductive SignumRetis where
@@ -109,4 +109,4 @@ def SignumRetis.adCatenam : SignumRetis → String
     if opt.isEmpty then s!"\\![execute,compressarchive,{evadeArgumentum v},{evadeArgumentum dir}]"
     else s!"\\![execute,compressarchive,{evadeArgumentum v},{evadeArgumentum dir},{evadeArgumentum opt}]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

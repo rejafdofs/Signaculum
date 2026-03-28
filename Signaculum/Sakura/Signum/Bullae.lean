@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 吹出し制御のシグヌムにゃん。\b[n] / \_b[...] に對應するにゃ -/
 inductive SignumBullae where
@@ -24,4 +24,4 @@ def SignumBullae.adCatenam : SignumBullae → String
   | .imagoBullaeInlineata via      => s!"\\_b[{evadeArgumentum via},inline]"
   | .imagoBullaeInlineataOpaca via => s!"\\_b[{evadeArgumentum via},inline,opaque]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

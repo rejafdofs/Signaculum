@@ -3,7 +3,7 @@
 
 import Signaculum.Sakura.Typi
 
-namespace Signaculum.Sakura
+namespace Signaculum.Sakura.Signum
 
 /-- 選擇肢・錨のシグヌムにゃん。\q / \_a / \__q 等に對應するにゃ -/
 inductive SignumOptionum where
@@ -37,4 +37,4 @@ def SignumOptionum.adCatenam : SignumOptionum → String
   | .fineAncora => "\\_a"
   | .tempusOptionum ms => s!"\\![set,choicetimeout,{ms}]"
 
-end Signaculum.Sakura
+end Signaculum.Sakura.Signum

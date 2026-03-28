@@ -19,6 +19,7 @@ import Signaculum.Notatio.Expande.Systema.Reliqua
 
 namespace Signaculum.Notatio.Expande
 
+open Signaculum.Notatio.Expande.Systema
 open Lean Elab Term
 
 -- ════════════════════════════════════════════════════

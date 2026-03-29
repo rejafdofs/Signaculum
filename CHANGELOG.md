@@ -23,8 +23,6 @@
 ### script: 構文サポート
 - `\q["title", script: "content"]` 構文をカスタムパーサーで對應（`optioScriptum` を生成）
 
-## v0.4.1 (2026-03-28) — scriptum パーサ堅牢化 & lean-toolchain 安定版移行
-
 ### lean-toolchain を安定版 v4.29.0 に移行
 - `leanprover/lean4:v4.29.0-rc7` → `leanprover/lean4:v4.29.0`
 

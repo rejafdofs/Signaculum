@@ -368,120 +368,21 @@ Sstp.excitaEventum "OnSomeEvent" ["arg0", "arg1"]
 
 ---
 
-## SakuraScriptum 命令一覧 (Mandata)
+## SakuraScriptum 命令概要 (Mandata)
 
-`open Signaculum Sakura` してから使ふにゃ。
-
-### 人格・表情
+`open Signaculum Sakura` してから使ふにゃ。よく使ふ基本命令だけ載せてあるにゃ。
 
 | 命令 | SakuraScript | 意味 |
 |---|---|---|
-| `sakura` | `\h` | 主人格に切り替へ |
-| `kero` | `\u` | 副人格に切り替へ |
-| `persona n` | `\p[n]` | 第 n 人格に切り替へ |
+| `sakura` / `kero` | `\h` / `\u` | 主人格 / 副人格に切り替へ |
 | `superficies n` | `\s[n]` | 表情を n 番にする |
-| `animatio n` | `\i[n]` | 動画 n 番を再生 |
+| `loqui "文字列"` | （テキスト） | 文字を表示（特殊文字自動エスケープ） |
+| `linea` | `\n` | 改行 |
+| `mora ms` | `\_w[ms]` | ms ミリ秒待機 |
+| `optio "名前" "Event"` | `\q["名前","Event"]` | 選択肢を追加 |
+| `finis` | `\e` | **スクリプト終了（必須）** |
 
-### 文字表示
-
-| 命令 | 意味 |
-|---|---|
-| `loqui "文字列"` | 文字を表示（特殊文字自動エスケープ）にゃ |
-| `loquiEtLinea "文字列"` | 表示して改行にゃ |
-| `linea` / `dimidiaLinea` | 改行 / 半改行にゃ |
-| `purga` | 吹き出しを消去にゃ |
-| `finis` | **スクリプト終了（必須）** にゃ |
-
-### 待機・操作
-
-| 命令 | 意味 |
-|---|---|
-| `mora ms` | ms ミリ秒待機にゃ |
-| `expecta` | 打鍵待ち（消去あり）にゃ |
-| `expectaSine` | 打鍵待ち（消去なし）にゃ |
-| `excita "Event"` | SSP 組み込み事象を発生させるにゃ（文字列形）にゃ |
-| `excita f args*` | def ベース事象を発生させるにゃ（識別子形）にゃ |
-| `insere f args*` | def ベース事象を埋め込むにゃ（識別子形）にゃ |
-| `notifica f args*` | def ベース通知事象を発生させるにゃ |
-| `excitaPostTempus ms repetitio f args*` | def ベース事象を遅延発火させるにゃ |
-| `notificaPostTempus ms repetitio f args*` | def ベース通知事象を遅延発火させるにゃ |
-| `exitus` | ゴーストを終了させるにゃ |
-
-### 選択肢
-
-| 命令 | 意味 |
-|---|---|
-| `optio "表示名" "EventName"` | 選択肢を追加にゃ |
-| `optioEventum "表示名" "EventName" ["r0","r1"]` | 文字列形 Reference 付き選択肢にゃ |
-| `optioEventum "表示名" f args*` | def ベース事象附き選択肢にゃ（識別子形）にゃ |
-| `ancora "signum"` … `fineAncora` | 錨（クリック可能テキスト）にゃ |
-
-### 入力ボックス
-
-| 命令 | 意味 |
-|---|---|
-| `aperiInputum modus f titulus textus` | def ベースのテキスト入力ボックスを開くにゃ |
-| `aperiInputum modus (fun text => ...) titulus` | ラムダ形のテキスト入力ボックスを開くにゃ |
-| `aperiInputumDiei f titulus annus mensis dies` | def ベースの日付入力ボックスを開くにゃ（月: 1〜12、日: 閏年考慮） |
-| `aperiInputumTemporis f titulus hora minutum secundum` | def ベースの時刻入力ボックスを開くにゃ（時: 0〜23、分秒: 0〜59） |
-| `aperiInputumGradus f titulus minimum maximum initium` | def ベースのスライダー入力ボックスを開くにゃ（minimum ≤ initium ≤ maximum） |
-| `aperiInputumIP f titulus ip1 ip2 ip3 ip4` | def ベースの IP アドレス入力ボックスを開くにゃ（各オクテット ≤ 255） |
-| `legeProprietatem f proprietates` | def ベースのプロパティ取得にゃ |
-
-### 書体
-
-| 命令 | 意味 |
-|---|---|
-| `audax true/false` | 太字 ON/OFF にゃ |
-| `obliquus true/false` | 斜体 ON/OFF にゃ |
-| `color r g b` | 文字色（0〜255）にゃ |
-| `altitudoLitterarum n` | 文字サイズにゃ |
-| `formaPraefinita` | 書式を既定に戻すにゃ |
-| `crudus "signum"` | 生の SakuraScript を直接出力にゃ |
-| `sonus "via"` | 音声を再生にゃ |
-| `aperi "nexus"` | URL を開くにゃ |
-
-### レスポンスムヘッダー設定
-
-イヴェントゥム處理器内から Value 以外の SHIORI/3.0 レスポンスムヘッダーを設定できるにゃ。
-
-| 命令 | 意味 |
-|---|---|
-| `configuraMarker "文字列"` | Marker ヘッダ（バルーン下部の附加情報）にゃ |
-| `configuraBalloonOffset x y` | BalloonOffset ヘッダ（バルーン位置補正）にゃ |
-| `configuraErrorLevel "info"` | ErrorLevel ヘッダにゃ |
-| `configuraErrorDescription "..."` | ErrorDescription ヘッダにゃ |
-| `configuraAge n` | Age ヘッダ（通信世代カウンタ）にゃ |
-| `configuraSecuritas "local"` | SecurityLevel ヘッダにゃ |
-| `configuraMarkerSend "..."` | MarkerSend ヘッダにゃ |
-| `configuraValorNotifica "..."` | ValueNotify ヘッダにゃ |
-| `addeCastellum "Key" "Value"` | 任意ヘッダ（X-SSTP-PassThru-* 等）にゃ |
-
-```lean
-eventum "OnBoot" fun _ => do
-  sakura; superficies 0; loqui "こんにちは"
-  configuraMarker "起動しました"
-  configuraBalloonOffset 10 (-5)
-  finis
-```
-
-### HTTP コマンド
-
-| 命令 | SakuraScript | 意味 |
-|---|---|---|
-| `executaHttpGet url` | `\![execute,http-get,URL]` | HTTP GET にゃ |
-| `executaHttpPost url` | `\![execute,http-post,URL]` | HTTP POST にゃ |
-| `executaHttpHead url` | `\![execute,http-head,URL]` | HTTP HEAD にゃ |
-| `executaHttpPut url` | `\![execute,http-put,URL]` | HTTP PUT にゃ |
-| `executaHttpDelete url` | `\![execute,http-delete,URL]` | HTTP DELETE にゃ |
-| `executaHttpPatch url` | `\![execute,http-patch,URL]` | HTTP PATCH にゃ |
-
-便利な一括命令:
-
-```lean
-sakuraLoquitur 0 "こんにちは"   -- sakura; superficies 0; loqui "..."
-keroLoquitur 10 "にゃ！"        -- kero; superficies 10; loqui "..."
-```
+全命令の詳細は [docs/SakuraScriptum.md](docs/SakuraScriptum.md)（do 記法）、`scriptum!` マクロ記法は [docs/Notatio.md](docs/Notatio.md) を参照にゃ。
 
 ---
 

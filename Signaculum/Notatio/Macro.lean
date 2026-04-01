@@ -248,7 +248,9 @@ def elabScriptum : TermElab := fun stx expectedType? => do
         | .synthetic (pos := p) .. => some p
         | .none => Option.none
       pos?.map fun pos => (tabulaFontis.toPosition pos).line
-    let mut body ← genTermLexema (ss[0]'h)
+    -- レクセマの term を全てリストゥスに溜めるにゃん♪
+    let mut partes : Array (TSyntax `term) := #[]
+    partes := partes.push (← genTermLexema (ss[0]'h))
     let mut lineaPrior := lineamSigni (ss[0]'h)
     for s in ss[1:] do
       -- 前のシグナムと行が違ったら \n を挾むにゃ
@@ -256,11 +258,18 @@ def elabScriptum : TermElab := fun stx expectedType? => do
       match lineaPrior, lineaCurrens with
       | some lp, some lc =>
         if lc > lp then
-          body ← `(Bind.bind $body fun () => Signaculum.Sakura.Textus.linea)
+          partes := partes.push (← `(Signaculum.Sakura.Textus.linea))
       | _, _ => pure ()
-      let next ← genTermLexema s
-      body ← `(Bind.bind $body fun () => $next)
+      partes := partes.push (← genTermLexema s)
       lineaPrior := lineaCurrens
-    elabTerm body expectedType?
+    -- 右結合で畳むにゃん♪ flat な do A; B; C; D になるにゃ
+    if hp : 0 < partes.size then
+      let mut body := partes[partes.size - 1]'(by omega)
+      for i in List.range (partes.size - 1) |>.reverse do
+        if hi : i < partes.size then
+          body ← `(Bind.bind $(partes[i]'hi) fun () => $body)
+      elabTerm body expectedType?
+    else
+      elabTerm (← `(pure ())) expectedType?
   else
     elabTerm (← `(pure ())) expectedType?

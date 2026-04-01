@@ -4,6 +4,7 @@
 
 import Lean
 import Signaculum.Sakura.Scriptum
+import Signaculum.Syntaxis
 
 namespace Signaculum.Notatio.Expande.Systema
 
@@ -19,6 +20,20 @@ private def expectaStrLitSystema (s : Lean.Syntax) (nomenSigni : String)
   match s.isStrLit? with
   | some _ => pure ⟨s⟩
   | none   => throwErrorAt s s!"{nomenSigni}: 文字列が期待されてゐますにゃ"
+
+/-- cb からイヴェント名 term を作るにゃ。
+    strLit → そのまま、ident → registraLazium、項 → registraLaziumLambda -/
+private def resolveCallbackumEventum (cb : Syntax) (paramCount : Nat := 0)
+    : TermElabM (TSyntax `term) := do
+  if cb.isStrLit?.isSome then
+    pure ⟨cb⟩
+  else if cb.isIdent then
+    let ev ← Signaculum.registraLazium ⟨cb⟩
+    `($(Syntax.mkStrLit ev))
+  else
+    let posIdx := (cb.getPos?.getD ⟨0⟩).byteIdx
+    let ev ← Signaculum.registraLaziumLambda cb posIdx paramCount
+    `($(Syntax.mkStrLit ev))
 
 -- ════════════════════════════════════════════════════
 --  事象ディスパッチ (Dispatch Eventuum)
@@ -36,54 +51,89 @@ def expandeEventum (imperium : String) (args : Array Lean.Syntax) (stx : Lean.Sy
   -- ────────────────────────────────────────────────
 
   | "raise" =>
-    if args.size < 1 then
-      throwErrorAt stx "\\![raise,...]: 引數が不足してゐますにゃ"
-    let e ← expectaStrLitSystema args[0]! "\\![raise]"
-    pure <| some (← `(Signaculum.Sakura.Systema.excita $e))
+    if h : args.size ≥ 1 then
+      let cb := args[0]'(by omega)
+      let evStx ← resolveCallbackumEventum cb (args.size - 1)
+      if args.size == 1 then
+        pure <| some (← `(Signaculum.Sakura.Systema.excita $evStx))
+      else
+        let refArgs ← (args.extract 1 args.size).mapM fun a => do
+          let t : TSyntax `term := ⟨a⟩
+          `(Signaculum.Memoria.Citatio.toRef $t)
+        pure <| some (← `(Signaculum.Sakura.Systema.excita $evStx [$refArgs,*]))
+    else throwErrorAt stx "\\![raise,...]: 引數が不足してゐますにゃ"
 
   -- ────────────────────────────────────────────────
   --  embed — 結果埋込にゃん
   -- ────────────────────────────────────────────────
 
   | "embed" =>
-    if args.size < 1 then
-      throwErrorAt stx "\\![embed,...]: 引數が不足してゐますにゃ"
-    let e ← expectaStrLitSystema args[0]! "\\![embed]"
-    pure <| some (← `(Signaculum.Sakura.Systema.insere $e))
+    if h : args.size ≥ 1 then
+      let cb := args[0]'(by omega)
+      let evStx ← resolveCallbackumEventum cb (args.size - 1)
+      if args.size == 1 then
+        pure <| some (← `(Signaculum.Sakura.Systema.insere $evStx))
+      else
+        let refArgs ← (args.extract 1 args.size).mapM fun a => do
+          let t : TSyntax `term := ⟨a⟩
+          `(Signaculum.Memoria.Citatio.toRef $t)
+        pure <| some (← `(Signaculum.Sakura.Systema.insere $evStx [$refArgs,*]))
+    else throwErrorAt stx "\\![embed,...]: 引數が不足してゐますにゃ"
 
   -- ────────────────────────────────────────────────
   --  notify — 通知にゃん
   -- ────────────────────────────────────────────────
 
   | "notify" =>
-    if args.size < 1 then
-      throwErrorAt stx "\\![notify,...]: 引數が不足してゐますにゃ"
-    let e ← expectaStrLitSystema args[0]! "\\![notify]"
-    pure <| some (← `(Signaculum.Sakura.Systema.notifica $e))
+    if h : args.size ≥ 1 then
+      let cb := args[0]'(by omega)
+      let evStx ← resolveCallbackumEventum cb (args.size - 1)
+      if args.size == 1 then
+        pure <| some (← `(Signaculum.Sakura.Systema.notifica $evStx))
+      else
+        let refArgs ← (args.extract 1 args.size).mapM fun a => do
+          let t : TSyntax `term := ⟨a⟩
+          `(Signaculum.Memoria.Citatio.toRef $t)
+        pure <| some (← `(Signaculum.Sakura.Systema.notifica $evStx [$refArgs,*]))
+    else throwErrorAt stx "\\![notify,...]: 引數が不足してゐますにゃ"
 
   -- ────────────────────────────────────────────────
   --  timerraise — 時限事象にゃん
   -- ────────────────────────────────────────────────
 
   | "timerraise" =>
-    if args.size < 3 then
-      throwErrorAt stx "\\![timerraise,...]: ms, rep, event の3引數が必要にゃ"
-    let ms  : TSyntax `term := ⟨args[0]!⟩
-    let rep : TSyntax `term := ⟨args[1]!⟩
-    let e ← expectaStrLitSystema args[2]! "\\![timerraise]"
-    pure <| some (← `(Signaculum.Sakura.Systema.excitaPostTempus $ms $rep $e))
+    if h : args.size ≥ 3 then
+      let ms  : TSyntax `term := ⟨args[0]'(by omega)⟩
+      let rep : TSyntax `term := ⟨args[1]'(by omega)⟩
+      let cb := args[2]'(by omega)
+      let evStx ← resolveCallbackumEventum cb (args.size - 3)
+      if args.size == 3 then
+        pure <| some (← `(Signaculum.Sakura.Systema.excitaPostTempus $ms $rep $evStx))
+      else
+        let refArgs ← (args.extract 3 args.size).mapM fun a => do
+          let t : TSyntax `term := ⟨a⟩
+          `(Signaculum.Memoria.Citatio.toRef $t)
+        pure <| some (← `(Signaculum.Sakura.Systema.excitaPostTempus $ms $rep $evStx [$refArgs,*]))
+    else throwErrorAt stx "\\![timerraise,...]: ms, rep, f の3引數以上が必要にゃ"
 
   -- ────────────────────────────────────────────────
   --  timernotify — 時限通知にゃん
   -- ────────────────────────────────────────────────
 
   | "timernotify" =>
-    if args.size < 3 then
-      throwErrorAt stx "\\![timernotify,...]: ms, rep, event の3引數が必要にゃ"
-    let ms  : TSyntax `term := ⟨args[0]!⟩
-    let rep : TSyntax `term := ⟨args[1]!⟩
-    let e ← expectaStrLitSystema args[2]! "\\![timernotify]"
-    pure <| some (← `(Signaculum.Sakura.Systema.notificaPostTempus $ms $rep $e))
+    if h : args.size ≥ 3 then
+      let ms  : TSyntax `term := ⟨args[0]'(by omega)⟩
+      let rep : TSyntax `term := ⟨args[1]'(by omega)⟩
+      let cb := args[2]'(by omega)
+      let evStx ← resolveCallbackumEventum cb (args.size - 3)
+      if args.size == 3 then
+        pure <| some (← `(Signaculum.Sakura.Systema.notificaPostTempus $ms $rep $evStx))
+      else
+        let refArgs ← (args.extract 3 args.size).mapM fun a => do
+          let t : TSyntax `term := ⟨a⟩
+          `(Signaculum.Memoria.Citatio.toRef $t)
+        pure <| some (← `(Signaculum.Sakura.Systema.notificaPostTempus $ms $rep $evStx [$refArgs,*]))
+    else throwErrorAt stx "\\![timernotify,...]: ms, rep, f の3引數以上が必要にゃ"
 
   -- ────────────────────────────────────────────────
   --  raiseother — 他ゴースト事象にゃん

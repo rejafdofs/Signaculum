@@ -73,21 +73,11 @@ def talkScriptum : SakuraPura Unit := scriptum!
 | `\![leave,passivemode]` | `egrediereModumPassivum` | パッシブモード解除 |
 | `\![set,autoscroll, b]` | `configuraAutoScroll b` | 自動スクロール |
 | `\![set,windowstate, s]` | `configuraStatusFenestrae s` | ウィンドウ状態 |
-| `\![raise, "event"]` | `excita "event"` | イベント発生（文字列形） |
-| `\![raise, ident args*]` | `excita ident args*` | イベント発生（def 識別子形） |
-| `\![raise, (fun x => ...)]` | `excita (fun x => ...)` | イベント発生（ラムダ形） |
-| `\![embed, "event"]` | `insere "event"` | イベント埋込（文字列形） |
-| `\![embed, ident args*]` | `insere ident args*` | イベント埋込（def 識別子形） |
-| `\![embed, (fun x => ...)]` | `insere (fun x => ...)` | イベント埋込（ラムダ形） |
-| `\![notify, "event"]` | `notifica "event"` | 通知（文字列形） |
-| `\![notify, ident args*]` | `notifica ident args*` | 通知（def 識別子形） |
-| `\![notify, (fun x => ...)]` | `notifica (fun x => ...)` | 通知（ラムダ形） |
-| `\![timerraise, t, r, "event"]` | `excitaPostTempus t r "event"` | 遅延発火（文字列形） |
-| `\![timerraise, t, r, ident args*]` | `excitaPostTempus t r ident args*` | 遅延発火（def 識別子形） |
-| `\![timerraise, t, r, (fun x => ...)]` | `excitaPostTempus t r (fun x => ...)` | 遅延発火（ラムダ形） |
-| `\![timernotify, t, r, "event"]` | `notificaPostTempus t r "event"` | 遅延通知（文字列形） |
-| `\![timernotify, t, r, ident args*]` | `notificaPostTempus t r ident args*` | 遅延通知（def 識別子形） |
-| `\![timernotify, t, r, (fun x => ...)]` | `notificaPostTempus t r (fun x => ...)` | 遅延通知（ラムダ形） |
+| `\![raise, f, args*]` | `excita f args*` | イベント発生（f: 文字列/識別子/ラムダ） |
+| `\![embed, f, args*]` | `insere f args*` | イベント埋込 |
+| `\![notify, f, args*]` | `notifica f args*` | 通知 |
+| `\![timerraise, t, r, f, args*]` | `excitaPostTempus t r f args*` | 遅延発火 |
+| `\![timernotify, t, r, f, args*]` | `notificaPostTempus t r f args*` | 遅延通知 |
 | `\![open,inputbox, f, title]` | `aperiInputum .simplex f title ""` | テキスト入力（f: 文字列/識別子/ラムダ） |
 | `\![open,inputbox, f, title, text]` | `aperiInputum .simplex f title text` | テキスト入力（初期テキスト付き） |
 | `\![open,passwordinput, f, title]` | `aperiInputum .sigillum f title ""` | パスワード入力 |

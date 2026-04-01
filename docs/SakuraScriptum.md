@@ -384,6 +384,20 @@ excitaPostTempus 5000 1 (fun s : String => scriptum {s}) "text"
 aperiInputum .simplex (fun text => scriptum こんにちは\、{text}さん) "名前を入力"
 ```
 
+### scriptum! タグ記法でのイベント
+
+do 記法と同じ三形式（文字列/識別子/ラムダ）が使えます。追加引数は Reference として渡されます。
+
+```lean
+scriptum!
+  \![raise, "OnMyEvent"]
+  \![raise, onGreet, "れゃ", 42]
+  \![raise, (fun s => scriptum {s}さん、こんにちは), "名前"]
+  \![timerraise, 5000, 1, onTick]
+  \![embed, onGetValue, "key"]
+  \![notify, onNotify]
+```
+
 ---
 
 ## ゴースト・シェル・吹出しの切替

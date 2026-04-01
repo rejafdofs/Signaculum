@@ -37,7 +37,9 @@ private def legeIdentFn (c : ParserContext) (s : ParserState) : ParserState :=
     let mut p := startPos
     while p.byteIdx < input.utf8ByteSize do
       let ch := p.get input
-      if ch.isAlphanum || ch == '.' || ch == '-' || ch == '_' then
+      if ch != ',' && ch != ']' && ch != '"' && ch != '\\' &&
+         ch != '{' && ch != '}' && ch != '(' && ch != ')' &&
+         ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' then
         p := p.next input
       else break
     return p
@@ -147,7 +149,27 @@ partial def legeRestantiaArgumenta (nomenTagi : String) (c : ParserContext) (s :
       else
         legeRestantiaArgumenta nomenTagi c s stackSz
     else
-      s.mkError s!"{nomenTagi}: , か ] が期待されてゐますにゃ"
+      -- 非キーワード ident の後に空白區切りテクストゥスが續く場合、吸收するにゃ
+      let lastArg := s.stxStack.back
+      if lastArg.isIdent && !(lastArg.getId.toString (escape := false)).endsWith ":" then
+        let restEnd := Id.run do
+          let mut p := s.pos
+          while p.byteIdx < input.utf8ByteSize do
+            let ch := p.get input
+            if ch == ',' || ch == ']' then break
+            p := p.next input
+          return p
+        match lastArg.getPos? with
+        | some origStart =>
+          let fullSub : Substring.Raw := ⟨input, origStart, restEnd⟩
+          let fullStr := fullSub.toString.trimAsciiEnd.toString
+          let strNode := Syntax.mkStrLit fullStr
+          let s := { s with pos := restEnd, stxStack := s.stxStack.pop.push strNode }
+          legeRestantiaArgumenta nomenTagi c s stackSz
+        | none =>
+          s.mkError s!"{nomenTagi}: , か ] が期待されてゐますにゃ"
+      else
+        s.mkError s!"{nomenTagi}: , か ] が期待されてゐますにゃ"
 
 /-- `[` arg1 `,` arg2 `,` ... `]` をパースして引數の nullKind ノードを積むにゃん♪
     nomenTagi はエラーメッセージ用のタグ名にゃ -/

@@ -36,7 +36,9 @@ private def expectaStrLit (s : Lean.Syntax) (nomenSigni : String)
   if s.isStrLit?.isSome then
     pure ⟨s⟩
   else
-    throwErrorAt s s!"{nomenSigni}: 文字列が期待されてゐますにゃ"
+    match extractIdentVal s with
+    | some v => pure ⟨Syntax.mkStrLit v⟩
+    | none   => throwErrorAt s s!"{nomenSigni}: 文字列が期待されてゐますにゃ"
 
 /-- 括弧附き term か、ident/numLit/strLit でない構文ノードを term として取り出すにゃん。
     カスタムパーサーは (expr) の括弧を剥がして中身だけ積むから、

@@ -33,7 +33,10 @@ private def expectaStrLit (s : Lean.Syntax) (nomenSigni : String)
     : TermElabM (Lean.TSyntax `str) := do
   match s.isStrLit? with
   | some _ => pure ⟨s⟩
-  | none   => throwErrorAt s s!"{nomenSigni}: []の中には文字列が期待されてゐますにゃ"
+  | none   =>
+    match extractIdentVal s with
+    | some v => pure ⟨Syntax.mkStrLit v⟩
+    | none   => throwErrorAt s s!"{nomenSigni}: []の中には文字列が期待されてゐますにゃ"
 
 /-- -1 パターンを檢出するにゃん。ident "-1" またはアトム "-" + numLit "1" の兩方に對應にゃ -/
 private def estNegativusUnus (args : Array Lean.Syntax) : Bool :=

@@ -573,5 +573,7 @@ elab "construe" : command => do
           catch _ => pure ()))
         (some servaStatum))
     ))
+    -- ゴーストの主循環エントリーポイントを自動定義するにゃ
+    elabCommand (← `(def main : IO Unit := Signaculum.Nucleus.loopPrincipalis))
 
 end Signaculum

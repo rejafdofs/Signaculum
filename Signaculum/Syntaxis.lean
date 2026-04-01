@@ -84,9 +84,14 @@ initialize ghostAccumulatioExt : SimplePersistentEnvExtension GhostEntry GhostAc
     addEntryFn := addGhostEntry
   }
 
+end Signaculum
+
 -- ═══════════════════════════════════════════════════
--- varia 構文擴張にゃん
+-- varia / eventum — グローバル登錄にゃん（open 不要で使へるにゃ）
 -- ═══════════════════════════════════════════════════
+
+section
+open Signaculum
 
 /-- 永続化變數を宣言するにゃん♪ -/
 elab "varia" "perpetua" n:ident ":" t:term ":=" v:term : command => do
@@ -102,10 +107,6 @@ elab "varia" "temporaria" n:ident ":" t:term ":=" v:term : command => do
     ghostAccumulatioExt.addEntry env (.varia {
       nomen := n.getId, typusSyntax := t, permanet := false })
 
--- ═══════════════════════════════════════════════════
--- eventum 構文擴張にゃん
--- ═══════════════════════════════════════════════════
-
 /-- 事象處理器を宣言するにゃん♪ -/
 elab "eventum" nomenEventi:str body:term : command => do
   let nomen := nomenEventi.getString
@@ -117,6 +118,10 @@ elab "eventum" nomenEventi:str body:term : command => do
   modifyEnv fun env =>
     ghostAccumulatioExt.addEntry env (.eventum {
       nomen, tractatorNomen := nomenPlenumTractatorum })
+
+end
+
+namespace Signaculum
 
 -- ═══════════════════════════════════════════════════
 -- def ベース事象の補助にゃん
@@ -470,10 +475,14 @@ elab "spawnaScriptum" f:ident args:term* : term => do
       Signaculum.Sstp.mitteSstpScriptum (Signaculum.Sakura.adCatenamLista _st.scriptum))))
     none
 
+end Signaculum
+
 -- ═══════════════════════════════════════════════════
--- construe 構文擴張にゃん
+-- construe — グローバル登錄にゃん（open 不要で使へるにゃ）
 -- ═══════════════════════════════════════════════════
 
+section
+open Signaculum
 set_option hygiene false in
 /-- ゴーストを組み立てて SSP に登錄するにゃん♪ -/
 elab "construe" : command => do
@@ -576,4 +585,4 @@ elab "construe" : command => do
     -- ゴーストの主循環エントリーポイントを自動定義するにゃ
     elabCommand (← `(def main : IO Unit := Signaculum.Nucleus.loopPrincipalis))
 
-end Signaculum
+end

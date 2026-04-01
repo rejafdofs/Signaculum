@@ -9,9 +9,7 @@ do 記法による SakuraScript の組み立ては [SakuraScriptum.md](SakuraScr
 ## 基本的な使い方
 
 ```lean
-import Signaculum.Notatio
-
-open Signaculum.Notatio
+import Signaculum
 
 def myTalk : SakuraPura Unit := scriptum!
   \h \s[0] "こんにちは" \n

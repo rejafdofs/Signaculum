@@ -46,7 +46,6 @@ root = "Main"
 
 ```lean
 import Signaculum
-open Signaculum Signaculum.Sakura Signaculum.Notatio
 
 varia perpetua   numerusSalutationum : Nat := 0
 varia temporaria nomina              : String := ""
@@ -161,7 +160,6 @@ construe
 
 ```lean
 import Signaculum
-open Signaculum Signaculum.Sakura Signaculum.Notatio
 ```
 
 ### 基本の書き方

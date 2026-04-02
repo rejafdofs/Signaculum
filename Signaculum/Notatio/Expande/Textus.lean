@@ -4,6 +4,7 @@
 
 import Lean
 import Signaculum.Sakura.Scriptum
+import Signaculum.Syntaxis
 
 namespace Signaculum.Notatio.Expande
 
@@ -52,6 +53,20 @@ private def estNegativusUnus (args : Array Lean.Syntax) : Bool :=
       | _      => false
     | _ => false
   else false
+
+/-- cb からイヴェント名 term を作るにゃ（選擇肢用）。
+    strLit → そのまま、ident → registraLazium、項 → registraLaziumLambda -/
+private def resolveCallbackumOptionis (cb : Syntax) (paramCount : Nat := 0)
+    : TermElabM (TSyntax `term) := do
+  if cb.isStrLit?.isSome then
+    pure ⟨cb⟩
+  else if cb.isIdent then
+    let ev ← Signaculum.registraLazium ⟨cb⟩
+    `($(Syntax.mkStrLit ev))
+  else
+    let posIdx := (cb.getPos?.getD ⟨0⟩).byteIdx
+    let ev ← Signaculum.registraLaziumLambda cb posIdx paramCount
+    `($(Syntax.mkStrLit ev))
 
 -- ════════════════════════════════════════════════════
 --  主ディスパッチ函數 (Functio Principalis Dispatchonis)
@@ -268,11 +283,16 @@ def expandeSignumTextus (nomen : String) (args : Array Lean.Syntax) (stx : Lean.
   | "\\_a" =>
     if args.size == 0 then
       pure <| some (← `(Signaculum.Sakura.Textus.fineAncora))
-    else if args.size == 1 then
-      let s ← expectaStrLit args[0]! "\\_a"
-      pure <| some (← `(Signaculum.Sakura.Textus.ancora $s))
     else
-      throwErrorAt stx "\\_a: 引數が不正にゃ"
+      let cb := args[0]!
+      let evStx ← resolveCallbackumOptionis cb (args.size - 1)
+      if args.size == 1 then
+        pure <| some (← `(Signaculum.Sakura.Textus.ancora $evStx))
+      else
+        let refArgs ← (args.extract 1 args.size).mapM fun a => do
+          let at_ : TSyntax `term := ⟨a⟩
+          `(Signaculum.Memoria.Citatio.toRef $at_)
+        pure <| some (← `(Signaculum.Sakura.Textus.ancora $evStx [$refArgs,*]))
 
   -- ════════════════════════════════════════════════════
   --  選擇肢 (Optiones)
@@ -281,8 +301,14 @@ def expandeSignumTextus (nomen : String) (args : Array Lean.Syntax) (stx : Lean.
   | "\\q" =>
     if args.size == 2 then
       let t ← expectaStrLit args[0]! "\\q"
-      let id ← expectaStrLit args[1]! "\\q"
-      pure <| some (← `(Signaculum.Sakura.Textus.optio $t $id))
+      let cb := args[1]!
+      if cb.isStrLit?.isSome then
+        -- 文字列形: optio title id（從來互換にゃ）
+        pure <| some (← `(Signaculum.Sakura.Textus.optio $t $(⟨cb⟩)))
+      else
+        -- 關數形: registraLazium/Lambda → optioEventum にゃ
+        let evStx ← resolveCallbackumOptionis cb 0
+        pure <| some (← `(Signaculum.Sakura.Textus.optioEventum $t $evStx))
     else if args.size >= 3 then
       let t ← expectaStrLit args[0]! "\\q"
       -- script: キーワード附き選擇肢にゃん (\q[t, script: sc])
@@ -292,32 +318,37 @@ def expandeSignumTextus (nomen : String) (args : Array Lean.Syntax) (stx : Lean.
           let sc ← expectaStrLit args[2]! "\\q"
           pure <| some (← `(Signaculum.Sakura.Textus.optioScriptum $t $sc))
         | _ =>
-          -- \\q[t, e, rs...] — イヴェントゥム附き選擇肢にゃん
-          let e ← expectaStrLit args[1]! "\\q"
-          let mut termElems : Array (TSyntax `term) := #[]
-          for h : idx in [2:args.size] do
-            let r ← expectaStrLit args[idx] "\\q"
-            termElems := termElems.push (← `(term| $r))
-          pure <| some (← `(Signaculum.Sakura.Textus.optioEventum $t $e [$termElems,*]))
+          -- \\q[t, f, rs...] — 關數/文字列附き選擇肢にゃん
+          let cb := args[1]!
+          let evStx ← resolveCallbackumOptionis cb (args.size - 2)
+          let refArgs ← (args.extract 2 args.size).mapM fun a => do
+            let at_ : TSyntax `term := ⟨a⟩
+            `(Signaculum.Memoria.Citatio.toRef $at_)
+          pure <| some (← `(Signaculum.Sakura.Textus.optioEventum $t $evStx [$refArgs,*]))
       else
-        -- \\q[t, e, rs...] — イヴェントゥム附き選擇肢にゃん
-        let e ← expectaStrLit args[1]! "\\q"
-        let mut termElems : Array (TSyntax `term) := #[]
-        for h : idx in [2:args.size] do
-          let r ← expectaStrLit args[idx] "\\q"
-          termElems := termElems.push (← `(term| $r))
-        pure <| some (← `(Signaculum.Sakura.Textus.optioEventum $t $e [$termElems,*]))
+        -- \\q[t, f, rs...] — 關數/文字列附き選擇肢にゃん
+        let cb := args[1]!
+        let evStx ← resolveCallbackumOptionis cb (args.size - 2)
+        let refArgs ← (args.extract 2 args.size).mapM fun a => do
+          let at_ : TSyntax `term := ⟨a⟩
+          `(Signaculum.Memoria.Citatio.toRef $at_)
+        pure <| some (← `(Signaculum.Sakura.Textus.optioEventum $t $evStx [$refArgs,*]))
     else
       throwErrorAt stx "\\q: 引數が不足してゐますにゃ"
 
   | "\\__q" =>
     if args.size == 0 then
       pure <| some (← `(Signaculum.Sakura.Textus.fineOptioScopus))
-    else if args.size == 1 then
-      let s ← expectaStrLit args[0]! "\\__q"
-      pure <| some (← `(Signaculum.Sakura.Textus.optioScopus $s))
     else
-      throwErrorAt stx "\\__q: 引數が不正にゃ"
+      let cb := args[0]!
+      let evStx ← resolveCallbackumOptionis cb (args.size - 1)
+      if args.size == 1 then
+        pure <| some (← `(Signaculum.Sakura.Textus.optioScopus $evStx))
+      else
+        let refArgs ← (args.extract 1 args.size).mapM fun a => do
+          let at_ : TSyntax `term := ⟨a⟩
+          `(Signaculum.Memoria.Citatio.toRef $at_)
+        pure <| some (← `(Signaculum.Sakura.Textus.optioScopus $evStx [$refArgs,*]))
 
   -- ════════════════════════════════════════════════════
   --  文字 (Characteres)

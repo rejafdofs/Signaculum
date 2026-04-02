@@ -22,8 +22,8 @@ def optioEventum {m : Type → Type} [Monad m]
 
 /-- 錨（\\_a[id]...テキスト...\\_a）にゃん。
     閉ぢる時は `fineAncora` を呼ぶにゃ -/
-def ancora {m : Type → Type} [Monad m] (id : String) : SakuraM m Unit :=
-  emitte (.optionum (.ancora id))
+def ancora {m : Type → Type} [Monad m] (id : String) (citationes : List String := []) : SakuraM m Unit :=
+  emitte (.optionum (.ancora id citationes))
 
 /-- 錨を閉ぢる（\\_a）にゃん -/
 def fineAncora {m : Type → Type} [Monad m] : SakuraM m Unit :=

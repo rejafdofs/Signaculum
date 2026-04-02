@@ -87,10 +87,11 @@ def talkScriptum : SakuraPura Unit := scriptum!
 | `\![async, ident args*]` | `spawnaScriptum ident args*` | 非同期 SSTP 送信 |
 | `\![anim,start, s, i]` | `animaIncepit s i` | アニメーション開始 |
 | `\![change,ghost, "name"]` | `mutaGhostNomen "name"` | ゴースト変更 |
-| `\q["text","id"]` | `optio "text" "id"` | 選択肢 |
-| `\q["title", script: "content"]` | `optioScriptum "title" "content"` | スクリプト実行型選択肢 |
-| `\__q["id"]` / `\__q` | `optioScopus "id"` / `fineOptioScopus` | 範囲選択肢 |
-| `\_a["id"]` ... `\_a` | `ancora "id"` ... `fineAncora` | 錨 |
+| `\q[title, f]` | `optio title f` / `optioEventum title f` | 選択肢（f: 文字列/識別子/ラムダ） |
+| `\q[title, f, args*]` | `optioEventum title f [toRef args*]` | 引数付き選択肢 |
+| `\q[title, script: content]` | `optioScriptum title content` | スクリプト実行型選択肢 |
+| `\__q[f]` / `\__q[f, args*]` / `\__q` | `optioScopus f` / `fineOptioScopus` | 範囲選択肢（f: 文字列/識別子/ラムダ） |
+| `\_a[f]` ... `\_a` | `ancora f` ... `fineAncora` | 錨（f: 文字列/識別子/ラムダ） |
 | `\0` / `\1` | `sakura` / `kero` | 旧形式スコープ |
 | `\c[char, n]` / `\c[char, n, i]` | `purgaCharacterem n` / `purgaCharacteremAb n i` | 文字単位クリア |
 | `\c[line, n]` / `\c[line, n, i]` | `purgaLineam n` / `purgaLineamAb n i` | 行単位クリア |

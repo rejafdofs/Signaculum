@@ -13,7 +13,7 @@ inductive SignumOptionum where
   | optioMultiplex (titulus : String) (signa : List String)              -- \q[t,ID1,ID2,...]
   | optioScopus (signum : String) (citationes : List String)             -- \__q[ID,...]
   | fineOptioScopus                                                       -- \__q
-  | ancora (id : String)                                                  -- \_a[id]
+  | ancora (id : String) (citationes : List String)                        -- \_a[id,r0,...]
   | fineAncora                                                            -- \_a
   | tempusOptionum (ms : Nat)                                             -- \![set,choicetimeout,ms]
   deriving Repr
@@ -33,7 +33,11 @@ def SignumOptionum.adCatenam : SignumOptionum → String
       | res => "," ++ ",".intercalate (res.map evadeArgumentum)
     s!"\\__q[{evadeArgumentum sig}{ccat}]"
   | .fineOptioScopus => "\\__q"
-  | .ancora id => s!"\\_a[{evadeArgumentum id}]"
+  | .ancora id cc =>
+    let ccat := match cc with
+      | [] => ""
+      | res => "," ++ ",".intercalate (res.map evadeArgumentum)
+    s!"\\_a[{evadeArgumentum id}{ccat}]"
   | .fineAncora => "\\_a"
   | .tempusOptionum ms => s!"\\![set,choicetimeout,{ms}]"
 

@@ -398,6 +398,22 @@ scriptum!
   \![notify, onNotify]
 ```
 
+### scriptum! タグ記法での選択肢
+
+`\q` / `\__q` / `\_a` でも関数型コールバックが使えます。`construe` が自動で Tractator ラッパーを生成するため、`eventum "OnChoiceSelect"` の手書きマッチングが不要になります。
+
+```lean
+def onMenuTalk : SakuraIO Unit := do sakura; loqui "おはよー"; finis
+def onTopic (topic : String) : SakuraIO Unit := do sakura; loqui s!"{topic}の話だね"; finis
+
+scriptum!
+  \q[なにか話して, onMenuTalk]
+  \q[Aの話題, onTopic, "topicA"]
+  \q[Bの話題, onTopic, "topicB"]
+  \q[やめる, "OnMenuCancel"]
+  \_a[onMenuTalk] ここをクリック \_a
+```
+
 ---
 
 ## ゴースト・シェル・吹出しの切替

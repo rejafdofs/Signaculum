@@ -322,7 +322,11 @@ def sakuraLexemaFn (c : ParserContext) (s : ParserState) : ParserState :=
     s.mkError "トークンが期待されてゐますにゃ"
   else
     let ch := s.pos.get input
-    if ch == '\\' then parsitorTagiFn c s
+    -- Lean コメント（--）はスクリプトゥムの一部ではにゃいにゃ
+    if ch == '-' && (s.pos.next input).byteIdx < input.utf8ByteSize
+                 && (s.pos.next input).get input == '-' then
+      s.mkError "コメントにゃ"
+    else if ch == '\\' then parsitorTagiFn c s
     else if ch == '"' then parsitorTextusLitFn c s
     else if ch == '{' then parsitorExpressionisFn c s
     else if ch == '%' then parsitorVariabilisFn c s

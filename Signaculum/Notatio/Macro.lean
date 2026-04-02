@@ -132,8 +132,27 @@ private def skipTrailingWsFn : Lean.Parser.ParserFn :=
       let mut p := s.pos
       while p.byteIdx < input.utf8ByteSize do
         let ch := p.get input
-        if ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' then break
-        p := p.next input
+        if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' then
+          p := p.next input
+        else if ch == '-' && (p.next input).byteIdx < input.utf8ByteSize
+                          && (p.next input).get input == '-' then
+          -- --コメントを行末までスキップするにゃ
+          p := p.next input; p := p.next input
+          while p.byteIdx < input.utf8ByteSize do
+            if (p.get input) == '\n' then
+              p := p.next input; break
+            p := p.next input
+        else if ch == '/' && (p.next input).byteIdx < input.utf8ByteSize
+                          && (p.next input).get input == '-' then
+          -- /- -/ ブロックコメントをスキップするにゃ（ネスト非對應）
+          p := p.next input; p := p.next input
+          while p.byteIdx < input.utf8ByteSize do
+            let ch := p.get input
+            if ch == '-' && (p.next input).byteIdx < input.utf8ByteSize
+                         && (p.next input).get input == '/' then
+              p := p.next input; p := p.next input; break
+            p := p.next input
+        else break
       return p
     { s with pos := newPos }
 
@@ -147,6 +166,54 @@ def skipTrailingWsParser.formatter : Lean.PrettyPrinter.Formatter := pure ()
 @[combinator_parenthesizer Signaculum.Notatio.skipTrailingWsParser]
 def skipTrailingWsParser.parenthesizer : Lean.PrettyPrinter.Parenthesizer := pure ()
 
+/-- scriptum ブロック用のカスタム繰返しにゃん♪
+    Lean の many はビルトイン ws skipper がコメントを飛ばしてしまふので、
+    改行・コメントで確實に止まるカスタムループを使ふにゃ -/
+private def manyLexemaFn : Lean.Parser.ParserFn := fun c s =>
+  let input := c.fileMap.source
+  let startPos := s.pos
+  let sz := s.stxStack.size
+  let rec loop (s : Lean.Parser.ParserState) : Nat → Lean.Parser.ParserState
+    | 0 => s
+    | n + 1 =>
+      let sWs := Parsitor.skipWsFn c s
+      if sWs.pos.byteIdx >= input.utf8ByteSize then s
+      else
+        let ch := sWs.pos.get input
+        -- Lean コメント（-- / /- ）で停止するにゃ
+        if ch == '-' && (sWs.pos.next input).byteIdx < input.utf8ByteSize then
+          let ch2 := (sWs.pos.next input).get input
+          if ch2 == '-' || ch2 == '/' then s  -- -- コメント
+          else s  -- 孤立した - もスクリプトゥムでは不正にゃ
+        else if ch == '/' && (sWs.pos.next input).byteIdx < input.utf8ByteSize
+                          && (sWs.pos.next input).get input == '-' then s  -- /- コメント
+        else
+          let col := (c.fileMap.toPosition sWs.pos).column
+          let refCol := match c.savedPos? with
+            | some p => (c.fileMap.toPosition p).column
+            | none   => 0
+          if col <= refCol then s
+          else
+            let szInner := s.stxStack.size
+            let s := Parsitor.sakuraLexemaFn c sWs
+            if s.hasError then
+              { s with pos := sWs.pos, stxStack := s.stxStack.shrink szInner, errorMsg := .none }
+            else loop s n
+  let s := loop s 10000
+  let nodes := s.stxStack.extract sz s.stxStack.size
+  let manyNode := Lean.Syntax.node (Lean.SourceInfo.synthetic startPos s.pos) Lean.nullKind nodes
+  { s with stxStack := s.stxStack.shrink sz |>.push manyNode }
+
+def manyLexemaParser : Lean.Parser.Parser where
+  info := {}
+  fn := manyLexemaFn
+
+@[combinator_formatter Signaculum.Notatio.manyLexemaParser]
+def manyLexemaParser.formatter : Lean.PrettyPrinter.Formatter := pure ()
+
+@[combinator_parenthesizer Signaculum.Notatio.manyLexemaParser]
+def manyLexemaParser.parenthesizer : Lean.PrettyPrinter.Parenthesizer := pure ()
+
 end Signaculum.Notatio
 
 -- ════════════════════════════════════════════════════
@@ -155,15 +222,11 @@ end Signaculum.Notatio
 
 open Lean Elab Term Signaculum.Notatio Signaculum.Notatio.Parsitor Signaculum.Notatio.Expande
 
-/-- SakuraScript を原形タグ記法で書けるパーサにゃん。
-    カスタムパーサー sakuraLexemaParser で全トークンを直接パースするにゃ♪
-    感嘆符あり・なし両方受け付けるにゃ（scriptum! / scriptum）-/
 private def scriptumParserCore (kw : String) : Lean.Parser.Parser :=
   withInitioLineae <|
     Lean.Parser.leadingNode `scriptumMacro Lean.Parser.maxPrec <|
       Lean.Parser.symbol kw >>
-      Lean.Parser.many (Lean.Parser.checkColGt "expected indent" >>
-                        sakuraLexemaParser) >>
+      manyLexemaParser >>
       skipTrailingWsParser
 
 @[term_parser 1001] def scriptumTermParser  : Lean.Parser.Parser := scriptumParserCore "scriptum!"

@@ -20,7 +20,6 @@ def lexemaExpressio   : SyntaxNodeKind := `Signaculum.Notatio.lexemaExpressio
 def lexemaTextusLit   : SyntaxNodeKind := `Signaculum.Notatio.lexemaTextusLit
 def lexemaVariabilis            : SyntaxNodeKind := `Signaculum.Notatio.lexemaVariabilis
 def lexemaProprietasCitata      : SyntaxNodeKind := `Signaculum.Notatio.lexemaProprietasCitata
-def lexemaProprietasCitataNomen : SyntaxNodeKind := `Signaculum.Notatio.lexemaProprietasCitataNomen
 
 -- ════════════════════════════════════════════════════
 --  タグ開始文字判定
@@ -309,62 +308,21 @@ private def parsitorVariabilisFn (c : ParserContext) (s : ParserState) : ParserS
     s.mkError "%: 變數名が期待されてゐますにゃ"
   else if nomen == "property" && afterIdent.byteIdx < input.utf8ByteSize
                                && afterIdent.get input == '[' then
-    -- %property[...] にゃん♪
+    -- %property[<term>] にゃん♪ 常に termParser で讀むにゃ
     let s := { s with pos := afterIdent.next input }  -- '[' を消費にゃ
     let s := skipWsFn c s
-    if s.pos.byteIdx >= input.utf8ByteSize then
-      s.mkError "%property: ']' が期待されてゐますにゃ"
-    else if s.pos.get input == '(' then
-      -- (term) モード: Lean の term をパースするにゃ
-      let s := { s with pos := s.pos.next input }  -- '(' を消費にゃ
-      let s := skipWsFn c s
-      let s := (Lean.Parser.termParser 0).fn c s
-      if s.hasError then s
-      else
-        let termNode := s.stxStack.back
-        let s := { s with stxStack := s.stxStack.pop }
-        let s := skipWsFn c s
-        if s.pos.byteIdx >= input.utf8ByteSize || s.pos.get input != ')' then
-          s.mkError "%property: ')' が期待されてゐますにゃ"
-        else
-          let s := skipWsFn c { s with pos := s.pos.next input }  -- ')' を消費にゃ
-          if s.pos.byteIdx >= input.utf8ByteSize || s.pos.get input != ']' then
-            s.mkError "%property: ']' が期待されてゐますにゃ"
-          else
-            let s := { s with pos := s.pos.next input }  -- ']' を消費にゃ
-            let node := Syntax.node (SourceInfo.synthetic startPos s.pos)
-                          lexemaProprietasCitata #[termNode]
-            let s := skipWsFn c s
-            { s with stxStack := s.stxStack.push node }
+    let s := (Lean.Parser.termParser 0).fn c s
+    if s.hasError then s
     else
-      -- 糖衣構文モード: プロパティ名を ] まで讀むにゃ（\] はエスケープにゃ）
-      let (propNomen, endPos) := Id.run do
-        let mut p := s.pos
-        let mut acc := ""
-        while p.byteIdx < input.utf8ByteSize do
-          let ch := p.get input
-          if ch == '\\' then
-            let next := p.next input
-            if next.byteIdx < input.utf8ByteSize && next.get input == ']' then
-              acc := acc.push ']'
-              p := next.next input
-            else
-              acc := acc.push ch
-              p := p.next input
-          else if ch == ']' then break
-          else
-            acc := acc.push ch
-            p := p.next input
-        return (acc, p)
-      if propNomen.isEmpty then
-        s.mkError "%property: プロパティ名が期待されてゐますにゃ"
-      else if endPos.byteIdx >= input.utf8ByteSize || endPos.get input != ']' then
+      let termNode := s.stxStack.back
+      let s := { s with stxStack := s.stxStack.pop }
+      let s := skipWsFn c s
+      if s.pos.byteIdx >= input.utf8ByteSize || s.pos.get input != ']' then
         s.mkError "%property: ']' が期待されてゐますにゃ"
       else
-        let s := { s with pos := endPos.next input }  -- ']' を消費にゃ
-        let nomenAtom := mkAtom (SourceInfo.synthetic startPos s.pos) propNomen
+        let s := { s with pos := s.pos.next input }  -- ']' を消費にゃ
         let node := Syntax.node (SourceInfo.synthetic startPos s.pos)
-                      lexemaProprietasCitataNomen #[nomenAtom]
+                      lexemaProprietasCitata #[termNode]
         let s := skipWsFn c s
         { s with stxStack := s.stxStack.push node }
   else

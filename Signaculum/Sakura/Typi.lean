@@ -907,6 +907,163 @@ def Proprietas.toString : Proprietas → String
   -- SHIORI 變數
   | .shioriVariabilis nomen    => s!"shiori.{nomen}"
 
+-- ════════════════════════════════════════════════════
+--  サブプロパティ SakuraScript 名 (Abbreviaturae Subproprietatis)
+-- ════════════════════════════════════════════════════
+
+-- ジェネリックサブプロパティの SakuraScript 名にゃん♪
+-- `%property[ghostlist "foo" .name]` のやうに使ふにゃ
+namespace ProprietasGenerica
+abbrev name       : ProprietasGenerica := .nomen
+abbrev sakuraname : ProprietasGenerica := .sakuraNomen
+abbrev keroname   : ProprietasGenerica := .keroNomen
+abbrev craftmanw  : ProprietasGenerica := .fabricator
+abbrev craftmanurl: ProprietasGenerica := .fabricatorNexus
+abbrev path       : ProprietasGenerica := .via
+abbrev thumbnail  : ProprietasGenerica := .imago
+abbrev homeurl    : ProprietasGenerica := .nexusAedis
+abbrev username   : ProprietasGenerica := .nomenUtentis
+-- index, icon は既にコンストラクタ名と一致するため省略にゃ（.index, .icon で使へるにゃ）
+end ProprietasGenerica
+
+-- スコープサブプロパティの SakuraScript 名にゃん♪
+namespace ProprietasScopus
+abbrev surface.num           : ProprietasScopus := .superficiesNum
+abbrev surface.x             : ProprietasScopus := .superficiesX
+abbrev surface.y             : ProprietasScopus := .superficiesY
+abbrev seriko.defaultsurface : ProprietasScopus := .serikoSuperficiesPraef
+-- x, y, rect, name は既にコンストラクタ名で使へるにゃ
+end ProprietasScopus
+
+-- バルーンスコープサブプロパティの SakuraScript 名にゃん♪
+namespace ProprietasBullaeScopus
+abbrev num             : ProprietasBullaeScopus := .numerus
+abbrev validwidth      : ProprietasBullaeScopus := .latitudo
+abbrev validwidth.initial : ProprietasBullaeScopus := .latitudoInitialis
+abbrev validheight     : ProprietasBullaeScopus := .altitudo
+abbrev validheight.initial : ProprietasBullaeScopus := .altitudoInitialis
+abbrev lines           : ProprietasBullaeScopus := .linea
+abbrev lines.initial   : ProprietasBullaeScopus := .lineaInitialis
+abbrev basepos.x       : ProprietasBullaeScopus := .basePosX
+abbrev basepos.y       : ProprietasBullaeScopus := .basePosY
+abbrev char_width      : ProprietasBullaeScopus := .latitudoCharacteris
+end ProprietasBullaeScopus
+
+-- rateofuse サブプロパティの SakuraScript 名にゃん♪
+namespace ProprietasRateOfUse
+abbrev name       : ProprietasRateOfUse := .nomen
+abbrev sakuraname : ProprietasRateOfUse := .sakuraNomen
+abbrev keroname   : ProprietasRateOfUse := .keroNomen
+abbrev boottime   : ProprietasRateOfUse := .numerusStartuporum
+abbrev bootminute : ProprietasRateOfUse := .minutae
+abbrev percent    : ProprietasRateOfUse := .proportio
+end ProprietasRateOfUse
+
+-- ════════════════════════════════════════════════════
+--  Proprietas SakuraScript 名 (Abbreviaturae Proprietatis)
+-- ════════════════════════════════════════════════════
+
+-- SakuraScript プロパティ名で Proprietas を參照するための略稱にゃん♪
+-- `open Signaculum.Sakura.Proprietas in system.year` で使へるにゃ
+namespace Proprietas
+-- ── system.* ──
+abbrev system.year           : Proprietas := .systemAnnus
+abbrev system.month          : Proprietas := .systemMensis
+abbrev system.day            : Proprietas := .systemDies
+abbrev system.hour           : Proprietas := .systemHora
+abbrev system.minute         : Proprietas := .systemMinutum
+abbrev system.second         : Proprietas := .systemSecundum
+abbrev system.millisecond    : Proprietas := .systemMillisecundum
+abbrev system.dayofweek      : Proprietas := .systemDiesSeptimanus
+abbrev system.cursor.pos     : Proprietas := .systemCursorPositio
+abbrev system.os.type        : Proprietas := .systemOsTypus
+abbrev system.os.name        : Proprietas := .systemOsNomen
+abbrev system.os.version     : Proprietas := .systemOsVersione
+abbrev system.os.build       : Proprietas := .systemOsCompilatio
+abbrev system.os.parenttype  : Proprietas := .systemOsParensTypus
+abbrev system.os.parentname  : Proprietas := .systemOsParensNomen
+abbrev system.cpu.load       : Proprietas := .systemCpuOnus
+abbrev system.cpu.num        : Proprietas := .systemCpuNumerus
+abbrev system.cpu.vendor     : Proprietas := .systemCpuVendor
+abbrev system.cpu.name       : Proprietas := .systemCpuNomen
+abbrev system.cpu.clock      : Proprietas := .systemCpuPulsus
+abbrev system.cpu.features   : Proprietas := .systemCpuFunctiones
+abbrev system.memory.load    : Proprietas := .systemMemoriaOnus
+abbrev system.memory.phyt    : Proprietas := .systemMemoriaPhysicaTota
+abbrev system.memory.phya    : Proprietas := .systemMemoriaPhysicaLibera
+-- ── baseware.* ──
+abbrev baseware.version      : Proprietas := .basewereVersione
+abbrev baseware.name         : Proprietas := .basewereNomen
+-- ── ghostlist ──
+abbrev ghostlist.count       : Proprietas := .ghostlistNumerus
+def ghostlist (nomen : String) (p : ProprietasGenerica) : Proprietas := .ghostlistNomen nomen p
+def ghostlist.index (i : Nat) (p : ProprietasGenerica) : Proprietas := .ghostlistIndex i p
+def ghostlist.current (p : ProprietasGenerica) : Proprietas := .ghostlistCurrent p
+-- ── activeghostlist ──
+def activeghostlist (nomen : String) (p : ProprietasGenerica) : Proprietas := .activeghostlistNomen nomen p
+def activeghostlist.index (i : Nat) (p : ProprietasGenerica) : Proprietas := .activeghostlistIndex i p
+def activeghostlist.current (p : ProprietasGenerica) : Proprietas := .activeghostlistCurrent p
+-- ── currentghost ──
+abbrev currentghost.status   : Proprietas := .currentghostStatus
+abbrev currentghost.scope.count : Proprietas := .currentghostScopusNumerus
+def currentghost (p : ProprietasGenerica) : Proprietas := .currentghostGenerica p
+def currentghost.scope (scopus : Nat) (p : ProprietasScopus) : Proprietas := .currentghostScopus scopus p
+-- currentghost.shelllist
+abbrev currentghost.shelllist.count : Proprietas := .currentghostShelllistNumerus
+def currentghost.shelllist (nomen : String) (p : ProprietasGenerica) : Proprietas := .currentghostShelllistNomen nomen p
+def currentghost.shelllist.index (i : Nat) (p : ProprietasGenerica) : Proprietas := .currentghostShelllistIndex i p
+def currentghost.shelllist.current (p : ProprietasGenerica) : Proprietas := .currentghostShelllistCurrent p
+-- currentghost.balloon
+abbrev currentghost.balloon.count : Proprietas := .currentghostBullaeNumerus
+def currentghost.balloon (p : ProprietasGenerica) : Proprietas := .currentghostBullaeGenerica p
+def currentghost.balloon.scope (scopus : Nat) (p : ProprietasBullaeScopus) : Proprietas := .currentghostBullaeScopus scopus p
+def currentghost.balloon.scope.count (scopus : Nat) : Proprietas := .currentghostBullaeScopusNumerus scopus
+-- currentghost.mousecursor
+abbrev currentghost.mousecursor       : Proprietas := .currentghostCursorMus
+abbrev currentghost.mousecursor.text  : Proprietas := .currentghostCursorTextus
+abbrev currentghost.mousecursor.wait  : Proprietas := .currentghostCursorExspecto
+abbrev currentghost.mousecursor.hand  : Proprietas := .currentghostCursorManus
+abbrev currentghost.mousecursor.grip  : Proprietas := .currentghostCursorPrehendo
+abbrev currentghost.mousecursor.arrow : Proprietas := .currentghostCursorSagitta
+abbrev currentghost.balloon.mousecursor       : Proprietas := .currentghostBullaeCursorMus
+abbrev currentghost.balloon.mousecursor.text  : Proprietas := .currentghostBullaeCursorTextus
+abbrev currentghost.balloon.mousecursor.wait  : Proprietas := .currentghostBullaeCursorExspecto
+abbrev currentghost.balloon.mousecursor.arrow : Proprietas := .currentghostBullaeCursorSagitta
+-- currentghost.seriko
+abbrev currentghost.seriko.surfacelist.all     : Proprietas := .currentghostSerikoSurfacesOmnes
+abbrev currentghost.seriko.surfacelist.defined : Proprietas := .currentghostSerikoSurfacesDefinitae
+-- ── balloonlist ──
+abbrev balloonlist.count : Proprietas := .balloonlistNumerus
+def balloonlist (nomen : String) (p : ProprietasGenerica) : Proprietas := .balloonlistNomen nomen p
+def balloonlist.index (i : Nat) (p : ProprietasGenerica) : Proprietas := .balloonlistIndex i p
+-- ── headlinelist ──
+abbrev headlinelist.count : Proprietas := .headlinelistNumerus
+def headlinelist (nomen : String) (p : ProprietasGenerica) : Proprietas := .headlinelistNomen nomen p
+def headlinelist.index (i : Nat) (p : ProprietasGenerica) : Proprietas := .headlinelistIndex i p
+-- ── pluginlist ──
+abbrev pluginlist.count : Proprietas := .pluginlistNumerus
+def pluginlist (nomen : String) (p : ProprietasGenerica) : Proprietas := .pluginlistNomen nomen p
+def pluginlist.index (i : Nat) (p : ProprietasGenerica) : Proprietas := .pluginlistIndex i p
+-- ── history.* ──
+abbrev history.ghost.count    : Proprietas := .historyGhostNumerus
+def history.ghost (nomen : String) (p : ProprietasGenerica) : Proprietas := .historyGhostNomen nomen p
+def history.ghost.index (i : Nat) (p : ProprietasGenerica) : Proprietas := .historyGhostIndex i p
+abbrev history.balloon.count  : Proprietas := .historyBullaeNumerus
+def history.balloon (nomen : String) (p : ProprietasGenerica) : Proprietas := .historyBullaeNomen nomen p
+def history.balloon.index (i : Nat) (p : ProprietasGenerica) : Proprietas := .historyBullaeIndex i p
+abbrev history.headline.count : Proprietas := .historyHeadlineNumerus
+def history.headline (nomen : String) (p : ProprietasGenerica) : Proprietas := .historyHeadlineNomen nomen p
+def history.headline.index (i : Nat) (p : ProprietasGenerica) : Proprietas := .historyHeadlineIndex i p
+abbrev history.plugin.count   : Proprietas := .historyPluginNumerus
+def history.plugin (nomen : String) (p : ProprietasGenerica) : Proprietas := .historyPluginNomen nomen p
+def history.plugin.index (i : Nat) (p : ProprietasGenerica) : Proprietas := .historyPluginIndex i p
+-- ── rateofuselist ──
+def rateofuselist (nomen : String) (p : ProprietasRateOfUse) : Proprietas := .rateofuselistNomen nomen p
+def rateofuselist.index (i : Nat) (p : ProprietasRateOfUse) : Proprietas := .rateofuselistIndex i p
+-- ── shiori ──
+def shiori (nomen : String) : Proprietas := .shioriVariabilis nomen
+end Proprietas
+
 /-- ダイアローグス・モードにゃん。`aperiDialogum` に渡すにゃ。
     - `aperire`     : ファイルを開く（`open`）
     - `servare`     : ファイルを保存（`save`）

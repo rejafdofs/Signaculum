@@ -574,21 +574,25 @@ proprietasCitata .systemAnnus  -- %property[system.year]
 `%property[...]` でプロパティ値をテキスト中に埋め込めます。
 
 ```lean
--- 糖衣構文: SakuraScript のプロパティ名をそのまま書ける
+-- SakuraScript のプロパティ名をそのまま書ける（Lean abbrev 経由）
 scriptum!
   \h \s[0] 今は%property[system.year]年%property[system.month]月にゃん
 
--- Lean term: 括弧で囲むと Proprietas 型の式を渡せる
+-- ドット記法: Proprietas コンストラクタを直接書ける
 scriptum!
-  \h \s[0] %property[(.systemAnnus)]
+  \h \s[0] %property[.systemAnnus]
+
+-- パラメータ付きプロパティ（関数呼び出し形式）
+scriptum!
+  \h \s[0] %property[ghostlist "MyGhost" .name]
 
 -- SHIORI 変数
 scriptum!
-  \h \s[0] %property[shiori.myvar]
+  \h \s[0] %property[shiori "myvar"]
 
--- パラメータ付きプロパティ
+-- 任意の Lean 式も渡せる
 scriptum!
-  \h \s[0] %property[ghostlist(MyGhost).name]
+  \h \s[0] %property[if cond then .systemAnnus else .systemMensis]
 ```
 
 ---

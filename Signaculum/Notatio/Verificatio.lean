@@ -67,24 +67,24 @@ example : Id.run (currereScriptum (scriptum! \h it's \e))
         = "\\hit's\\e" := by native_decide
 
 -- ════════════════════════════════════════════════════
---  %property[...] 糖衣構文の檢證にゃん（マクロのパーサ擧動にゃ）
+--  %property[...] の檢證にゃん（マクロのパーサ擧動にゃ）
 -- ════════════════════════════════════════════════════
 
--- 靜的プロパティにゃん
+-- ドット記法にゃん
+example : Id.run (currereScriptum (scriptum! %property[.systemAnnus])) =
+  "%property[system.year]" := by native_decide
+
+-- SakuraScript プロパティ名（abbrev 經由）にゃん
 example : Id.run (currereScriptum (scriptum! %property[system.year])) =
   "%property[system.year]" := by native_decide
 
--- 別の靜的プロパティにゃん
+-- ghostlist.count にゃん
 example : Id.run (currereScriptum (scriptum! %property[ghostlist.count])) =
   "%property[ghostlist.count]" := by native_decide
 
--- SHIORI 變數にゃん
-example : Id.run (currereScriptum (scriptum! %property[shiori.myvar])) =
+-- shiori ヘルパーにゃん
+example : Id.run (currereScriptum (scriptum! %property[shiori "myvar"])) =
   "%property[shiori.myvar]" := by native_decide
-
--- Lean term モードにゃん
-example : Id.run (currereScriptum (scriptum! %property[(.systemMensis)])) =
-  "%property[system.month]" := by native_decide
 
 -- 裸テクストゥスとの混在にゃん
 example : Id.run (currereScriptum (scriptum! \h \s[0] 今は%property[system.year]年にゃ)) =

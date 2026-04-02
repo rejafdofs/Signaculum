@@ -1,5 +1,15 @@
 # 變更記錄 (Mutationum Registrum)
 
+## v0.6.0 (2026-04-02) — チェイントーク (Catena Colloquiorum) 支援
+
+### チェイントーク型・Exhibibilis インスタンス
+- `Sakura/Textus/Catena.lean`: `Catena` 構造体（名前・話配列・位置 IO.Ref）、`OptioPiscinae` 判別共用体、`exequiCatenam` 順次再生関数、`eligeVelCatena` チェイン優先混合選択関数を新設
+- `Notatio/Macro.lean`: `Exhibibilis Catena IO` インスタンスを追加。`{catena}` で scriptum! 内から直接使用可能
+
+### `catena` DSL マクロ
+- `Syntaxis.lean`: `catena nomen := [actio1, actio2, ...]` マクロを追加。位置用 IO.Ref の自動生成・永続化変数としての自動登録・`construe` での catenaActiva 状態の自動永続化を実現
+- `GhostAccumulatio` に `hasCatenas` フラグ、`GhostEntry` に `.catena` バリアントを追加
+
 ## v0.5.0 (2026-03-28) — LexemaSakurae IR + カスタムパーサー全面移行
 
 ### LexemaSakurae 帰納型パーサー中間表現

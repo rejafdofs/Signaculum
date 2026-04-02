@@ -92,6 +92,10 @@ universe u in
 theorem exhibeOptionNullus_eq {m : Type → Type} [Monad m] {α : Type} [Exhibibilis α m] :
     Exhibibilis.exhibe (m := m) (.none : Option α) = pure () := rfl
 
+-- Catena → 順次再生にゃん。チェイントークの現在位置を實行して進めるにゃ（IO 專用）
+instance (priority := 96) : Exhibibilis Signaculum.Sakura.Textus.Catena IO where
+  exhibe := Signaculum.Sakura.Textus.exequiCatenam
+
 -- Exhibibilis 經由の CoeDep にゃん。{expr} の型強制はぜんぶこゝを通るにゃ
 universe u in
 instance {α : Type u} {m : Type → Type} [Monad m] [Exhibibilis α m] (a : α) :

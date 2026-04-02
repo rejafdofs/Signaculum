@@ -627,6 +627,47 @@ def talkRandom3 : SakuraIO Unit := scriptum!
 
 ---
 
+## チェイントーク（連鎖対話）
+
+`catena` マクロで順次再生トークを定義できます。OnAITalk で通常トークと混ぜて使い、チェインが選ばれると完了まで順番に再生されます。位置は自動永続化されます。
+
+```lean
+-- チェイントーク宣言
+catena historiaPrima := [
+  do sakura; loqui "第一話：むかしむかし..."; finis,
+  do sakura; loqui "第二話：それから..."; finis,
+  do sakura; loqui "第三話：めでたしめでたし"; finis
+]
+
+-- OnAITalk でチェインと通常トークを混合（チェイン優先）
+eventum "OnAITalk" fun _ => do
+  eligeVelCatena #[
+    .simplex (do sakura; loqui "通常トーク1"; finis),
+    .simplex (do sakura; loqui "通常トーク2"; finis),
+    .catena historiaPrima
+  ]
+```
+
+`Catena` は `Exhibibilis` インスタンスを持つため、`{expr}` 構文や `Exhibibilis.exhibe` で直接使えます：
+
+```lean
+-- scriptum! 内で直接使用
+def testum : SakuraIO Unit := scriptum! \h \s[0] {historiaPrima} \e
+
+-- exhibe で直接呼び出し
+eventum "OnSomeEvent" fun _ => do
+  Exhibibilis.exhibe historiaPrima
+```
+
+`eligeVelCatena` の動作:
+1. 活動中チェインがあれば続行（チェイン優先）
+2. なければランダムに選択。チェインが選ばれたら開始
+3. チェイン完了後は自動リセットし通常選択に戻る
+
+チェイン状態を手動リセットするには `resiceCatenam` を使います。
+
+---
+
 ## 特殊文字・低レベル
 
 ```lean

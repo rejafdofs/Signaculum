@@ -10,4 +10,5 @@ import Signaculum.Sakura.Textus.Imperii
 import Signaculum.Sakura.Textus.Formae
 import Signaculum.Sakura.Textus.Bullae
 import Signaculum.Sakura.Textus.Utilia
+import Signaculum.Sakura.Textus.Catena
 import Signaculum.Sakura.Textus.Responsi

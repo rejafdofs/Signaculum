@@ -41,6 +41,13 @@ instance (priority := 80) {α : Type} {m : Type → Type} [Monad m] [ToString α
     let v ← liftM action
     Signaculum.Sakura.loqui (toString v)
 
+-- SakuraM m Unit → そのまゝ返すにゃん（恆等インスタンスゥス）
+instance (priority := 105) {m : Type → Type} [Monad m] : Exhibibilis (Signaculum.Sakura.SakuraM m Unit) m where
+  exhibe a := a
+
+theorem exhibeSakuraM_eq {m : Type → Type} [Monad m] (a : Signaculum.Sakura.SakuraM m Unit) :
+    Exhibibilis.exhibe (m := m) a = a := rfl
+
 -- α [ToString α] → toString して loqui にゃん（最汎用、最低優先）
 instance (priority := 70) {α : Type} {m : Type → Type} [Monad m] [ToString α] : Exhibibilis α m where
   exhibe a := Signaculum.Sakura.loqui (toString a)

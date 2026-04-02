@@ -8,7 +8,7 @@ import Signaculum.Syntaxis
 
 namespace Signaculum.Notatio.Expande
 
-open Lean Elab Term
+open Lean Elab Term Meta
 
 -- ════════════════════════════════════════════════════
 --  補助函數 (Functiones Auxiliares)
@@ -54,19 +54,28 @@ private def estNegativusUnus (args : Array Lean.Syntax) : Bool :=
     | _ => false
   else false
 
-/-- cb からイヴェント名 term を作るにゃ（選擇肢用）。
-    strLit → そのまま、ident → registraLazium、項 → registraLaziumLambda -/
+/-- cb からイヴェント名 term とパラメータ型配列を作るにゃ（選擇肢用）。
+    strLit → そのまま（型情報なし）、ident → registraLazium（型取得）、
+    項 → elaborate して型取得 → registraLaziumLambda -/
 private def resolveCallbackumOptionis (cb : Syntax) (paramCount : Nat := 0)
-    : TermElabM (TSyntax `term) := do
+    : TermElabM (TSyntax `term × Array Lean.Expr) := do
   if cb.isStrLit?.isSome then
-    pure ⟨cb⟩
+    let stx : TSyntax `term := ⟨cb⟩
+    return (stx, #[])
   else if cb.isIdent then
     let ev ← Signaculum.registraLazium ⟨cb⟩
-    `($(Syntax.mkStrLit ev))
+    let fname ← Signaculum.resolveToConst ⟨cb⟩
+    let some info := (← getEnv).find? fname |
+      throwError "resolveCallbackumOptionis: {cb} が見つからにゃいにゃ"
+    let paramTypes ← Signaculum.getExplicitParamTypes info.type
+    return (← `($(Syntax.mkStrLit ev)), paramTypes)
   else
+    let cbExpr ← elabTerm cb none
+    let cbType ← inferType cbExpr
+    let paramTypes ← Signaculum.getExplicitParamTypes (← whnf cbType)
     let posIdx := (cb.getPos?.getD ⟨0⟩).byteIdx
     let ev ← Signaculum.registraLaziumLambda cb posIdx paramCount
-    `($(Syntax.mkStrLit ev))
+    return (← `($(Syntax.mkStrLit ev)), paramTypes)
 
 -- ════════════════════════════════════════════════════
 --  主ディスパッチ函數 (Functio Principalis Dispatchonis)
@@ -285,13 +294,11 @@ def expandeSignumTextus (nomen : String) (args : Array Lean.Syntax) (stx : Lean.
       pure <| some (← `(Signaculum.Sakura.Textus.fineAncora))
     else
       let cb := args[0]!
-      let evStx ← resolveCallbackumOptionis cb (args.size - 1)
+      let (evStx, paramTypes) ← resolveCallbackumOptionis cb (args.size - 1)
       if args.size == 1 then
         pure <| some (← `(Signaculum.Sakura.Textus.ancora $evStx))
       else
-        let refArgs ← (args.extract 1 args.size).mapM fun a => do
-          let at_ : TSyntax `term := ⟨a⟩
-          `(Signaculum.Memoria.Citatio.toRef $at_)
+        let refArgs ← Signaculum.toRefCumTypo (args.extract 1 args.size) paramTypes
         pure <| some (← `(Signaculum.Sakura.Textus.ancora $evStx [$refArgs,*]))
 
   -- ════════════════════════════════════════════════════
@@ -307,7 +314,7 @@ def expandeSignumTextus (nomen : String) (args : Array Lean.Syntax) (stx : Lean.
         pure <| some (← `(Signaculum.Sakura.Textus.optio $t $(⟨cb⟩)))
       else
         -- 關數形: registraLazium/Lambda → optioEventum にゃ
-        let evStx ← resolveCallbackumOptionis cb 0
+        let (evStx, _) ← resolveCallbackumOptionis cb 0
         pure <| some (← `(Signaculum.Sakura.Textus.optioEventum $t $evStx))
     else if args.size >= 3 then
       let t ← expectaStrLit args[0]! "\\q"
@@ -320,18 +327,14 @@ def expandeSignumTextus (nomen : String) (args : Array Lean.Syntax) (stx : Lean.
         | _ =>
           -- \\q[t, f, rs...] — 關數/文字列附き選擇肢にゃん
           let cb := args[1]!
-          let evStx ← resolveCallbackumOptionis cb (args.size - 2)
-          let refArgs ← (args.extract 2 args.size).mapM fun a => do
-            let at_ : TSyntax `term := ⟨a⟩
-            `(Signaculum.Memoria.Citatio.toRef $at_)
+          let (evStx, paramTypes) ← resolveCallbackumOptionis cb (args.size - 2)
+          let refArgs ← Signaculum.toRefCumTypo (args.extract 2 args.size) paramTypes
           pure <| some (← `(Signaculum.Sakura.Textus.optioEventum $t $evStx [$refArgs,*]))
       else
         -- \\q[t, f, rs...] — 關數/文字列附き選擇肢にゃん
         let cb := args[1]!
-        let evStx ← resolveCallbackumOptionis cb (args.size - 2)
-        let refArgs ← (args.extract 2 args.size).mapM fun a => do
-          let at_ : TSyntax `term := ⟨a⟩
-          `(Signaculum.Memoria.Citatio.toRef $at_)
+        let (evStx, paramTypes) ← resolveCallbackumOptionis cb (args.size - 2)
+        let refArgs ← Signaculum.toRefCumTypo (args.extract 2 args.size) paramTypes
         pure <| some (← `(Signaculum.Sakura.Textus.optioEventum $t $evStx [$refArgs,*]))
     else
       throwErrorAt stx "\\q: 引數が不足してゐますにゃ"
@@ -341,13 +344,11 @@ def expandeSignumTextus (nomen : String) (args : Array Lean.Syntax) (stx : Lean.
       pure <| some (← `(Signaculum.Sakura.Textus.fineOptioScopus))
     else
       let cb := args[0]!
-      let evStx ← resolveCallbackumOptionis cb (args.size - 1)
+      let (evStx, paramTypes) ← resolveCallbackumOptionis cb (args.size - 1)
       if args.size == 1 then
         pure <| some (← `(Signaculum.Sakura.Textus.optioScopus $evStx))
       else
-        let refArgs ← (args.extract 1 args.size).mapM fun a => do
-          let at_ : TSyntax `term := ⟨a⟩
-          `(Signaculum.Memoria.Citatio.toRef $at_)
+        let refArgs ← Signaculum.toRefCumTypo (args.extract 1 args.size) paramTypes
         pure <| some (← `(Signaculum.Sakura.Textus.optioScopus $evStx [$refArgs,*]))
 
   -- ════════════════════════════════════════════════════

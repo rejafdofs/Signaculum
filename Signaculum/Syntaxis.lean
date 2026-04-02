@@ -128,10 +128,34 @@ namespace Signaculum
 -- ═══════════════════════════════════════════════════
 
 /-- Expr の先頭にある明示的 forall の数を数えるにゃん♪ -/
-private partial def countExplicitParams : Lean.Expr → MetaM Nat
+partial def countExplicitParams : Lean.Expr → MetaM Nat
   | .forallE _ _ body .default => return 1 + (← countExplicitParams body)
   | .forallE _ _ body _        => countExplicitParams body
   | _                          => return 0
+
+/-- 明示的パラメータの型を Expr の配列で返すにゃん♪ -/
+partial def getExplicitParamTypes : Lean.Expr → MetaM (Array Lean.Expr)
+  | .forallE _ dom body .default => do
+    let rest ← getExplicitParamTypes body
+    return #[dom] ++ rest
+  | .forallE _ _ body _ => getExplicitParamTypes body
+  | _ => return #[]
+
+/-- 引數配列に型注釋を附けて toRef でラップするにゃん♪
+    paramTypes が空なら注釋なし（文字列形コールバック等）にゃ -/
+def toRefCumTypo (args : Array Syntax) (paramTypes : Array Lean.Expr)
+    : TermElabM (Array (TSyntax `term)) := do
+  let mut result : Array (TSyntax `term) := #[]
+  for hi : i in [:args.size] do
+    let a := args[i]'hi.upper
+    let t : TSyntax `term := ⟨a⟩
+    if h : i < paramTypes.size then
+      let tyExpr := paramTypes[i]'h
+      let tySyntax ← PrettyPrinter.delab tyExpr
+      result := result.push (← `(Signaculum.Memoria.Citatio.toRef (($t : $tySyntax))))
+    else
+      result := result.push (← `(Signaculum.Memoria.Citatio.toRef $t))
+  return result
 
 /-- ident を項として展開して const 名と引數リストを取り出すにゃん♪ -/
 def resolveToConst (f : Ident) : TermElabM Name := do

@@ -15,5 +15,8 @@ lean_lib Signaculum where globs := #[.one `Signaculum, .submodules `Signaculum]
 lean_exe testGhost where
   root := `TestGhost
 
+lean_exe testIntegratio where
+  root := `TestIntegratio
+
 lean_exe ghost where
   root := `Main

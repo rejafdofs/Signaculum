@@ -336,10 +336,12 @@ notificaAlium "SomeGhost" "OnNotify"
 
 ### def ベース DSL 形式（識別子形）
 
+識別子形で登録されたイベントは、プロトコル上では UUID v4 準拠の `On_xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx` 形式で識別される。関数名は露出しない。
+
 ```lean
 -- A 形式: def ベース事象（型付き引数あり）
 -- 引数は Reference 経由で渡される（Reference[0], Reference[1], ...）
-excita onGreet "れゃ" 42                    -- \![raise,Ns.onGreet,...]
+excita onGreet "れゃ" 42                    -- \![raise,On_xxxx-...,...]
 notifica onGreet "れゃ" 42                  -- \![notify,...]
 excitaPostTempus 5000 1 onGreet "れゃ" 42   -- \![timerraise,...]
 notificaPostTempus 1000 0 onGreet "れゃ" 42 -- \![timernotify,...]

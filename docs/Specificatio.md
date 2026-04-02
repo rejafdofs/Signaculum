@@ -442,9 +442,17 @@ Bind.bind で連鎖した SakuraM m Unit 項
 
 1. **strLit** → イヴェント名としてそのまま渡す（従来の文字列形）
 2. **ident** → `registraLazium` でコールバック登録（型から paramCount を自動推定）
-3. **その他の term** → `registraLaziumLambda` で登録（posIdx ベースの一意名生成、paramCount は追加引數數）
+3. **その他の term** → `registraLaziumLambda` で登録（paramCount は追加引數數）
 
 いづれの場合も最終的に `Signaculum.Sakura.*` のランタイム関數にイヴェント名文字列として渡される。`construe` が `ghostAccumulatioExt` の `LazyEventDecl` から Tractator ラッパー def を自動生成し、SHIORI ハンドラテーブルに登録する。
+
+#### イヴェント名の UUID v4 化
+
+識別子形・ラムダ形で登録されるイヴェント名は、関數名やソース位置ではなく UUID v4 準據の一意識別子が自動生成される。形式は `On_xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx`。
+
+- **関數名の隠蔽**: Lean の内部名がプロトコル上に露出しない
+- **SSP 直接發火**: `On` プレフィクスにより、SSP が `\![open,inputbox,...]` 等のウィジェットコールバックで `OnUserInput` にリダイレクトせず、指定された ID で直接發火する（ukadoc 仕様: イヴェント名が `On` で始まる場合は直接發火、それ以外は `OnUserInput` / `OnChoiceSelect` / `OnAnchorSelect` 等にリダイレクト）
+- **衝突回避**: 128ビット亂數による UUID v4 で、イヴェント名の衝突が實質不可能
 
 #### エラーメッセージ
 

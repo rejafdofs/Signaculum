@@ -229,6 +229,8 @@ scriptum
 
 引數は `Citatio.toRef` で文字列 Reference に変換され、呼び出し時に `Citatio.fromRef` で復元されるにゃ。
 
+識別子形を使ふと、プロトコル上のイベント名は UUID v4 準據の `On_` プレフィクス附き一意識別子に自動変換されるにゃ（例: `On_a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d`）。関數名はプロトコルに露出しないにゃん♪ SSP は `On` 始まりのイベント名を直接 ID として發火するため、inputbox 等のウィジェットコールバックも正しく動作するにゃ。
+
 ```lean
 -- 通常の def で処理を定義するにゃ
 def onGreet (nomen : String) (kai : Nat) : SakuraIO Unit := do
@@ -243,7 +245,7 @@ eventum "OnGreet" fun rogatio => do
   finis
 
 eventum "OnBoot" fun _ => do
-  excita onGreet "れゃ" 42   -- \![raise,Ns.onGreet] + 自動登録にゃん♪
+  excita onGreet "れゃ" 42   -- \![raise,On_xxxx,...] + 自動登録にゃん♪
   finis
 
 construe

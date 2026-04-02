@@ -153,6 +153,25 @@ namespace Signaculum
 -- def ベース事象の補助にゃん
 -- ═══════════════════════════════════════════════════
 
+/-- Nat を指定桁數の0埋め16進文字列にするにゃん -/
+private def hexPad (n : Nat) (width : Nat) : String :=
+  let digits := Nat.toDigits 16 n
+  let pad := List.replicate (width - digits.length) '0'
+  String.ofList (pad ++ digits)
+
+/-- UUID v4 準據の "On_" 附きイヴェント名を生成するにゃん♪
+    形式: `On_xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx`
+    SSP は "On" 始まりの名前を直接 ID として發火するにゃ -/
+def generaNomenEventum : TermElabM String := do
+  let a ← IO.rand 0 (2^32 - 1)  -- 8桁
+  let b ← IO.rand 0 (2^16 - 1)  -- 4桁
+  let c ← IO.rand 0 (2^12 - 1)  -- 3桁（上位4ビットはヴァージョン4固定）
+  let d ← IO.rand 0 (2^14 - 1)  -- ヴァリアント2ビット + 14ビット亂數
+  let e ← IO.rand 0 (2^48 - 1)  -- 12桁
+  let c4 := 0x4000 + c           -- ヴァージョン 4
+  let d8 := 0x8000 + (d % 0x4000) -- ヴァリアント 10xx
+  return s!"On_{hexPad a 8}-{hexPad b 4}-{hexPad c4 4}-{hexPad d8 4}-{hexPad e 12}"
+
 /-- Expr の先頭にある明示的 forall の数を数えるにゃん♪ -/
 partial def countExplicitParams : Lean.Expr → MetaM Nat
   | .forallE _ _ body .default => return 1 + (← countExplicitParams body)
@@ -198,16 +217,19 @@ def registraLazium (f : Ident) : TermElabM String := do
   let some info := env.find? fname |
     throwError "excita/insere: {fname} が見つからにゃいにゃ"
   let paramCount ← countExplicitParams info.type
-  let nomenEventi := fname.toString
-  unless (ghostAccumulatioExt.getState env).lazyEventa.any (·.declNomen == fname) do
+  -- 既登録なら既存の名前を返すにゃ。未登録なら UUID を振るにゃん
+  match (ghostAccumulatioExt.getState env).lazyEventa.find? (·.declNomen == fname) with
+  | some existing => return existing.nomenEventi
+  | none =>
+    let nomenEventi ← generaNomenEventum
     modifyEnv (ghostAccumulatioExt.addEntry · (.lazium {
       declNomen := fname, nomenEventi, paramCount }))
-  return nomenEventi
+    return nomenEventi
 
 /-- ラムダ式（Tractator 型の term）を lazyEventa にソース位置ベースの新鮮な名前で登録するにゃ -/
 def registraLaziumLambda (lamStx : Syntax) (posIdx : Nat) (pc : Nat := 0) : TermElabM String := do
   let freshName := Name.mkSimple s!"_excitaLambda_{posIdx}"
-  let nomenEventi := freshName.toString
+  let nomenEventi ← generaNomenEventum
   modifyEnv (ghostAccumulatioExt.addEntry · (.lazium {
       declNomen := freshName
       nomenEventi

@@ -395,6 +395,26 @@ let s <- elige #["A", "B", "C"]   -- ランダムに 1 つ選んで返すにゃ
 
 ---
 
+## チェイントーク (Catena Colloquiorum)
+
+```lean
+-- 順次再生トークを定義にゃ
+catena historiaPrima := [
+  do sakura; loqui "第一話"; finis,
+  do sakura; loqui "第二話"; finis,
+  do sakura; loqui "第三話"; finis
+]
+
+-- 通常トークとチェインの混合選択（チェイン優先）
+eventum "OnAITalk" fun _ => do
+  eligeVelCatena #[
+    .simplex (do sakura; loqui "通常トーク"; finis),
+    .catena historiaPrima
+  ]
+```
+
+---
+
 ## 即時保存 (servaStatum)
 
 `construe` が自動生成する `servaStatum : IO Unit` を使へば、任意のタイミングで `perpetua` 變數を保存できるにゃ。

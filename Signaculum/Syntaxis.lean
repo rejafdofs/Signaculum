@@ -1,7 +1,7 @@
 -- Signaculum.Syntaxis
 -- ゴーストDSL構文擴張にゃん♪
--- varia / eventum / excita(ident形) / insere(ident形) / construe の構文擴張を提供するにゃ
--- 環境拡張 GhostAccumulatio に variae・eventa・lazyEventa を累積するにゃ
+-- varia / eventum / catena / excita(ident形) / insere(ident形) / construe の構文擴張を提供するにゃ
+-- 環境拡張 GhostAccumulatio に variae・eventa・lazyEventa・hasCatenas を累積するにゃ
 
 import Lean
 import Signaculum.Memoria.Citationes
@@ -50,6 +50,7 @@ structure GhostAccumulatio where
   variae     : Array GhostVarDecl   := #[]
   eventa     : Array GhostEventDecl := #[]
   lazyEventa : Array LazyEventDecl  := #[]
+  hasCatenas : Bool                  := false
 
 -- Inhabited インスタンスにゃん♪
 instance : Inhabited GhostVarDecl :=
@@ -68,12 +69,14 @@ inductive GhostEntry
   | varia (decl : GhostVarDecl)
   | eventum (decl : GhostEventDecl)
   | lazium (decl : LazyEventDecl)
+  | catena
 
 private def addGhostEntry (acc : GhostAccumulatio) (entry : GhostEntry) : GhostAccumulatio :=
   match entry with
   | .varia d => { acc with variae := acc.variae.push d }
   | .eventum d => { acc with eventa := acc.eventa.push d }
   | .lazium d => { acc with lazyEventa := acc.lazyEventa.push d }
+  | .catena => { acc with hasCatenas := true }
 
 /-- 環境拡張の登錄にゃん♪ ファイル境界を越えて状態が伝搬するにゃ -/
 initialize ghostAccumulatioExt : SimplePersistentEnvExtension GhostEntry GhostAccumulatio ←
@@ -118,6 +121,29 @@ elab "eventum" nomenEventi:str body:term : command => do
   modifyEnv fun env =>
     ghostAccumulatioExt.addEntry env (.eventum {
       nomen, tractatorNomen := nomenPlenumTractatorum })
+
+/-- チェイントークを宣言するにゃん♪
+    `catena nomen := [actio1, actio2, ...]` で順次再生トークを定義するにゃ。
+    位置は自動的に永續化されるにゃん -/
+elab "catena" n:ident ":=" "[" acts:term,* "]" : command => do
+  let nomen := n.getId.toString
+  let nomenPositio := "_catena_" ++ nomen ++ "_positio"
+  let identPositio := mkIdent (Name.mkSimple nomenPositio)
+  -- 位置用 IO.Ref を initialize するにゃ
+  elabCommand (← `(initialize $identPositio : IO.Ref Nat ← IO.mkRef 0))
+  -- Catena 定義を生成するにゃん♪
+  let actsArr := acts.getElems
+  let nomenLit := Syntax.mkStrLit nomen
+  let identCatena := mkIdent n.getId
+  elabCommand (← `(
+    def $identCatena : Signaculum.Sakura.Textus.Catena :=
+      ⟨$nomenLit, #[$actsArr,*], $identPositio⟩))
+  -- varia perpetua として位置を永續化登錄するにゃ
+  modifyEnv fun env =>
+    ghostAccumulatioExt.addEntry env (.varia {
+      nomen := Name.mkSimple nomenPositio, typusSyntax := mkIdent `Nat, permanet := true })
+  -- hasCatenas フラグを立てるにゃん
+  modifyEnv fun env => ghostAccumulatioExt.addEntry env .catena
 
 end
 
@@ -557,7 +583,7 @@ elab "construe" : command => do
     let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit e.nomenEventi⟩
     pariaTractatorum := pariaTractatorum.push (← `(($signumNominis, $tractorIdent)))
 
-  if variaePermanentes.isEmpty then
+  if variaePermanentes.isEmpty && !acc.hasCatenas then
     elabCommand (← `(def servaStatum : IO Unit := pure ()))
     elabCommand (← `(
       initialize (Signaculum.Nucleus.registraShiori [$pariaTractatorum,*])
@@ -565,7 +591,7 @@ elab "construe" : command => do
     -- ゴーストの主循環エントリーポイントを自動定義するにゃ
     elabCommand (← `(def main : IO Unit := Signaculum.Nucleus.loopPrincipalis))
   else
-    let elementaOnerandi : Array (TSyntax `term) ← variaePermanentes.mapM fun v => do
+    let mut elementaOnerandi : Array (TSyntax `term) ← variaePermanentes.mapM fun v => do
       let identVariae := mkIdent v.nomen
       let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit v.nomen.toString⟩
       let syntaxisTypi : TSyntax `term := ⟨v.typusSyntax⟩
@@ -575,7 +601,7 @@ elab "construe" : command => do
                 Signaculum.Memoria.StatusPermanens.eBytes _s then
               ($identVariae).set _v))
 
-    let elementaServandi : Array (TSyntax `term) ← variaePermanentes.mapM fun v => do
+    let mut elementaServandi : Array (TSyntax `term) ← variaePermanentes.mapM fun v => do
       let identVariae := mkIdent v.nomen
       let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit v.nomen.toString⟩
       let syntaxisTypi : TSyntax `term := ⟨v.typusSyntax⟩
@@ -583,6 +609,20 @@ elab "construe" : command => do
           let _v ← ($identVariae).get
           return (Signaculum.Memoria.StatusPermanens.typusTag (α := $syntaxisTypi),
                   Signaculum.Memoria.StatusPermanens.adBytes _v)))
+
+    -- チェイントーク使用時は catenaActiva の永續化を注入するにゃん♪
+    if acc.hasCatenas then
+      elementaOnerandi := elementaOnerandi.push (← `(
+        ("_catenaActiva", fun _tag _s => do
+          if _tag == Signaculum.Memoria.StatusPermanens.typusTag (α := Option String) then
+            if let (some _v : Option (Option String)) :=
+                Signaculum.Memoria.StatusPermanens.eBytes _s then
+              Signaculum.Sakura.Textus.catenaActiva.set _v)))
+      elementaServandi := elementaServandi.push (← `(
+        ("_catenaActiva", do
+          let _v ← Signaculum.Sakura.Textus.catenaActiva.get
+          return (Signaculum.Memoria.StatusPermanens.typusTag (α := Option String),
+                  Signaculum.Memoria.StatusPermanens.adBytes _v))))
 
     let terminusTractatorum ← `([$pariaTractatorum,*])
     let terminusOnerandi    ← `([$elementaOnerandi,*])

@@ -153,6 +153,8 @@ def talkScriptum : SakuraPura Unit := scriptum!
 | `\__v["options"]` | `synthesisVocis "options"` | 音声合成調整 |
 | `\f[anchor.font.color, c]` | `colorFontisAncorae c` | 錨テキスト色 |
 | `%month` / `%username` 等 | `variabilisAmbientis "month"` | 環境変数参照 |
+| `%property[system.year]` | `proprietasCitata .systemAnnus` | プロパティ値埋込（糖衣構文） |
+| `%property[(.systemAnnus)]` | `proprietasCitata .systemAnnus` | プロパティ値埋込（Lean term） |
 | `"テキスト"` | `loqui "テキスト"` | 文字列表示 |
 | `{expr}` | （任意の Lean 式） | 式埋込（`Exhibibilis` 型クラス経由） |
 

@@ -250,6 +250,369 @@ private def extractLabel (s : Lean.Syntax) : String :=
 --  scriptumMacro エラボレーター
 -- ════════════════════════════════════════════════════
 
+-- ════════════════════════════════════════════════════
+--  %property[...] 糖衣構文解決 (Resolutio Proprietatis)
+-- ════════════════════════════════════════════════════
+
+/-- ジェネリックサブプロパティ名を解決するにゃん♪ -/
+private def resolveProprietasGenerica (suffix : String) (stx : Lean.Syntax)
+    : TermElabM (TSyntax `term) := do
+  match suffix with
+  | "name"        => `(Signaculum.Sakura.ProprietasGenerica.nomen)
+  | "sakuraname"  => `(Signaculum.Sakura.ProprietasGenerica.sakuraNomen)
+  | "keroname"    => `(Signaculum.Sakura.ProprietasGenerica.keroNomen)
+  | "craftmanw"   => `(Signaculum.Sakura.ProprietasGenerica.fabricator)
+  | "craftmanurl" => `(Signaculum.Sakura.ProprietasGenerica.fabricatorNexus)
+  | "path"        => `(Signaculum.Sakura.ProprietasGenerica.via)
+  | "thumbnail"   => `(Signaculum.Sakura.ProprietasGenerica.imago)
+  | "homeurl"     => `(Signaculum.Sakura.ProprietasGenerica.nexusAedis)
+  | "username"    => `(Signaculum.Sakura.ProprietasGenerica.nomenUtentis)
+  | "index"       => `(Signaculum.Sakura.ProprietasGenerica.index)
+  | "icon"        => `(Signaculum.Sakura.ProprietasGenerica.icon)
+  | _ => throwErrorAt stx s!"未知のジェネリックサブプロパティにゃ: {suffix}"
+
+/-- スコープサブプロパティ名を解決するにゃん♪ -/
+private def resolveProprietasScopus (suffix : String) (stx : Lean.Syntax)
+    : TermElabM (TSyntax `term) := do
+  match suffix with
+  | "surface.num"            => `(Signaculum.Sakura.ProprietasScopus.superficiesNum)
+  | "surface.x"              => `(Signaculum.Sakura.ProprietasScopus.superficiesX)
+  | "surface.y"              => `(Signaculum.Sakura.ProprietasScopus.superficiesY)
+  | "seriko.defaultsurface"  => `(Signaculum.Sakura.ProprietasScopus.serikoSuperficiesPraef)
+  | "x"                      => `(Signaculum.Sakura.ProprietasScopus.x)
+  | "y"                      => `(Signaculum.Sakura.ProprietasScopus.y)
+  | "rect"                   => `(Signaculum.Sakura.ProprietasScopus.rect)
+  | "name"                   => `(Signaculum.Sakura.ProprietasScopus.nomen)
+  | _ => throwErrorAt stx s!"未知のスコープサブプロパティにゃ: {suffix}"
+
+/-- バルーンスコープサブプロパティ名を解決するにゃん♪ -/
+private def resolveProprietasBullaeScopus (suffix : String) (stx : Lean.Syntax)
+    : TermElabM (TSyntax `term) := do
+  match suffix with
+  | "num"              => `(Signaculum.Sakura.ProprietasBullaeScopus.numerus)
+  | "validwidth"       => `(Signaculum.Sakura.ProprietasBullaeScopus.latitudo)
+  | "validwidth.initial" => `(Signaculum.Sakura.ProprietasBullaeScopus.latitudoInitialis)
+  | "validheight"      => `(Signaculum.Sakura.ProprietasBullaeScopus.altitudo)
+  | "validheight.initial" => `(Signaculum.Sakura.ProprietasBullaeScopus.altitudoInitialis)
+  | "lines"            => `(Signaculum.Sakura.ProprietasBullaeScopus.linea)
+  | "lines.initial"    => `(Signaculum.Sakura.ProprietasBullaeScopus.lineaInitialis)
+  | "basepos.x"        => `(Signaculum.Sakura.ProprietasBullaeScopus.basePosX)
+  | "basepos.y"        => `(Signaculum.Sakura.ProprietasBullaeScopus.basePosY)
+  | "char_width"       => `(Signaculum.Sakura.ProprietasBullaeScopus.latitudoCharacteris)
+  | _ => throwErrorAt stx s!"未知のバルーンスコープサブプロパティにゃ: {suffix}"
+
+/-- rateofuse サブプロパティ名を解決するにゃん♪ -/
+private def resolveProprietasRateOfUse (suffix : String) (stx : Lean.Syntax)
+    : TermElabM (TSyntax `term) := do
+  match suffix with
+  | "name"       => `(Signaculum.Sakura.ProprietasRateOfUse.nomen)
+  | "sakuraname" => `(Signaculum.Sakura.ProprietasRateOfUse.sakuraNomen)
+  | "keroname"   => `(Signaculum.Sakura.ProprietasRateOfUse.keroNomen)
+  | "boottime"   => `(Signaculum.Sakura.ProprietasRateOfUse.numerusStartuporum)
+  | "bootminute" => `(Signaculum.Sakura.ProprietasRateOfUse.minutae)
+  | "percent"    => `(Signaculum.Sakura.ProprietasRateOfUse.proportio)
+  | _ => throwErrorAt stx s!"未知の rateofuse サブプロパティにゃ: {suffix}"
+
+/-- 文字列の指定位置以降を String として取り出すにゃん♪
+    String.drop は Slice を返すから、toString で變換するにゃ -/
+private def stringDropToString (s : String) (n : Nat) : String :=
+  (s.drop n).toString
+
+/-- 文字列を指定文字で前後に分割するにゃん♪ 最初の出現位置で切るにゃ -/
+private def splitAtChar (s : String) (ch : Char) : Option (String × String) := Id.run do
+  let chars := s.toList
+  let mut before : List Char := []
+  let mut rest := chars
+  while true do
+    match rest with
+    | [] => return .none
+    | c :: cs =>
+      if c == ch then
+        return .some (before.reverse |> String.ofList, cs |> String.ofList)
+      before := c :: before
+      rest := cs
+  return .none
+
+/-- "prefix(name).suffix" からパレンの中身とサフィクスを抽出するにゃん♪
+    prefixLen の長さ分だけ先頭をスキップして '(' を探すにゃ -/
+private def extractNomenEtSuffix (s : String) (prefixLen : Nat)
+    : Option (String × String) := do
+  let rest := stringDropToString s prefixLen
+  if rest.front? != some '(' then .none
+  let inner := stringDropToString rest 1  -- '(' の後にゃ
+  -- ')' で分割にゃ
+  let (nomen, afterParen) ← splitAtChar inner ')'
+  -- '.' を期待にゃ
+  if afterParen.front? != some '.' then .none
+  let suffix := stringDropToString afterParen 1
+  .some (nomen, suffix)
+
+/-- "prefix.index(n).suffix" からインデックスとサフィクスを抽出するにゃん♪ -/
+private def extractIndexEtSuffix (s : String) (prefixLen : Nat)
+    : Option (Nat × String) := do
+  let rest := stringDropToString s prefixLen
+  if !rest.startsWith ".index(" then .none
+  let inner := stringDropToString rest 7  -- ".index(" の後にゃ
+  let (numStr, afterParen) ← splitAtChar inner ')'
+  let n ← numStr.toNat?
+  if afterParen.front? != some '.' then .none
+  let suffix := stringDropToString afterParen 1
+  .some (n, suffix)
+
+/-- "prefix.current.suffix" からサフィクスを抽出するにゃん♪ -/
+private def extractCurrentSuffix (s : String) (prefixLen : Nat)
+    : Option String := do
+  let rest := stringDropToString s prefixLen
+  if !rest.startsWith ".current." then .none
+  .some (stringDropToString rest 9)
+
+/-- ジェネリックリスト系プロパティを解決するにゃん♪
+    ghostlist / activeghostlist / balloonlist 等の共通パターンにゃ -/
+private def resolveListaGenerica (nomen : String) (praefixum : String)
+    (mkNomen : TSyntax `term → TSyntax `term → TermElabM (TSyntax `term))
+    (mkIndex : TSyntax `term → TSyntax `term → TermElabM (TSyntax `term))
+    (mkCurrent : TSyntax `term → TermElabM (TSyntax `term))
+    (stx : Lean.Syntax) : TermElabM (Option (TSyntax `term)) := do
+  if let some (n, suffix) := extractNomenEtSuffix nomen praefixum.length then
+    let sub ← resolveProprietasGenerica suffix stx
+    let nLit := Lean.Syntax.mkStrLit n
+    some <$> mkNomen nLit sub
+  else if let some (i, suffix) := extractIndexEtSuffix nomen praefixum.length then
+    let sub ← resolveProprietasGenerica suffix stx
+    let iLit := Lean.Syntax.mkNumLit (toString i)
+    some <$> mkIndex iLit sub
+  else if let some suffix := extractCurrentSuffix nomen praefixum.length then
+    let sub ← resolveProprietasGenerica suffix stx
+    some <$> mkCurrent sub
+  else
+    return .none
+
+/-- プロパティパス文字列を Proprietas コンストラクタ構文に解決するにゃん♪
+    scriptum マクロの %property[...] 糖衣構文で使ふにゃ -/
+private def resolveNomenProprietatis (nomen : String) (stx : Lean.Syntax)
+    : TermElabM (TSyntax `term) := do
+  -- ── 靜的プロパティ（パラメータ無し）にゃ ──
+  match nomen with
+  -- system.*
+  | "system.year"           => return ← `(Signaculum.Sakura.Proprietas.systemAnnus)
+  | "system.month"          => return ← `(Signaculum.Sakura.Proprietas.systemMensis)
+  | "system.day"            => return ← `(Signaculum.Sakura.Proprietas.systemDies)
+  | "system.hour"           => return ← `(Signaculum.Sakura.Proprietas.systemHora)
+  | "system.minute"         => return ← `(Signaculum.Sakura.Proprietas.systemMinutum)
+  | "system.second"         => return ← `(Signaculum.Sakura.Proprietas.systemSecundum)
+  | "system.millisecond"    => return ← `(Signaculum.Sakura.Proprietas.systemMillisecundum)
+  | "system.dayofweek"      => return ← `(Signaculum.Sakura.Proprietas.systemDiesSeptimanus)
+  | "system.cursor.pos"     => return ← `(Signaculum.Sakura.Proprietas.systemCursorPositio)
+  | "system.os.type"        => return ← `(Signaculum.Sakura.Proprietas.systemOsTypus)
+  | "system.os.name"        => return ← `(Signaculum.Sakura.Proprietas.systemOsNomen)
+  | "system.os.version"     => return ← `(Signaculum.Sakura.Proprietas.systemOsVersione)
+  | "system.os.build"       => return ← `(Signaculum.Sakura.Proprietas.systemOsCompilatio)
+  | "system.os.parenttype"  => return ← `(Signaculum.Sakura.Proprietas.systemOsParensTypus)
+  | "system.os.parentname"  => return ← `(Signaculum.Sakura.Proprietas.systemOsParensNomen)
+  | "system.cpu.load"       => return ← `(Signaculum.Sakura.Proprietas.systemCpuOnus)
+  | "system.cpu.num"        => return ← `(Signaculum.Sakura.Proprietas.systemCpuNumerus)
+  | "system.cpu.vendor"     => return ← `(Signaculum.Sakura.Proprietas.systemCpuVendor)
+  | "system.cpu.name"       => return ← `(Signaculum.Sakura.Proprietas.systemCpuNomen)
+  | "system.cpu.clock"      => return ← `(Signaculum.Sakura.Proprietas.systemCpuPulsus)
+  | "system.cpu.features"   => return ← `(Signaculum.Sakura.Proprietas.systemCpuFunctiones)
+  | "system.memory.load"    => return ← `(Signaculum.Sakura.Proprietas.systemMemoriaOnus)
+  | "system.memory.phyt"    => return ← `(Signaculum.Sakura.Proprietas.systemMemoriaPhysicaTota)
+  | "system.memory.phya"    => return ← `(Signaculum.Sakura.Proprietas.systemMemoriaPhysicaLibera)
+  -- baseware.*
+  | "baseware.version"      => return ← `(Signaculum.Sakura.Proprietas.basewereVersione)
+  | "baseware.name"         => return ← `(Signaculum.Sakura.Proprietas.basewereNomen)
+  -- ghostlist.count
+  | "ghostlist.count"       => return ← `(Signaculum.Sakura.Proprietas.ghostlistNumerus)
+  -- currentghost 靜的にゃ
+  | "currentghost.status"   => return ← `(Signaculum.Sakura.Proprietas.currentghostStatus)
+  | "currentghost.scope.count" => return ← `(Signaculum.Sakura.Proprietas.currentghostScopusNumerus)
+  -- currentghost.shelllist.count
+  | "currentghost.shelllist.count" => return ← `(Signaculum.Sakura.Proprietas.currentghostShelllistNumerus)
+  -- currentghost.balloon.count
+  | "currentghost.balloon.count" => return ← `(Signaculum.Sakura.Proprietas.currentghostBullaeNumerus)
+  -- currentghost mousecursor
+  | "currentghost.mousecursor"        => return ← `(Signaculum.Sakura.Proprietas.currentghostCursorMus)
+  | "currentghost.mousecursor.text"   => return ← `(Signaculum.Sakura.Proprietas.currentghostCursorTextus)
+  | "currentghost.mousecursor.wait"   => return ← `(Signaculum.Sakura.Proprietas.currentghostCursorExspecto)
+  | "currentghost.mousecursor.hand"   => return ← `(Signaculum.Sakura.Proprietas.currentghostCursorManus)
+  | "currentghost.mousecursor.grip"   => return ← `(Signaculum.Sakura.Proprietas.currentghostCursorPrehendo)
+  | "currentghost.mousecursor.arrow"  => return ← `(Signaculum.Sakura.Proprietas.currentghostCursorSagitta)
+  | "currentghost.balloon.mousecursor"        => return ← `(Signaculum.Sakura.Proprietas.currentghostBullaeCursorMus)
+  | "currentghost.balloon.mousecursor.text"   => return ← `(Signaculum.Sakura.Proprietas.currentghostBullaeCursorTextus)
+  | "currentghost.balloon.mousecursor.wait"   => return ← `(Signaculum.Sakura.Proprietas.currentghostBullaeCursorExspecto)
+  | "currentghost.balloon.mousecursor.arrow"  => return ← `(Signaculum.Sakura.Proprietas.currentghostBullaeCursorSagitta)
+  -- currentghost seriko
+  | "currentghost.seriko.surfacelist.all"     => return ← `(Signaculum.Sakura.Proprietas.currentghostSerikoSurfacesOmnes)
+  | "currentghost.seriko.surfacelist.defined" => return ← `(Signaculum.Sakura.Proprietas.currentghostSerikoSurfacesDefinitae)
+  -- balloonlist.count / headlinelist.count / pluginlist.count
+  | "balloonlist.count"     => return ← `(Signaculum.Sakura.Proprietas.balloonlistNumerus)
+  | "headlinelist.count"    => return ← `(Signaculum.Sakura.Proprietas.headlinelistNumerus)
+  | "pluginlist.count"      => return ← `(Signaculum.Sakura.Proprietas.pluginlistNumerus)
+  -- history.*.count
+  | "history.ghost.count"    => return ← `(Signaculum.Sakura.Proprietas.historyGhostNumerus)
+  | "history.balloon.count"  => return ← `(Signaculum.Sakura.Proprietas.historyBullaeNumerus)
+  | "history.headline.count" => return ← `(Signaculum.Sakura.Proprietas.historyHeadlineNumerus)
+  | "history.plugin.count"   => return ← `(Signaculum.Sakura.Proprietas.historyPluginNumerus)
+  | _ => pure ()
+  -- ── パラメータ付きプロパティにゃ ──
+  -- ghostlist(name).* / ghostlist.index(n).* / ghostlist.current.*
+  if nomen.startsWith "ghostlist" && !nomen.startsWith "ghostlist." || nomen.startsWith "ghostlist." then
+    if let some r ← resolveListaGenerica nomen "ghostlist"
+        (fun n sub => `(Signaculum.Sakura.Proprietas.ghostlistNomen $n $sub))
+        (fun i sub => `(Signaculum.Sakura.Proprietas.ghostlistIndex $i $sub))
+        (fun sub   => `(Signaculum.Sakura.Proprietas.ghostlistCurrent $sub))
+        stx then
+      return r
+  -- activeghostlist(name).* / .index(n).* / .current.*
+  if nomen.startsWith "activeghostlist" then
+    if let some r ← resolveListaGenerica nomen "activeghostlist"
+        (fun n sub => `(Signaculum.Sakura.Proprietas.activeghostlistNomen $n $sub))
+        (fun i sub => `(Signaculum.Sakura.Proprietas.activeghostlistIndex $i $sub))
+        (fun sub   => `(Signaculum.Sakura.Proprietas.activeghostlistCurrent $sub))
+        stx then
+      return r
+  -- currentghost generic: currentghost.name 等にゃ
+  if nomen.startsWith "currentghost." then
+    -- currentghost.scope(n).* — ProprietasScopus にゃ
+    if nomen.startsWith "currentghost.scope(" then
+      let inner := stringDropToString nomen 20  -- "currentghost.scope(" の後にゃ
+      if let some (numStr, afterParen) := splitAtChar inner ')' then
+        if let some n := numStr.toNat? then
+          if afterParen.startsWith "." then
+            let suffix := stringDropToString afterParen 1
+            let sub ← resolveProprietasScopus suffix stx
+            let nLit := Lean.Syntax.mkNumLit (toString n)
+            return ← `(Signaculum.Sakura.Proprietas.currentghostScopus $nLit $sub)
+    -- currentghost.shelllist(name).* / .index(n).* / .current.*
+    if nomen.startsWith "currentghost.shelllist" then
+      if let some (n, suffix) := extractNomenEtSuffix nomen "currentghost.shelllist".length then
+        let sub ← resolveProprietasGenerica suffix stx
+        let nLit := Lean.Syntax.mkStrLit n
+        return ← `(Signaculum.Sakura.Proprietas.currentghostShelllistNomen $nLit $sub)
+      if let some (i, suffix) := extractIndexEtSuffix nomen "currentghost.shelllist".length then
+        let sub ← resolveProprietasGenerica suffix stx
+        let iLit := Lean.Syntax.mkNumLit (toString i)
+        return ← `(Signaculum.Sakura.Proprietas.currentghostShelllistIndex $iLit $sub)
+      if let some suffix := extractCurrentSuffix nomen "currentghost.shelllist".length then
+        let sub ← resolveProprietasGenerica suffix stx
+        return ← `(Signaculum.Sakura.Proprietas.currentghostShelllistCurrent $sub)
+    -- currentghost.balloon.scope(n).* — ProprietasBullaeScopus にゃ
+    if nomen.startsWith "currentghost.balloon.scope(" then
+      let inner := stringDropToString nomen 27  -- "currentghost.balloon.scope(" の後にゃ
+      if let some (numStr, afterParen) := splitAtChar inner ')' then
+        if let some n := numStr.toNat? then
+          if afterParen.startsWith "." then
+            let suffix := stringDropToString afterParen 1
+            if suffix == "count" then
+              let nLit := Lean.Syntax.mkNumLit (toString n)
+              return ← `(Signaculum.Sakura.Proprietas.currentghostBullaeScopusNumerus $nLit)
+            else
+              let sub ← resolveProprietasBullaeScopus suffix stx
+              let nLit := Lean.Syntax.mkNumLit (toString n)
+              return ← `(Signaculum.Sakura.Proprietas.currentghostBullaeScopus $nLit $sub)
+    -- currentghost.balloon.* (generic)
+    if nomen.startsWith "currentghost.balloon." then
+      let suffix := stringDropToString nomen 21
+      -- 既に處理濟みの balloon.count / balloon.mousecursor* / balloon.scope* は上で返すにゃ
+      -- 殘りは generic にゃ
+      if !suffix.startsWith "mousecursor" && !suffix.startsWith "scope" && suffix != "count" then
+        let sub ← resolveProprietasGenerica suffix stx
+        return ← `(Signaculum.Sakura.Proprietas.currentghostBullaeGenerica $sub)
+    -- currentghost.* (generic) — 上で處理されなかった殘りにゃ
+    let suffix := stringDropToString nomen 13  -- "currentghost." の後にゃ
+    if !suffix.startsWith "scope" && !suffix.startsWith "shelllist" && !suffix.startsWith "balloon"
+       && !suffix.startsWith "mousecursor" && !suffix.startsWith "seriko"
+       && suffix != "status" then
+      let sub ← resolveProprietasGenerica suffix stx
+      return ← `(Signaculum.Sakura.Proprietas.currentghostGenerica $sub)
+  -- balloonlist(name).* / .index(n).*
+  if nomen.startsWith "balloonlist" && nomen != "balloonlist.count" then
+    if let some (n, suffix) := extractNomenEtSuffix nomen "balloonlist".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let nLit := Lean.Syntax.mkStrLit n
+      return ← `(Signaculum.Sakura.Proprietas.balloonlistNomen $nLit $sub)
+    if let some (i, suffix) := extractIndexEtSuffix nomen "balloonlist".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let iLit := Lean.Syntax.mkNumLit (toString i)
+      return ← `(Signaculum.Sakura.Proprietas.balloonlistIndex $iLit $sub)
+  -- headlinelist(name).* / .index(n).*
+  if nomen.startsWith "headlinelist" && nomen != "headlinelist.count" then
+    if let some (n, suffix) := extractNomenEtSuffix nomen "headlinelist".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let nLit := Lean.Syntax.mkStrLit n
+      return ← `(Signaculum.Sakura.Proprietas.headlinelistNomen $nLit $sub)
+    if let some (i, suffix) := extractIndexEtSuffix nomen "headlinelist".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let iLit := Lean.Syntax.mkNumLit (toString i)
+      return ← `(Signaculum.Sakura.Proprietas.headlinelistIndex $iLit $sub)
+  -- pluginlist(name).* / .index(n).*
+  if nomen.startsWith "pluginlist" && nomen != "pluginlist.count" then
+    if let some (n, suffix) := extractNomenEtSuffix nomen "pluginlist".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let nLit := Lean.Syntax.mkStrLit n
+      return ← `(Signaculum.Sakura.Proprietas.pluginlistNomen $nLit $sub)
+    if let some (i, suffix) := extractIndexEtSuffix nomen "pluginlist".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let iLit := Lean.Syntax.mkNumLit (toString i)
+      return ← `(Signaculum.Sakura.Proprietas.pluginlistIndex $iLit $sub)
+  -- history.ghost(name).* / .index(n).*
+  if nomen.startsWith "history.ghost" && nomen != "history.ghost.count" then
+    if let some (n, suffix) := extractNomenEtSuffix nomen "history.ghost".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let nLit := Lean.Syntax.mkStrLit n
+      return ← `(Signaculum.Sakura.Proprietas.historyGhostNomen $nLit $sub)
+    if let some (i, suffix) := extractIndexEtSuffix nomen "history.ghost".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let iLit := Lean.Syntax.mkNumLit (toString i)
+      return ← `(Signaculum.Sakura.Proprietas.historyGhostIndex $iLit $sub)
+  -- history.balloon(name).* / .index(n).*
+  if nomen.startsWith "history.balloon" && nomen != "history.balloon.count" then
+    if let some (n, suffix) := extractNomenEtSuffix nomen "history.balloon".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let nLit := Lean.Syntax.mkStrLit n
+      return ← `(Signaculum.Sakura.Proprietas.historyBullaeNomen $nLit $sub)
+    if let some (i, suffix) := extractIndexEtSuffix nomen "history.balloon".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let iLit := Lean.Syntax.mkNumLit (toString i)
+      return ← `(Signaculum.Sakura.Proprietas.historyBullaeIndex $iLit $sub)
+  -- history.headline(name).* / .index(n).*
+  if nomen.startsWith "history.headline" && nomen != "history.headline.count" then
+    if let some (n, suffix) := extractNomenEtSuffix nomen "history.headline".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let nLit := Lean.Syntax.mkStrLit n
+      return ← `(Signaculum.Sakura.Proprietas.historyHeadlineNomen $nLit $sub)
+    if let some (i, suffix) := extractIndexEtSuffix nomen "history.headline".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let iLit := Lean.Syntax.mkNumLit (toString i)
+      return ← `(Signaculum.Sakura.Proprietas.historyHeadlineIndex $iLit $sub)
+  -- history.plugin(name).* / .index(n).*
+  if nomen.startsWith "history.plugin" && nomen != "history.plugin.count" then
+    if let some (n, suffix) := extractNomenEtSuffix nomen "history.plugin".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let nLit := Lean.Syntax.mkStrLit n
+      return ← `(Signaculum.Sakura.Proprietas.historyPluginNomen $nLit $sub)
+    if let some (i, suffix) := extractIndexEtSuffix nomen "history.plugin".length then
+      let sub ← resolveProprietasGenerica suffix stx
+      let iLit := Lean.Syntax.mkNumLit (toString i)
+      return ← `(Signaculum.Sakura.Proprietas.historyPluginIndex $iLit $sub)
+  -- rateofuselist(name).* / .index(n).*
+  if nomen.startsWith "rateofuselist" then
+    if let some (n, suffix) := extractNomenEtSuffix nomen "rateofuselist".length then
+      let sub ← resolveProprietasRateOfUse suffix stx
+      let nLit := Lean.Syntax.mkStrLit n
+      return ← `(Signaculum.Sakura.Proprietas.rateofuselistNomen $nLit $sub)
+    if let some (i, suffix) := extractIndexEtSuffix nomen "rateofuselist".length then
+      let sub ← resolveProprietasRateOfUse suffix stx
+      let iLit := Lean.Syntax.mkNumLit (toString i)
+      return ← `(Signaculum.Sakura.Proprietas.rateofuselistIndex $iLit $sub)
+  -- shiori.*
+  if nomen.startsWith "shiori." then
+    let varNomen := stringDropToString nomen 7
+    let nLit := Lean.Syntax.mkStrLit varNomen
+    return ← `(Signaculum.Sakura.Proprietas.shioriVariabilis $nLit)
+  -- 未知にゃ
+  throwErrorAt stx s!"未知のプロパティ名にゃ: {nomen}"
+
 /-- LexemaSakurae ノードを term 構文に變換するにゃん♪
     ノードカインドでディスパッチしてから Expande 關數に委ねるにゃ -/
 private def genTermLexema (s : Lean.Syntax) : TermElabM (TSyntax `term) := do
@@ -276,6 +639,17 @@ private def genTermLexema (s : Lean.Syntax) : TermElabM (TSyntax `term) := do
       | .ident _ rawVal _ _ => rawVal.toString
       | _ => s[0].getId.toString
     return ← `(Signaculum.Sakura.Systema.variabilisAmbientis $(Lean.Syntax.mkStrLit nomen))
+  -- プロパティ引用（Lean term）にゃ
+  if kind == lexemaProprietasCitata then
+    let termStx : TSyntax `term := ⟨s[0]⟩
+    return ← `(Signaculum.Sakura.Systema.proprietasCitata $termStx)
+  -- プロパティ引用（糖衣構文）にゃ
+  if kind == lexemaProprietasCitataNomen then
+    let nomen := match s[0] with
+      | .atom _ val => val
+      | _ => ""
+    let propTerm ← resolveNomenProprietatis nomen s
+    return ← `(Signaculum.Sakura.Systema.proprietasCitata $propTerm)
   -- バックスラッシュタグにゃ
   if kind == lexemaSignum then
     let nomen := extractLabel s

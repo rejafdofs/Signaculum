@@ -562,8 +562,33 @@ allineatioDesktop .liber
 ## プロパティ
 
 ```lean
-configuraProprietatem "mykey" "myvalue"
-legeProprietatem "OnResult" ["key1", "key2"]
+configuraProprietatem .systemAnnus "2026"
+legeProprietatem "OnResult" [.systemMensis, .systemDies]
+
+-- プロパティ値をその場に埋め込む
+proprietasCitata .systemAnnus  -- %property[system.year]
+```
+
+### scriptum! 記法でのプロパティ参照
+
+`%property[...]` でプロパティ値をテキスト中に埋め込めます。
+
+```lean
+-- 糖衣構文: SakuraScript のプロパティ名をそのまま書ける
+scriptum!
+  \h \s[0] 今は%property[system.year]年%property[system.month]月にゃん
+
+-- Lean term: 括弧で囲むと Proprietas 型の式を渡せる
+scriptum!
+  \h \s[0] %property[(.systemAnnus)]
+
+-- SHIORI 変数
+scriptum!
+  \h \s[0] %property[shiori.myvar]
+
+-- パラメータ付きプロパティ
+scriptum!
+  \h \s[0] %property[ghostlist(MyGhost).name]
 ```
 
 ---

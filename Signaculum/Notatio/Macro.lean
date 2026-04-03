@@ -264,11 +264,6 @@ private def emitteCompletionem (stx : Lean.Syntax) (nomenId : Name) (ns : Name) 
   withTheReader Lean.Core.Context
     (fun ctx => { ctx with openDecls := ctx.openDecls ++ [openDecl] }) do
     pushInfoLeaf (.ofCompletionInfo (.id stx nomenId false (← getLCtx) none))
-  -- ホバー情報: Complementum の定數を參照して docstring を表示するにゃん♪
-  let fullName := ns ++ nomenId
-  if (← getEnv).find? fullName |>.isSome then
-    let expr ← mkConstWithLevelParams fullName
-    Term.addTermInfo' stx expr (isBinder := false)
 
 -- ════════════════════════════════════════════════════
 --  scriptumMacro エラボレーター
@@ -314,12 +309,15 @@ private def genTermLexema (s : Lean.Syntax) : TermElabM (TSyntax `term) := do
     -- 補完用プレースホルダー（\ のみ）にゃ
     if nomen == "\\" then
       return ← `(Pure.pure ())
-    -- Textus ディスパッチにゃ
-    if let some t ← expandeSignumTextus nomen args s then return t
+    -- Textus ディスパッチにゃ（setHeadInfo でタグ位置を保持→ホバー表示にゃん♪）
+    if let some t ← expandeSignumTextus nomen args s then
+      return ⟨t.raw.setHeadInfo (s.getHeadInfo)⟩
     -- Fenestra basicum ディスパッチにゃ（\z, \_b 等）
-    if let some t ← expandeSignumFenestraeBasicum nomen args s then return t
+    if let some t ← expandeSignumFenestraeBasicum nomen args s then
+      return ⟨t.raw.setHeadInfo (s.getHeadInfo)⟩
     -- Systema basicum ディスパッチにゃ（\_v, \8, \m, \__v 等）
-    if let some t ← expandeSignumSystematisBasicum nomen args s then return t
+    if let some t ← expandeSignumSystematisBasicum nomen args s then
+      return ⟨t.raw.setHeadInfo (s.getHeadInfo)⟩
     throwErrorAt s s!"未知のサクラスクリプトタグにゃ: {nomen}"
   -- 感嘆符タグにゃ
   if kind == lexemaSignumExcl then
@@ -330,10 +328,12 @@ private def genTermLexema (s : Lean.Syntax) : TermElabM (TSyntax `term) := do
     -- 補完用プレースホルダー（空コマンド名）にゃ
     if imperium == "" then
       return ← `(Pure.pure ())
-    -- Fenestra ディスパッチにゃ
-    if let some t ← expandeSignumFenestrae imperium args s then return t
+    -- Fenestra ディスパッチにゃ（setHeadInfo でホバー位置保持にゃん♪）
+    if let some t ← expandeSignumFenestrae imperium args s then
+      return ⟨t.raw.setHeadInfo (s.getHeadInfo)⟩
     -- Systema ディスパッチにゃ
-    if let some t ← expandeSignumSystematis imperium args s then return t
+    if let some t ← expandeSignumSystematis imperium args s then
+      return ⟨t.raw.setHeadInfo (s.getHeadInfo)⟩
     throwErrorAt s s!"未知の \\![...] コマンドにゃ: {imperium}"
   -- 書體タグにゃ
   if kind == lexemaFontis then
@@ -344,7 +344,8 @@ private def genTermLexema (s : Lean.Syntax) : TermElabM (TSyntax `term) := do
     -- 補完用プレースホルダー（空キー名）にゃ
     if clavis == "" then
       return ← `(Pure.pure ())
-    if let some t ← expandeFons clavis valores s then return t
+    if let some t ← expandeFons clavis valores s then
+      return ⟨t.raw.setHeadInfo (s.getHeadInfo)⟩
     throwErrorAt s s!"未知の \\f[...] キーにゃ: {clavis}"
   -- 未知のノードにゃ
   throwErrorAt s "未知のレクセマにゃ"

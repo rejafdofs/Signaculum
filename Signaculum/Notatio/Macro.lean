@@ -268,7 +268,7 @@ private def emitteCompletionem (stx : Lean.Syntax) (nomenId : Name) (ns : Name) 
   let openDecl := Lean.OpenDecl.simple ns []
   withTheReader Lean.Core.Context
     (fun ctx => { ctx with openDecls := ctx.openDecls ++ [openDecl] }) do
-    pushInfoLeaf (.ofCompletionInfo (.id canonStx nomenId false (← getLCtx) none))
+    pushInfoLeaf (.ofCompletionInfo (.id canonStx .anonymous false (← getLCtx) none))
 
 -- ════════════════════════════════════════════════════
 --  scriptumMacro エラボレーター

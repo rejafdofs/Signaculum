@@ -309,15 +309,12 @@ private def genTermLexema (s : Lean.Syntax) : TermElabM (TSyntax `term) := do
     -- 補完用プレースホルダー（\ のみ）にゃ
     if nomen == "\\" then
       return ← `(Pure.pure ())
-    -- Textus ディスパッチにゃ（setHeadInfo でタグ位置を保持→ホバー表示にゃん♪）
-    if let some t ← expandeSignumTextus nomen args s then
-      return ⟨t.raw.setHeadInfo (s.getHeadInfo)⟩
+    -- Textus ディスパッチにゃ
+    if let some t ← expandeSignumTextus nomen args s then return t
     -- Fenestra basicum ディスパッチにゃ（\z, \_b 等）
-    if let some t ← expandeSignumFenestraeBasicum nomen args s then
-      return ⟨t.raw.setHeadInfo (s.getHeadInfo)⟩
+    if let some t ← expandeSignumFenestraeBasicum nomen args s then return t
     -- Systema basicum ディスパッチにゃ（\_v, \8, \m, \__v 等）
-    if let some t ← expandeSignumSystematisBasicum nomen args s then
-      return ⟨t.raw.setHeadInfo (s.getHeadInfo)⟩
+    if let some t ← expandeSignumSystematisBasicum nomen args s then return t
     throwErrorAt s s!"未知のサクラスクリプトタグにゃ: {nomen}"
   -- 感嘆符タグにゃ
   if kind == lexemaSignumExcl then
@@ -328,12 +325,10 @@ private def genTermLexema (s : Lean.Syntax) : TermElabM (TSyntax `term) := do
     -- 補完用プレースホルダー（空コマンド名）にゃ
     if imperium == "" then
       return ← `(Pure.pure ())
-    -- Fenestra ディスパッチにゃ（setHeadInfo でホバー位置保持にゃん♪）
-    if let some t ← expandeSignumFenestrae imperium args s then
-      return ⟨t.raw.setHeadInfo (s.getHeadInfo)⟩
+    -- Fenestra ディスパッチにゃ
+    if let some t ← expandeSignumFenestrae imperium args s then return t
     -- Systema ディスパッチにゃ
-    if let some t ← expandeSignumSystematis imperium args s then
-      return ⟨t.raw.setHeadInfo (s.getHeadInfo)⟩
+    if let some t ← expandeSignumSystematis imperium args s then return t
     throwErrorAt s s!"未知の \\![...] コマンドにゃ: {imperium}"
   -- 書體タグにゃ
   if kind == lexemaFontis then
@@ -344,8 +339,7 @@ private def genTermLexema (s : Lean.Syntax) : TermElabM (TSyntax `term) := do
     -- 補完用プレースホルダー（空キー名）にゃ
     if clavis == "" then
       return ← `(Pure.pure ())
-    if let some t ← expandeFons clavis valores s then
-      return ⟨t.raw.setHeadInfo (s.getHeadInfo)⟩
+    if let some t ← expandeFons clavis valores s then return t
     throwErrorAt s s!"未知の \\f[...] キーにゃ: {clavis}"
   -- 未知のノードにゃ
   throwErrorAt s "未知のレクセマにゃ"
@@ -363,9 +357,9 @@ def elabScriptum : TermElab := fun stx expectedType? => do
         | .synthetic (pos := p) .. => some p
         | .none => Option.none
       pos?.map fun pos => (tabulaFontis.toPosition pos).line
-    -- レクセマの term を全てリストゥスに溜めるにゃん♪
-    let mut partes : Array (TSyntax `term) := #[]
-    partes := partes.push (← genTermLexema (ss[0]'h))
+    -- (オリジナル構文, 生成 term) のペアを溜めるにゃん♪
+    let mut partes : Array (Lean.Syntax × TSyntax `term) := #[]
+    partes := partes.push (ss[0]'h, ← genTermLexema (ss[0]'h))
     let mut lineaPrior := lineamSigni (ss[0]'h)
     for s in ss[1:] do
       -- 前のシグナムと行が違ったら \n を挾むにゃ
@@ -373,17 +367,38 @@ def elabScriptum : TermElab := fun stx expectedType? => do
       match lineaPrior, lineaCurrens with
       | some lp, some lc =>
         if lc > lp then
-          partes := partes.push (← `(Signaculum.Sakura.Textus.linea))
+          partes := partes.push (s, ← `(Signaculum.Sakura.Textus.linea))
       | _, _ => pure ()
-      partes := partes.push (← genTermLexema s)
+      partes := partes.push (s, ← genTermLexema s)
       lineaPrior := lineaCurrens
-    -- 右結合で畳むにゃん♪ flat な do A; B; C; D になるにゃ
-    if hp : 0 < partes.size then
-      let mut body := partes[partes.size - 1]'(by omega)
-      for i in List.range (partes.size - 1) |>.reverse do
-        if hi : i < partes.size then
-          body ← `(Bind.bind $(partes[i]'hi) fun () => $body)
-      elabTerm body expectedType?
+    if partes.size > 0 then
+      -- ① ホバー情報登錄パスにゃん♪ 各タグを個別 elaborate して TermInfo を收集するにゃ
+      --    メタ變數が本番パスに漏れないやうに狀態を保存・復元するにゃん
+      let savedState ← saveState
+      let mut hoverInfos : Array Lean.Elab.Info := #[]
+      for (origStx, termStx) in partes do
+        try
+          let expr ← elabTerm termStx expectedType?
+          hoverInfos := hoverInfos.push (.ofTermInfo {
+            elaborator := .anonymous
+            lctx := ← getLCtx
+            expectedType?
+            expr, stx := origStx
+            isBinder := false })
+        catch _ => pure ()
+      restoreState savedState
+      for info in hoverInfos do
+        pushInfoLeaf info
+      -- ② 本番にゃん♪ 從來通り構文レヴェルで Bind.bind チェーンに畳んで elaborate するにゃ
+      let partesSyntax := partes.map (·.2)
+      if hp : 0 < partesSyntax.size then
+        let mut body := partesSyntax[partesSyntax.size - 1]'(by omega)
+        for i in List.range (partesSyntax.size - 1) |>.reverse do
+          if hi : i < partesSyntax.size then
+            body ← `(Bind.bind $(partesSyntax[i]'hi) fun () => $body)
+        elabTerm body expectedType?
+      else
+        elabTerm (← `(pure ())) expectedType?
     else
       elabTerm (← `(pure ())) expectedType?
   else

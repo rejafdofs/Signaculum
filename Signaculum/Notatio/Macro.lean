@@ -370,9 +370,10 @@ def elabScriptum : TermElab := fun stx expectedType? => do
         | .synthetic (pos := p) .. => some p
         | .none => Option.none
       pos?.map fun pos => (tabulaFontis.toPosition pos).line
-    -- (オリジナル構文, 生成 term) のペアを溜めるにゃん♪
-    let mut partes : Array (Lean.Syntax × TSyntax `term) := #[]
-    partes := partes.push (ss[0]'h, ← genTermLexema (ss[0]'h))
+    -- (オリジナル構文?, 生成 term) のペアを溜めるにゃん♪
+    -- some = 實タグ（ホバー有效）、none = 自動挿入（ホバー無效）
+    let mut partes : Array (Option Lean.Syntax × TSyntax `term) := #[]
+    partes := partes.push (some (ss[0]'h), ← genTermLexema (ss[0]'h))
     let mut lineaPrior := lineamSigni (ss[0]'h)
     for s in ss[1:] do
       -- 前のシグナムと行が違ったら \n を挾むにゃ
@@ -380,17 +381,21 @@ def elabScriptum : TermElab := fun stx expectedType? => do
       match lineaPrior, lineaCurrens with
       | some lp, some lc =>
         if lc > lp then
-          partes := partes.push (s, ← `(Signaculum.Sakura.Textus.linea))
+          partes := partes.push (none, ← `(Signaculum.Sakura.Textus.linea))
       | _, _ => pure ()
-      partes := partes.push (s, ← genTermLexema s)
+      partes := partes.push (some s, ← genTermLexema s)
       lineaPrior := lineaCurrens
     if partes.size > 0 then
-      -- 生成構文に canonical ソース位置を埋込んでホバーを有效にするにゃん♪
-      let partesSyntax : Array (TSyntax `term) := partes.map fun (origStx, termStx) =>
-        match origStx.getHeadInfo with
-        | .synthetic (pos := p) (endPos := ep) .. =>
-          ⟨canonizaHead p ep termStx.raw⟩
-        | _ => termStx
+      -- 實タグの生成構文にだけ canonical ソース位置を埋込んでホバーを有效にするにゃん♪
+      -- 自動挿入 linea はホバー對象外にゃ
+      let partesSyntax : Array (TSyntax `term) := partes.map fun (origStx?, termStx) =>
+        match origStx? with
+        | some origStx =>
+          match origStx.getHeadInfo with
+          | .synthetic (pos := p) (endPos := ep) .. =>
+            ⟨canonizaHead p ep termStx.raw⟩
+          | _ => termStx
+        | none => termStx
       if hp : 0 < partesSyntax.size then
         let mut body := partesSyntax[partesSyntax.size - 1]'(by omega)
         for i in List.range (partesSyntax.size - 1) |>.reverse do

@@ -507,6 +507,234 @@ class Citatio (α : Type) where
 
 ---
 
+## 日時ユーティリティ (Tempus)
+
+`Signaculum.Utilia.Tempus` は `Std.Time` を活用した日時関数を提供する。時間帯別の挨拶分岐やログのタイムスタンプに使える。
+
+```lean
+import Signaculum
+
+eventum "OnBoot" fun _ => do
+  let dt ← liftM Signaculum.Utilia.obtineTempus
+  sakura; superficies 0
+  if Signaculum.Utilia.estMane dt then
+    loqui "おはようにゃん♪"
+  else if Signaculum.Utilia.estVespera dt then
+    loqui "こんばんはにゃん♪"
+  else
+    loqui "こんにちはにゃん♪"
+  finis
+```
+
+| 関数 | 説明 |
+|---|---|
+| `obtineTempus` | 現在時刻を `PlainDateTime`（UTC）で取得 |
+| `obtineTimestamp` | Unix タイムスタンプを取得 |
+| `estMane dt` | 朝かどうか（6 ≤ hora < 12） |
+| `estMeridies dt` | 昼かどうか（12 ≤ hora < 18） |
+| `estVespera dt` | 夕方かどうか（18 ≤ hora < 24） |
+| `estNox dt` | 夜かどうか（0 ≤ hora < 6） |
+| `tempusAdTextum dt` | "YYYY-MM-DD HH:MM:SS" 形式の文字列に変換 |
+
+---
+
+## ログ機能 (Registrum)
+
+`Signaculum.Utilia.Registrum` は YAYA の LOGGING に相当するログ機能を提供する。`ghost_log.txt` にタイムスタンプ付きでメッセージを記録する。
+
+```lean
+import Signaculum
+
+eventum "OnBoot" fun _ => do
+  -- IO コンテクスト内でログ出力
+  liftM (show IO Unit from Signaculum.Utilia.registraIndicium "起動しました")
+  -- SakuraIO コンテクスト内でログ + SHIORI ErrorLevel/ErrorDescription に設定
+  Signaculum.Utilia.registraEtNotifica .monitum "何かおかしいかも"
+  sakura; superficies 0; loqui "起動にゃん♪"; finis
+```
+
+| 関数 | 説明 |
+|---|---|
+| `registra gradus nuntius` | 指定等級でログ出力 |
+| `registraIndicium nuntius` | INFO ログ |
+| `registraMonitum nuntius` | WARN ログ |
+| `registraErrorem nuntius` | ERROR ログ |
+| `registraM gradus nuntius` | SakuraIO 内でログ出力 |
+| `registraEtNotifica gradus nuntius` | SakuraIO 内でログ + SHIORI 応答の ErrorLevel/ErrorDescription に設定 |
+
+ログ等級 `GradusRegistri` は `.indicium`（INFO）、`.monitum`（WARN）、`.error`（ERROR）の3段階。`registraEtNotifica` を使うと SSP 側のログにもエラー情報が記録される。
+
+---
+
+## SHIORI Resource 応答 (resourcea)
+
+`resourcea` マクロで SHIORI Resource 応答（`GET SHIORI/3.0` / `ID: version` 等）を宣言できる。SSP がゴーストの情報を問い合わせた時に返す値を定義する。
+
+```lean
+import Signaculum
+
+resourcea "version"  := "1.0.0"
+resourcea "craftmanw" := "作者名"
+resourcea "homeurl"  := "https://example.com"
+
+construe
+```
+
+静的な文字列値のほか、動的な `IO String` 関数も指定できる。`construe` が自動的にリソース応答ハンドラとして登録する。
+
+---
+
+## 日本語イベント名 (NominaIaponica)
+
+`Signaculum.Eventum.NominaIaponica` は里々のように日本語名でイベントを宣言できるマッピングテーブルを提供する。`eventum` の引数に日本語名を渡すと、コンパイル時に SHIORI/3.0 イベント名に変換される。
+
+```lean
+import Signaculum
+
+eventum "起動" fun _ => do
+  sakura; superficies 0; loqui "起動にゃん♪"; finis
+
+eventum "ランダムトーク" fun _ => do
+  sakura; superficies 0; loqui "暇にゃん..."; finis
+
+construe
+```
+
+70 以上のマッピングが定義済み（起動/終了、ゴースト切替、マウス、時間、トーク、選択肢、通信、入力、シェル、バルーン、ファイルドロップ、ネットワーク更新、OS 状態、消滅、キー、音声、インストール等）。テーブルにない名前はカスタムイベント名としてそのまま使われる。
+
+---
+
+## トーク管理 (Colloquium)
+
+`Signaculum.Sakura.Textus.Colloquium` はランダムトーク・条件付きトーク・チェイントークを統一的に管理する DSL を提供する。旧 API（`OptioPiscinae` / `eligeVelCatena`）の改善版。
+
+```lean
+import Signaculum
+
+varia perpetua numerusColloquii : Nat := 0
+
+catena historiaPrima := [
+  do sakura; loqui "第一話にゃ"; finis,
+  do sakura; loqui "第二話にゃ"; finis,
+  do sakura; loqui "完結にゃ！"; finis
+]
+
+eventum "OnAITalk" fun _ => do
+  eligeColloquium #[
+    -- 通常トーク（Coe により SakuraIO Unit をそのまま書ける）
+    do sakura; loqui "暇にゃ..."; finis,
+    do sakura; loqui "今日もいい天気にゃ"; finis,
+    -- 条件付きトーク
+    cum (do let n ← numerusColloquii.get; pure (n > 10))
+        (do sakura; loqui "たくさん話したにゃん♪"; finis),
+    -- チェイントーク（Coe により Catena をそのまま書ける）
+    historiaPrima
+  ]
+```
+
+`Colloquium` 型は4つのコンストラクタを持つ:
+
+| コンストラクタ | 説明 |
+|---|---|
+| `.loquela actio` | 通常トーク（無条件でランダム候補） |
+| `.conditio cond actio` | 条件付きトーク（条件が真の時のみ候補） |
+| `.series catena` | チェイントーク |
+| `.seriesCum cond catena` | 条件付きチェイントーク |
+
+`Coe` インスタンスにより `SakuraIO Unit` と `Catena` は配列内で自動変換される。
+
+| 関数 | 説明 |
+|---|---|
+| `eligeColloquium colloquia` | 配列から均等確率で選択・実行 |
+| `eligeColloquiumPonderatum colloquia` | 重み付き確率で選択・実行 |
+
+いずれもアクティブなチェインがあれば優先的に続行する。
+
+---
+
+## イベントラッパー (Involucra)
+
+`Signaculum.Eventum.Involucra` は生の SHIORI イベントを加工して高レベルな抽象を提供する。里々の「なでられ」「つつかれ」や YAYA のシステム辞書に相当する。
+
+### なでられ判定
+
+`OnMouseMove` の連続回数が閾値を超えたら「なでられた」と判定する。scope + area をキーにして個別にカウントする。
+
+```lean
+import Signaculum
+
+eventum "OnMouseMove" fun rogatio => do
+  let scopeId := (rogatio.referentiam 3).getD ""
+  let areaName := (rogatio.referentiam 4).getD ""
+  let naderare ← liftM (Signaculum.Eventum.iudicaNaderare scopeId areaName)
+  if naderare then
+    sakura; superficies 5; loqui "にゃ〜ん♪ なでなでにゃ〜"; finis
+  else pure ()
+```
+
+| 関数 | 説明 |
+|---|---|
+| `configuraNaderareLimen n` | なでられ判定の閾値を設定（デフォルト 10） |
+| `configuraNaderareIntervallum ms` | リセットまでの最大間隔を設定（デフォルト 2000ms） |
+| `iudicaNaderare scopeId areaName` | なでられ判定を行う（`IO Bool`） |
+
+### マウスイベント名生成
+
+```lean
+let nomen := Signaculum.Eventum.nomenEventumMusis rogatio "つつかれ"
+-- "0HEADつつかれ" のようなイベント名が生成される
+```
+
+### ランダムトークタイマー
+
+`OnSecondChange` でカウントダウンし、0 に達したらランダムトーク発火を通知する。
+
+```lean
+eventum "OnSecondChange" fun rogatio => do
+  let fire ← liftM (Signaculum.Eventum.pulsaTimerColloquii rogatio.status)
+  if fire then
+    -- ランダムトーク処理
+    sakura; superficies 0; loqui "にゃん♪"; finis
+  else pure ()
+```
+
+| 関数 | 説明 |
+|---|---|
+| `configuraIntervallumColloquii n` | ランダムトーク間隔を設定（秒、デフォルト 180） |
+| `pulsaTimerColloquii status` | タイマーパルス（0 到達で `true`） |
+
+---
+
+## 変数デバッグ (Inspectio)
+
+`Signaculum.Utilia.Inspectio` は変数のデバッグ支援を提供する。`construe` が `inspiceVariabiles : IO Unit` を自動生成し、全ての `varia perpetua` の名前・型・現在値を `ghost_log.txt` に出力する。
+
+```lean
+import Signaculum
+
+varia perpetua numerus : Nat := 0
+varia perpetua nomen   : String := "シロ"
+
+eventum "OnKeyPress" fun rogatio => do
+  let key := (rogatio.referentiam 0).getD ""
+  if key == "F12" then
+    liftM inspiceVariabiles  -- 全変数をログに出力
+  sakura; superficies 0; loqui "デバッグにゃ"; finis
+
+construe
+```
+
+出力例（ghost_log.txt）:
+```
+═══ Inspectio Variabilium ═══
+  numerus : Nat = 42
+  nomen : String = シロ
+```
+
+`inspiceEtMitte` を使うと個別の変数をログ出力しつつ SSTP でゴーストにも表示できる。
+
+---
+
 ## 参照 (Referentia)
 
 - [UKADOC Project](https://ssp.shillest.net/ukadoc/manual/index.html) — SHIORI/3.0・SakuraScript 仕様にゃ

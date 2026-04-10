@@ -9,7 +9,6 @@ package Signaculum where
   leanOptions := #[⟨`autoImplicit, false⟩, ⟨`pp.unicode.fun, true⟩]
 
 require LemmaGeneralis from git "https://github.com/rejafdofs/LemmaGeneralis"@"main"
-require Regex from git "https://github.com/pandaman64/lean-regex.git"@"v4.28.0" / "regex"
 
 lean_lib Signaculum where globs := #[.one `Signaculum, .submodules `Signaculum]
 

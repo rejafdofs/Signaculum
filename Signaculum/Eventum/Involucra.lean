@@ -56,7 +56,7 @@ def iudicaNaderare (scopeId areaName : String) : IO Bool := do
   let clavis := scopeId ++ ":" ++ areaName
   let config ← configuratioTactusGlobalis.get
   let nunc ← Timestamp.now
-  let nuncMs := nunc.toMillisecondsSinceUnixEpoch.toNat
+  let nuncMs := nunc.toMillisecondsSinceUnixEpoch.val.toNat
   let tabula ← tabulaTactus.get
   let status := match tabula.lookup clavis with
     | some s => s

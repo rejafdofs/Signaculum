@@ -708,15 +708,18 @@ elab "construe" : command => do
     let identVariae := mkIdent v.nomen
     let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit v.nomen.toString⟩
     let signumTypi : TSyntax `term := ⟨Syntax.mkStrLit (toString v.typusSyntax)⟩
-    elementaInspectionis := elementaInspectionis.push (← `(do
-      let _v ← ($identVariae).get
-      Signaculum.Utilia.registraIndicium
-        (Signaculum.Utilia.lineaInspectionis $signumNominis $signumTypi (toString _v))))
+    elementaInspectionis := elementaInspectionis.push (← `(
+      (do let _v ← ($identVariae).get
+          Signaculum.Utilia.registraIndicium
+            (Signaculum.Utilia.lineaInspectionis $signumNominis $signumTypi (toString _v)) : IO Unit)))
 
+  -- TSyntax `term を TSyntax `Lean.Parser.Term.doSeqItem にキャストするにゃん
+  let doItems : Array (TSyntax ``Lean.Parser.Term.doSeqItem) :=
+    elementaInspectionis.map fun e => ⟨e.raw⟩
   elabCommand (← `(
     def inspiceVariabiles : IO Unit := do
       Signaculum.Utilia.registraIndicium Signaculum.Utilia.caputInspectionis
-      $[$elementaInspectionis]*
+      $[$doItems]*
       Signaculum.Utilia.registraIndicium "═══════════════════════════════"))
 
   if variaePermanentes.isEmpty && !acc.hasCatenas then

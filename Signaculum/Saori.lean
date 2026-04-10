@@ -37,7 +37,7 @@ def onerareSaori (via : String) (directorium : String) : IO Bool := do
   -- 應答: [0/1: u8]
   let resp ← stdin.read 1
   if h : resp.size > 0 then
-    return resp.get ⟨0, h⟩ == 1
+    return resp[0]'h == 1
   else
     return false
 
@@ -77,21 +77,19 @@ where
       Result が最初の要素、Value0, Value1, ... が續くにゃ -/
   parsaSaoriResponsum (resp : String) : Array String :=
     let lineae := resp.splitOn "\r\n"
-    let mut valores := #[]
     -- まづ Result を探すにゃん
-    for linea in lineae do
-      if linea.startsWith "Result: " then
-        valores := valores.push (linea.drop 8)
+    let valores := lineae.foldl (fun acc linea =>
+      if linea.startsWith "Result: " then acc.push (linea.drop 8 |>.toString) else acc) #[]
     -- 次に Value0, Value1, ... を順番に探すにゃん
-    for i in List.range 128 do
-      let praefixum := s!"Value{i}: "
-      let mut inventum := false
-      for linea in lineae do
-        if linea.startsWith praefixum then
-          valores := valores.push (linea.drop praefixum.length)
-          inventum := true
-      unless inventum do break
-    valores
+    let rec colligeValores (i : Nat) (acc : Array String) (fuel : Nat) : Array String :=
+      match fuel with
+      | 0 => acc
+      | fuel' + 1 =>
+        let praefixum := s!"Value{i}: "
+        match lineae.find? (·.startsWith praefixum) with
+        | some linea => colligeValores (i + 1) (acc.push (linea.drop praefixum.length |>.toString)) fuel'
+        | none => acc
+    colligeValores 0 valores 128
 
 /-- SAORI DLL をアンロードするにゃん（procurator32 に 0x06 コマンドを送信）-/
 def exonerareSaori (via : String) : IO Unit := do

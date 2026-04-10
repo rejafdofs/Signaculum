@@ -10,6 +10,7 @@ import Signaculum.Nucleus.Exporta
 import Signaculum.Nucleus.Circulus
 import Signaculum.Sstp
 import Signaculum.Eventum.NominaIaponica
+import Signaculum.Utilia.Inspectio
 
 open Lean Elab Command Term Meta
 
@@ -700,6 +701,23 @@ elab "construe" : command => do
     let identTractator := mkIdent r.tractatorNomen
     let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit r.nomen⟩
     pariaTractatorum := pariaTractatorum.push (← `(($signumNominis, $identTractator)))
+
+  -- inspiceVariabiles を自動生成するにゃん♪（全 varia の現在值をログ出力）
+  let mut elementaInspectionis : Array (TSyntax `term) := #[]
+  for v in acc.variae do
+    let identVariae := mkIdent v.nomen
+    let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit v.nomen.toString⟩
+    let signumTypi : TSyntax `term := ⟨Syntax.mkStrLit (toString v.typusSyntax)⟩
+    elementaInspectionis := elementaInspectionis.push (← `(do
+      let _v ← ($identVariae).get
+      Signaculum.Utilia.registraIndicium
+        (Signaculum.Utilia.lineaInspectionis $signumNominis $signumTypi (toString _v))))
+
+  elabCommand (← `(
+    def inspiceVariabiles : IO Unit := do
+      Signaculum.Utilia.registraIndicium Signaculum.Utilia.caputInspectionis
+      $[$elementaInspectionis]*
+      Signaculum.Utilia.registraIndicium "═══════════════════════════════"))
 
   if variaePermanentes.isEmpty && !acc.hasCatenas then
     elabCommand (← `(def servaStatum : IO Unit := pure ()))

@@ -41,8 +41,10 @@ partial def Communicatio.legeExactus (c : Communicatio) (magnitudo : Nat)
     return accumulatum
   c.legeExactus magnitudo (accumulatum ++ o)
 
-/-- バイト列をレスポンスムとして送信するにゃん（長さプレーフィクスム + 本體 + flush）-/
+/-- バイト列をレスポンスムとして送信するにゃん（0x00 コマンドバイト + 長さプレーフィクスム + 本體 + flush）。
+    procurator32 の SAORI コマンドループが 0x00 を讀んで最終應答と認識するにゃ -/
 def Communicatio.scribeResponsum (c : Communicatio) (octeti : ByteArray) : IO Unit := do
+  c.rivusEgressus.write ⟨#[0x00]⟩
   c.scribeU32 octeti.size.toUInt32
   c.rivusEgressus.write octeti
   c.rivusEgressus.flush

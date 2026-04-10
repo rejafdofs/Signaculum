@@ -3,14 +3,16 @@
  */
 #![allow(non_snake_case)]
 
+use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::os::windows::process::CommandExt;
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 use std::sync::Mutex;
-use windows_sys::Win32::Foundation::BOOL;
+use windows_sys::Win32::Foundation::{BOOL, HMODULE};
 use windows_sys::Win32::Globalization::{
     MultiByteToWideChar, WideCharToMultiByte, CP_ACP, CP_UTF8,
 };
+use windows_sys::Win32::System::LibraryLoader::{FreeLibrary, GetProcAddress, LoadLibraryW};
 use windows_sys::Win32::System::Memory::{GlobalAlloc, GlobalLock, GlobalUnlock, GMEM_FIXED};
 
 type HGLOBAL = *mut core::ffi::c_void;
@@ -189,6 +191,251 @@ struct Nexus {
 
 static NEXUS: Mutex<Option<Nexus>> = Mutex::new(None);
 
+// SAORI DLL 管理にゃん♪ ロード濟みモジュールを保持するにゃ
+static SAORI_MODULES: Mutex<Option<HashMap<String, HMODULE>>> = Mutex::new(None);
+
+// SAORI C ABI 型定義にゃ
+type SaoriLoadFn = unsafe extern "C" fn(h: HGLOBAL, len: i32) -> BOOL;
+type SaoriRequestFn = unsafe extern "C" fn(h: HGLOBAL, len: *mut i32) -> HGLOBAL;
+type SaoriUnloadFn = unsafe extern "C" fn() -> BOOL;
+
+// ═══════════════════════════════════════════════════
+// SAORI 補助關數にゃん♪
+// ═══════════════════════════════════════════════════
+
+/// UTF-8 文字列を UTF-16 のヌル終端ワイド文字列に變換するにゃ
+fn utf8_to_wide(s: &str) -> Vec<u16> {
+    s.encode_utf16().chain(std::iter::once(0)).collect()
+}
+
+/// SAORI DLL をロードして load() を呼ぶにゃん♪
+/// via: DLL パス（UTF-8）、hdir: ghost ディレクトーリウムパス（UTF-8）
+/// 成功なら true を返すにゃ
+fn saori_onerare(via: &str, hdir: &str) -> bool {
+    log_trace!("[SAORI] onerare: via={}, hdir={}", via, hdir);
+    let mut guard = SAORI_MODULES.lock().unwrap();
+    let modules = guard.as_mut().expect("SAORI_MODULES non initialisatus にゃ！");
+
+    // 既にロード濟みなら成功扱ひにゃ
+    if modules.contains_key(via) {
+        log_trace!("[SAORI] iam oneratus: {}", via);
+        return true;
+    }
+
+    let wide_path = utf8_to_wide(via);
+    let hmodule = unsafe { LoadLibraryW(wide_path.as_ptr()) };
+    if hmodule.is_null() {
+        log_trace!("[SAORI] LoadLibraryW failed: {}", via);
+        return false;
+    }
+
+    // load 關數を取得して呼ぶにゃん
+    let load_fn = unsafe { GetProcAddress(hmodule, b"load\0".as_ptr()) };
+    if let Some(load_fn) = load_fn {
+        let load: SaoriLoadFn = unsafe { core::mem::transmute(load_fn) };
+        // hdir を HGLOBAL に詰めて渡すにゃ（SAORI は Shift_JIS を期待する DLL が多いにゃ）
+        let hdir_ansi = utf8_to_ansi_bytes(hdir.as_bytes());
+        let hdir_len = hdir_ansi.len();
+        let hg = unsafe { GlobalAlloc(GMEM_FIXED, hdir_len + 1) } as HGLOBAL;
+        if !hg.is_null() {
+            unsafe {
+                let ptr = hg as *mut u8;
+                core::ptr::copy_nonoverlapping(hdir_ansi.as_ptr(), ptr, hdir_len);
+                *ptr.add(hdir_len) = 0;
+            }
+            let res = unsafe { load(hg, hdir_len as i32) };
+            log_trace!("[SAORI] load() returned: {}", res);
+            // SAORI の load は自前で HGLOBAL を管理するので解放しにゃい
+            if res == 0 {
+                unsafe { FreeLibrary(hmodule) };
+                return false;
+            }
+        }
+    } else {
+        log_trace!("[SAORI] load 關數が見つからにゃい: {}", via);
+        unsafe { FreeLibrary(hmodule) };
+        return false;
+    }
+
+    modules.insert(via.to_string(), hmodule);
+    log_trace!("[SAORI] onerare success: {}", via);
+    true
+}
+
+/// SAORI DLL に request を送信するにゃん♪
+/// via: DLL パス、rogatio: SAORI/1.0 リクエスト文字列（UTF-8）
+/// 應答文字列（UTF-8）を返すにゃ
+fn saori_rogare(via: &str, rogatio: &[u8]) -> Vec<u8> {
+    log_trace!("[SAORI] rogare: via={}, len={}", via, rogatio.len());
+    let guard = SAORI_MODULES.lock().unwrap();
+    let modules = guard.as_ref().expect("SAORI_MODULES non initialisatus にゃ！");
+
+    let hmodule = match modules.get(via) {
+        Some(h) => *h,
+        None => {
+            log_trace!("[SAORI] non oneratus: {}", via);
+            return Vec::new();
+        }
+    };
+
+    let request_fn = unsafe { GetProcAddress(hmodule, b"request\0".as_ptr()) };
+    let request_fn = match request_fn {
+        Some(f) => f,
+        None => {
+            log_trace!("[SAORI] request 關數が見つからにゃい: {}", via);
+            return Vec::new();
+        }
+    };
+
+    let request: SaoriRequestFn = unsafe { core::mem::transmute(request_fn) };
+
+    // SAORI は Shift_JIS を期待するものが多いにゃ。UTF-8 の SAORI リクエストゥムを ANSI に變換するにゃん
+    let ansi_req = utf8_to_ansi_bytes(rogatio);
+    let req_len = ansi_req.len();
+    let hg = unsafe { GlobalAlloc(GMEM_FIXED, req_len + 1) } as HGLOBAL;
+    if hg.is_null() {
+        log_trace!("[SAORI] GlobalAlloc failed for request");
+        return Vec::new();
+    }
+    unsafe {
+        let ptr = hg as *mut u8;
+        core::ptr::copy_nonoverlapping(ansi_req.as_ptr(), ptr, req_len);
+        *ptr.add(req_len) = 0;
+    }
+
+    let mut resp_len: i32 = req_len as i32;
+    let resp_h = unsafe { request(hg, &mut resp_len) };
+
+    if resp_h.is_null() || resp_len <= 0 {
+        log_trace!("[SAORI] request returned null/empty");
+        return Vec::new();
+    }
+
+    let resp_bytes = unsafe {
+        let ptr = GlobalLock(resp_h as _) as *const u8;
+        let bytes = core::slice::from_raw_parts(ptr, resp_len as usize).to_vec();
+        GlobalUnlock(resp_h as _);
+        bytes
+    };
+
+    // 應答を ANSI → UTF-8 に變換するにゃん
+    let utf8_resp = ansi_to_utf8_bytes(&resp_bytes);
+    log_trace!("[SAORI] rogare resp len={}", utf8_resp.len());
+    utf8_resp
+}
+
+/// SAORI DLL をアンロードするにゃん♪
+fn saori_exonerare(via: &str) {
+    log_trace!("[SAORI] exonerare: {}", via);
+    let mut guard = SAORI_MODULES.lock().unwrap();
+    let modules = guard.as_mut().expect("SAORI_MODULES non initialisatus にゃ！");
+
+    if let Some(hmodule) = modules.remove(via) {
+        // unload 關數を呼ぶにゃん
+        let unload_fn = unsafe { GetProcAddress(hmodule, b"unload\0".as_ptr()) };
+        if let Some(unload_fn) = unload_fn {
+            let unload: SaoriUnloadFn = unsafe { core::mem::transmute(unload_fn) };
+            let _ = unsafe { unload() };
+        }
+        unsafe { FreeLibrary(hmodule) };
+        log_trace!("[SAORI] exonerare success: {}", via);
+    } else {
+        log_trace!("[SAORI] exonerare: non oneratus: {}", via);
+    }
+}
+
+/// 全ての SAORI DLL をアンロードするにゃん♪（unload 時に呼ぶにゃ）
+fn saori_exonerare_omnes() {
+    log_trace!("[SAORI] exonerare_omnes");
+    let mut guard = SAORI_MODULES.lock().unwrap();
+    if let Some(modules) = guard.as_mut() {
+        let viae: Vec<String> = modules.keys().cloned().collect();
+        for via in &viae {
+            if let Some(hmodule) = modules.remove(via.as_str()) {
+                let unload_fn = unsafe { GetProcAddress(hmodule, b"unload\0".as_ptr()) };
+                if let Some(unload_fn) = unload_fn {
+                    let unload: SaoriUnloadFn = unsafe { core::mem::transmute(unload_fn) };
+                    let _ = unsafe { unload() };
+                }
+                unsafe { FreeLibrary(hmodule) };
+            }
+        }
+    }
+    *guard = None;
+}
+
+/// パイプから SAORI コマンドを處理するにゃん♪
+/// ghost.exe が最終應答（0x00）を返すまでループするにゃ
+/// 戻り値は最終應答のバイト列にゃ
+fn tractare_saori_circulum(
+    calamus: &mut ChildStdin,
+    rivus: &mut ChildStdout,
+) -> std::io::Result<Vec<u8>> {
+    loop {
+        // コマンドバイトを讀むにゃん
+        let mut cmd = [0u8; 1];
+        rivus.read_exact(&mut cmd)?;
+
+        match cmd[0] {
+            // 0x00: 最終應答にゃ — [len:u32LE][response]
+            0x00 => {
+                let resp_len = lege_u32(rivus)? as usize;
+                if resp_len == 0 {
+                    return Ok(Vec::new());
+                }
+                let mut resp = vec![0u8; resp_len];
+                rivus.read_exact(&mut resp)?;
+                return Ok(resp);
+            }
+            // 0x04: SAORI load にゃ — [pathLen:u32][dllPath][hdirLen:u32][hdir]
+            0x04 => {
+                let path_len = lege_u32(rivus)? as usize;
+                let mut path_buf = vec![0u8; path_len];
+                rivus.read_exact(&mut path_buf)?;
+                let hdir_len = lege_u32(rivus)? as usize;
+                let mut hdir_buf = vec![0u8; hdir_len];
+                rivus.read_exact(&mut hdir_buf)?;
+                let via = String::from_utf8_lossy(&path_buf).to_string();
+                let hdir = String::from_utf8_lossy(&hdir_buf).to_string();
+                let ok = saori_onerare(&via, &hdir);
+                // 應答: [0/1: u8]
+                calamus.write_all(&[if ok { 1u8 } else { 0u8 }])?;
+                calamus.flush()?;
+            }
+            // 0x05: SAORI request にゃ — [pathLen:u32][dllPath][reqLen:u32][requestStr]
+            0x05 => {
+                let path_len = lege_u32(rivus)? as usize;
+                let mut path_buf = vec![0u8; path_len];
+                rivus.read_exact(&mut path_buf)?;
+                let req_len = lege_u32(rivus)? as usize;
+                let mut req_buf = vec![0u8; req_len];
+                rivus.read_exact(&mut req_buf)?;
+                let via = String::from_utf8_lossy(&path_buf).to_string();
+                let resp = saori_rogare(&via, &req_buf);
+                // 應答: [respLen:u32LE][respStr]
+                scribe_u32(calamus, resp.len() as u32)?;
+                if !resp.is_empty() {
+                    calamus.write_all(&resp)?;
+                }
+                calamus.flush()?;
+            }
+            // 0x06: SAORI unload にゃ — [pathLen:u32][dllPath]
+            0x06 => {
+                let path_len = lege_u32(rivus)? as usize;
+                let mut path_buf = vec![0u8; path_len];
+                rivus.read_exact(&mut path_buf)?;
+                let via = String::from_utf8_lossy(&path_buf).to_string();
+                saori_exonerare(&via);
+                // アンロードに應答は不要にゃ
+            }
+            other => {
+                log_trace!("[SAORI] unknown command byte: {}", other);
+                // 不明なコマンドは無視するにゃ
+            }
+        }
+    }
+}
+
 fn scribe_u32(w: &mut impl Write, v: u32) -> std::io::Result<()> {
     w.write_all(&v.to_le_bytes())
 }
@@ -265,6 +512,10 @@ pub unsafe extern "C" fn load(h: HGLOBAL, len: i32) -> BOOL {
     }
 
     log_trace!("load success");
+
+    // SAORI モジュール管理を初期化するにゃん♪
+    *SAORI_MODULES.lock().unwrap() = Some(HashMap::new());
+
     *NEXUS.lock().unwrap() = Some(Nexus {
         _filius: filius,
         calamus,
@@ -276,6 +527,8 @@ pub unsafe extern "C" fn load(h: HGLOBAL, len: i32) -> BOOL {
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn unload() -> BOOL {
     log_trace!("=== unload called ===");
+    // 全ての SAORI DLL を先にアンロードするにゃん♪
+    saori_exonerare_omnes();
     if let Some(mut n) = NEXUS.lock().unwrap().take() {
         // ONERARE 終了命令: [2u8]
         let _ = n.calamus.write_all(&[2u8]);
@@ -345,28 +598,19 @@ pub unsafe extern "C" fn request(h: HGLOBAL, len: *mut i32) -> HGLOBAL {
         return core::ptr::null_mut();
     }
 
-    // 應答(responsum)
-    let resp_len = match lege_u32(&mut n.rivus) {
-        Ok(v) => v as usize,
+    // 應答(responsum) — SAORI コマンドループ經由で最終應答を待つにゃん♪
+    // ghost.exe は SAORI 呼出し（0x04/05/06）を挟んでから最終應答（0x00）を返すにゃ
+    let u8_resp = match tractare_saori_circulum(&mut n.calamus, &mut n.rivus) {
+        Ok(v) => v,
         Err(_) => {
-            log_trace!("request failed: failed to read resp_len from ghost_host");
+            log_trace!("request failed: tractare_saori_circulum error");
             *len = 0;
             return core::ptr::null_mut();
         }
     };
 
-    if resp_len == 0 {
-        log_trace!("request: resp_len was 0");
-        *len = 0;
-        return core::ptr::null_mut();
-    }
-
-    let mut u8_resp = vec![0u8; resp_len];
-    if n.rivus.read_exact(&mut u8_resp).is_err() {
-        log_trace!(
-            "request failed: failed to read {} bytes from ghost_host",
-            resp_len
-        );
+    if u8_resp.is_empty() {
+        log_trace!("request: resp was empty");
         *len = 0;
         return core::ptr::null_mut();
     }

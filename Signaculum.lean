@@ -10,3 +10,4 @@ import Signaculum.Syntaxis
 import Signaculum.Elementa
 import Signaculum.Notatio
 import Signaculum.Praeludio
+import Signaculum.Utilia

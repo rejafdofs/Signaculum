@@ -52,4 +52,14 @@ def excitaEventum (nomenEventi : String) (citationes : List String := []) (mitte
       ++ purgaCrlf nomenEventi ++ "\r\n" ++ String.join refs ++ "\r\n"
   sstpDirectumMittere req
 
+/-- SSTP/1.4 COMMUNICATE で他ゴーストにスクリプトゥムを送信するにゃん -/
+def communicaSstpScriptum (ghostNomen scriptum : String) (mittens : String := mittensDefectus) : IO Unit :=
+  let req := s!"SEND SSTP/1.4\r\nCharset: UTF-8\r\nSender: {purgaCrlf mittens}\r\nScript: {purgaCrlf scriptum}\r\nIfGhost: {purgaCrlf ghostNomen}\r\n\r\n"
+  sstpDirectumMittere req
+
+/-- SSTP/1.4 COMMUNICATE で他ゴーストにテクストゥムを送信するにゃん -/
+def communicaSstpSentence (ghostNomen sentence : String) (mittens : String := mittensDefectus) : IO Unit :=
+  let req := s!"SEND SSTP/1.4\r\nCharset: UTF-8\r\nSender: {purgaCrlf mittens}\r\nSentence: {purgaCrlf sentence}\r\nIfGhost: {purgaCrlf ghostNomen}\r\n\r\n"
+  sstpDirectumMittere req
+
 end Signaculum.Sstp

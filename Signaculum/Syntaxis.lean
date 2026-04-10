@@ -9,6 +9,8 @@ import Signaculum.Memoria.StatusPermanens
 import Signaculum.Nucleus.Exporta
 import Signaculum.Nucleus.Circulus
 import Signaculum.Sstp
+import Signaculum.Eventum.NominaIaponica
+import Signaculum.Utilia.Inspectio
 
 open Lean Elab Command Term Meta
 
@@ -45,12 +47,20 @@ structure LazyEventDecl where
   /-- Some ならラムダ形にゃ。construe がここから def を生成するにゃ -/
   lambdaStx?  : Option Syntax := none
 
+/-- resourcea 宣言の情報にゃん -/
+structure GhostResourceDecl where
+  /-- リソース名にゃ（例: "version", "craftmanw"）-/
+  nomen : String
+  /-- 生成した處理器の完全修飾名にゃ -/
+  tractatorNomen : Name
+
 /-- ゴーストの累積宣言にゃん。construe 時に全部參照するにゃ -/
 structure GhostAccumulatio where
-  variae     : Array GhostVarDecl   := #[]
-  eventa     : Array GhostEventDecl := #[]
-  lazyEventa : Array LazyEventDecl  := #[]
-  hasCatenas : Bool                  := false
+  variae     : Array GhostVarDecl      := #[]
+  eventa     : Array GhostEventDecl    := #[]
+  lazyEventa : Array LazyEventDecl     := #[]
+  resourceae : Array GhostResourceDecl := #[]
+  hasCatenas : Bool                     := false
 
 -- Inhabited インスタンスにゃん♪
 instance : Inhabited GhostVarDecl :=
@@ -69,6 +79,7 @@ inductive GhostEntry
   | varia (decl : GhostVarDecl)
   | eventum (decl : GhostEventDecl)
   | lazium (decl : LazyEventDecl)
+  | resourcea (decl : GhostResourceDecl)
   | catena
 
 private def addGhostEntry (acc : GhostAccumulatio) (entry : GhostEntry) : GhostAccumulatio :=
@@ -76,6 +87,7 @@ private def addGhostEntry (acc : GhostAccumulatio) (entry : GhostEntry) : GhostA
   | .varia d => { acc with variae := acc.variae.push d }
   | .eventum d => { acc with eventa := acc.eventa.push d }
   | .lazium d => { acc with lazyEventa := acc.lazyEventa.push d }
+  | .resourcea d => { acc with resourceae := acc.resourceae.push d }
   | .catena => { acc with hasCatenas := true }
 
 /-- 環境拡張の登錄にゃん♪ ファイル境界を越えて状態が伝搬するにゃ -/
@@ -110,9 +122,12 @@ elab "varia" "temporaria" n:ident ":" t:term ":=" v:term : command => do
     ghostAccumulatioExt.addEntry env (.varia {
       nomen := n.getId, typusSyntax := t, permanet := false })
 
-/-- 事象處理器を宣言するにゃん♪ -/
+/-- 事象處理器を宣言するにゃん♪
+    日本語名にも對應してゐるにゃ（例: `eventum "起動"` → `OnBoot`）-/
 elab "eventum" nomenEventi:str body:term : command => do
-  let nomen := nomenEventi.getString
+  let nomenCrudus := nomenEventi.getString
+  -- 日本語エイリアスを解決するにゃん♪
+  let nomen := Signaculum.Eventum.resolveNomenEventi nomenCrudus
   let nomenBasisTractatorum := "_tractator_" ++ nomen
   let identTractatorum := mkIdent (Name.mkSimple nomenBasisTractatorum)
   elabCommand (← `(def $identTractatorum : Signaculum.Nucleus.Tractator := $body))
@@ -121,6 +136,40 @@ elab "eventum" nomenEventi:str body:term : command => do
   modifyEnv fun env =>
     ghostAccumulatioExt.addEntry env (.eventum {
       nomen, tractatorNomen := nomenPlenumTractatorum })
+
+/-- SHIORI リソース應答を靜的文字列で宣言するにゃん♪
+    SSP が GET SHIORI/3.0 / ID: version 等で問ひ合はせた時に返す値にゃ -/
+elab "resourcea" nomenResource:str ":=" valor:str : command => do
+  let nomen := nomenResource.getString
+  let nomenBasis := "_resourcea_" ++ nomen.map (fun c => if c == '.' then '_' else c)
+  let identTractator := mkIdent (Name.mkSimple nomenBasis)
+  -- リソース値を返すだけの簡單なハンドラーにゃん
+  elabCommand (← `(
+    def $identTractator : Signaculum.Nucleus.Tractator := fun _ => do
+      Signaculum.Sakura.Fundamentum.loqui $valor
+      Signaculum.Sakura.Textus.Imperii.finis))
+  let ns ← getCurrNamespace
+  let nomenPlenum := ns ++ Name.mkSimple nomenBasis
+  modifyEnv fun env =>
+    ghostAccumulatioExt.addEntry env (.resourcea {
+      nomen, tractatorNomen := nomenPlenum })
+
+/-- SHIORI リソース應答を動的（IO 關數）で宣言するにゃん♪ -/
+elab "resourcea" nomenResource:str body:term : command => do
+  let nomen := nomenResource.getString
+  let nomenBasis := "_resourcea_" ++ nomen.map (fun c => if c == '.' then '_' else c)
+  let identTractator := mkIdent (Name.mkSimple nomenBasis)
+  -- body : IO String を呼んで結果を返すハンドラーにゃん
+  elabCommand (← `(
+    def $identTractator : Signaculum.Nucleus.Tractator := fun _ => do
+      let _valor ← liftM (show IO String from $body)
+      Signaculum.Sakura.Fundamentum.loqui _valor
+      Signaculum.Sakura.Textus.Imperii.finis))
+  let ns ← getCurrNamespace
+  let nomenPlenum := ns ++ Name.mkSimple nomenBasis
+  modifyEnv fun env =>
+    ghostAccumulatioExt.addEntry env (.resourcea {
+      nomen, tractatorNomen := nomenPlenum })
 
 /-- チェイントークを宣言するにゃん♪
     `catena nomen := [actio1, actio2, ...]` で順次再生トークを定義するにゃ。
@@ -646,6 +695,32 @@ elab "construe" : command => do
 
     let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit e.nomenEventi⟩
     pariaTractatorum := pariaTractatorum.push (← `(($signumNominis, $tractorIdent)))
+
+  -- resourceae のペアを追加するにゃん♪
+  for r in acc.resourceae do
+    let identTractator := mkIdent r.tractatorNomen
+    let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit r.nomen⟩
+    pariaTractatorum := pariaTractatorum.push (← `(($signumNominis, $identTractator)))
+
+  -- inspiceVariabiles を自動生成するにゃん♪（全 varia の現在值をログ出力）
+  let mut elementaInspectionis : Array (TSyntax `term) := #[]
+  for v in acc.variae do
+    let identVariae := mkIdent v.nomen
+    let signumNominis : TSyntax `term := ⟨Syntax.mkStrLit v.nomen.toString⟩
+    let signumTypi : TSyntax `term := ⟨Syntax.mkStrLit (toString v.typusSyntax)⟩
+    elementaInspectionis := elementaInspectionis.push (← `(
+      (do let _v ← ($identVariae).get
+          Signaculum.Utilia.registraIndicium
+            (Signaculum.Utilia.lineaInspectionis $signumNominis $signumTypi (toString _v)) : IO Unit)))
+
+  -- TSyntax `term を TSyntax `Lean.Parser.Term.doSeqItem にキャストするにゃん
+  let doItems : Array (TSyntax ``Lean.Parser.Term.doSeqItem) :=
+    elementaInspectionis.map fun e => ⟨e.raw⟩
+  elabCommand (← `(
+    def inspiceVariabiles : IO Unit := do
+      Signaculum.Utilia.registraIndicium Signaculum.Utilia.caputInspectionis
+      $[$doItems]*
+      Signaculum.Utilia.registraIndicium "═══════════════════════════════"))
 
   if variaePermanentes.isEmpty && !acc.hasCatenas then
     elabCommand (← `(def servaStatum : IO Unit := pure ()))

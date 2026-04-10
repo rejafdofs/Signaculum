@@ -1,5 +1,81 @@
 # 變更記錄 (Mutationum Registrum)
 
+## v0.7.0 (2026-04-10) — ユーティリティ・イベントラッパー・トーク管理 DSL
+
+### 正規表現 (ExpressioRegularis)
+- `Utilia/ExpressioRegularis.lean`: `pandaman64/lean-regex` ライブラリーのラッパーを新設。テクストゥス處理向けの正規表現關數群を提供
+- `quaereRE`: 正規表現で最初のマッチとキャプチャグループを檢索
+- `congruatRE`: テクストゥスがパターンにマッチするか判定
+- `quaereOmnesRE`: 全マッチ文字列を配列で返す
+- `substitueRE`: 正規表現による置換
+- `scindeRE`: 正規表現によるテクストゥス分割
+- `numeraRE`: マッチ數のカウント
+- `lakefile.lean`: `pandaman64/lean-regex` への依存を追加
+
+### ゴースト間通信 (Communicationis)
+- `Sstp.lean`: SSTP/1.4 SEND プロトコルによるゴースト間通信關數を追加。`communicaSstpScriptum`（SakuraScript 送信）と `communicaSstpSentence`（テクストゥム送信）を提供
+- `Sakura/Systema/Communicationis.lean`: SakuraIO コンテクスト内ラッパー `communicaScriptum` / `communicaSentence` を新設。`IfGhost` ヘッダーで送信先ゴーストを指定
+
+### SAORI ブリッジ (Saori)
+- `Saori.lean`: SAORI-universal（DLL）および SAORI-basic（.exe）の呼出し機構を新設
+- `onerareSaori`: SAORI DLL のロード（procurator32 經由、コマンドバイト 0x04）
+- `vocareSaori`: SAORI DLL へのリクエスト送信（コマンドバイト 0x05）。SAORI/1.0 リクエストゥムを組み立て、Result + Value 配列を返す
+- `exonerareSaori`: SAORI DLL のアンロード（コマンドバイト 0x06）
+- `vocareSaoriBasic`: SAORI-basic（.exe）を IO.Process で起動して結果を得る
+- `vocareSaoriM`: SakuraIO コンテクスト内から SAORI-universal を呼び出すラッパー
+- `procurator/procurator32/src/lib.rs`: Rust 側に SAORI DLL 管理（`SAORI_MODULES` HashMap）、`saori_onerare`/`saori_rogare`/`saori_exonerare` 關數、`tractare_saori_circulum` コマンドループを追加。ANSI ↔ UTF-8 變換對應
+- `Nucleus/Circulus.lean`: `Communicatio.scribeResponsum` で 0x00 コマンドバイト + 長さプレフィクスム應答を送信。SAORI コマンドループとの連攜に對應
+
+### タイマー (Horologium)
+- `Utilia/Horologium.lean`: OnSecondChange 用の高レヴェルタイマー抽象を新設
+- `Horologium` 構造體: 名前・間隔・殘り秒數を保持するタイマー狀態
+- `creandum`: タイマー作成（指定秒後に最初に發火）
+- `pulsaHorologium`: 1秒進めて發火時刻到達時に true を返しリセット
+- `reinitia`: タイマーをリセット
+- `pulsaOmnia`: 複數タイマーの一括パルス（發火したタイマー名の配列を返す）
+
+### 日時ユーティリティ (Tempus)
+- `Utilia/Tempus.lean`: `Std.Time` を活用した日時関数群を新設。`obtineTempus`（現在時刻取得）、`estMane`/`estMeridies`/`estVespera`/`estNox`（時間帯判定）、`tempusAdTextum`（書式化）を提供
+
+### ログ機能 (Registrum)
+- `Utilia/Registrum.lean`: YAYA の LOGGING 相当のログ機能を新設。`ghost_log.txt` にタイムスタンプ付きで記録
+- `registra`/`registraIndicium`/`registraMonitum`/`registraErrorem`: IO コンテクスト内でのログ出力（INFO/WARN/ERROR）
+- `registraM`: SakuraIO コンテクスト内でのログ出力
+- `registraEtNotifica`: SakuraIO 内でログ出力 + SHIORI 応答の ErrorLevel/ErrorDescription にも設定
+
+### SHIORI Resource 応答 (resourcea)
+- `Syntaxis.lean`: `resourcea "version" := "1.0.0"` マクロを追加。SHIORI Resource 応答（version, craftmanw, homeurl 等）を宣言的に定義可能に
+- 静的文字列値と動的 `IO String` 関数の両方に対応。`construe` がリソース応答ハンドラとして自動登録
+- `GhostAccumulatio` に `resourceae` フィールド、`GhostEntry` に `.resourcea` バリアントを追加
+
+### 日本語イベント名 (NominaIaponica)
+- `Eventum/NominaIaponica.lean`: 里々方式の日本語イベント名エイリアスを新設。`eventum "起動"` → `OnBoot` 等の自動変換
+- 70 以上のマッピングを定義（起動/終了、ゴースト切替、マウス、時間、トーク、選択肢、通信、入力、シェル、バルーン、ファイルドロップ、ネットワーク更新、OS 状態、消滅、キー、音声、インストール等）
+- `resolveNomenEventi` 関数でコンパイル時にテーブル参照・変換
+
+### 統一トーク管理 (Colloquium)
+- `Sakura/Textus/Colloquium.lean`: ランダムトーク・条件付きトーク・チェイントークを統一管理する `Colloquium` 帰納型を新設
+- 4 コンストラクタ: `.loquela`（通常）、`.conditio`（条件付き）、`.series`（チェイン）、`.seriesCum`（条件付きチェイン）
+- `Coe` インスタンスにより `SakuraIO Unit` と `Catena` を配列内で自動変換
+- `eligeColloquium`: 均等確率選択（アクティブチェイン優先続行）
+- `eligeColloquiumPonderatum`: 重み付き確率選択
+- `cum`/`cumSeries` 便利コンストラクタ
+
+### イベントラッパー (Involucra)
+- `Eventum/Involucra.lean`: 生の SHIORI イベントを加工する高レベル抽象を新設
+- なでられ判定: `iudicaNaderare` — OnMouseMove の連続回数が閾値を超えたら発火。scope+area 別カウント
+- `configuraNaderareLimen`/`configuraNaderareIntervallum` で閾値・間隔を設定可能
+- `nomenEventumMusis`: マウスイベントから「{scopeId}{areaName}{suffix}」形式のイベント名を生成
+- ランダムトークタイマー: `pulsaTimerColloquii` — OnSecondChange でカウントダウン、0 到達で発火通知
+- `configuraIntervallumColloquii` でランダムトーク間隔を設定可能（デフォルト 180 秒）
+
+### 変数デバッグ (Inspectio)
+- `Utilia/Inspectio.lean`: 変数デバッグ支援を新設。`construe` が `inspiceVariabiles : IO Unit` を自動生成
+- 全 `varia perpetua` の名前・型・現在値を `ghost_log.txt` に出力
+- `inspiceEtMitte`: 個別変数をログ出力しつつ SSTP でゴーストにも表示
+
+---
+
 ## v0.6.0 (2026-04-02) — チェイントーク (Catena Colloquiorum) 支援
 
 ### チェイントーク型・Exhibibilis インスタンス

@@ -36,7 +36,9 @@ Signaculum.Nucleus.Exporta  ← exportaLoad / exportaUnload / exportaRequest
   │     │     ├── Textus.Formae       ← 書體
   │     │     ├── Textus.Bullae       ← 吹出し
   │     │     ├── Textus.Utilia       ← 便利關數・無作爲・實行
-  │     │     └── Textus.Responsi     ← レスポンスムヘッダー設定
+  │     │     ├── Textus.Responsi     ← レスポンスムヘッダー設定
+  │     │     ├── Textus.Catena       ← チェイントーク
+  │     │     └── Textus.Colloquium   ← 統一トーク管理 DSL
   │     ├── Sakura.Systema.*      ← システム操作
   │     │     ├── Systema.Soni        ← 音響
   │     │     ├── Systema.Eventuum    ← 事象
@@ -46,6 +48,7 @@ Signaculum.Nucleus.Exporta  ← exportaLoad / exportaUnload / exportaRequest
   │     │     ├── Systema.Retis       ← HTTP・ネットワーク
   │     │     └── Systema.Modorum     ← モード制御・同期
   │     ├── Sakura.Fenestra       ← 窓操作
+  │     ├── Sakura.Systema.Communicationis ← ゴースト間通信（SSTP SEND）
   │     ├── Sakura.Literalis      ← リテラル解析
   │     └── Sakura.Theoremata    ← adCatenam 全稱證明（§1〜§8b）
   │
@@ -60,7 +63,20 @@ Signaculum.Nucleus.Exporta  ← exportaLoad / exportaUnload / exportaRequest
   │     ├── Notatio.Expande.*    ← タグ別展開ディスパッチ
   │     └── Notatio.Macro        ← scriptum! エラボレーター
   ├── Signaculum.Nucleus.Loop ← Communicatio 構造體による通信ループ管理
-  └── Signaculum.Elementa.*  ← 基礎要素（公理・補題・變數補助）
+  ├── Signaculum.Elementa.*  ← 基礎要素（公理・補題・變數補助）
+  │
+  ├── Signaculum.Saori        ← SAORI ブリッジ（DLL/exe 呼出し）
+  │
+  ├── Signaculum.Utilia.*    ← ユーティリティ
+  │     ├── Utilia.Tempus            ← 日時ユーティリティ（Std.Time 活用）
+  │     ├── Utilia.Registrum         ← ログ機能（ghost_log.txt 記錄）
+  │     ├── Utilia.Inspectio         ← 變數デバッグ支援
+  │     ├── Utilia.ExpressioRegularis← 正規表現（pandaman64/lean-regex）
+  │     └── Utilia.Horologium        ← タイマー（OnSecondChange 用）
+  │
+  └── Signaculum.Eventum.*   ← イベント処理支援
+        ├── Eventum.NominaIaponica ← 日本語イベント名エイリアス
+        └── Eventum.Involucra      ← イベントラッパー（なでられ・タイマー）
 ```
 
 ---
@@ -475,6 +491,279 @@ def myTalk : SakuraPura Unit := scriptum!
   \u \s[10] "やっほー"
   \e
 ```
+
+---
+
+### Signaculum.Utilia.* — ユーティリティ
+
+ゴースト開発向けの汎用ユーティリティ群。
+
+#### Utilia.Tempus — 日時ユーティリティ
+
+`Std.Time` を活用した日時関数群。時間帯別の挨拶分岐やログのタイムスタンプに使える。
+
+| 関数 | 説明 |
+|---|---|
+| `obtineTempus` | 現在時刻を `PlainDateTime`（UTC）として取得 |
+| `obtineTimestamp` | Unix タイムスタンプを取得 |
+| `estMane dt` | 朝かどうか（6 ≤ hora < 12） |
+| `estMeridies dt` | 昼かどうか（12 ≤ hora < 18） |
+| `estVespera dt` | 夕方かどうか（18 ≤ hora < 24） |
+| `estNox dt` | 夜かどうか（0 ≤ hora < 6） |
+| `tempusAdTextum dt` | "YYYY-MM-DD HH:MM:SS" 形式の文字列に変換 |
+
+#### Utilia.Registrum — ログ機能
+
+YAYA の LOGGING に相当するログ機能。`ghost_log.txt` にタイムスタンプ付きでメッセージを記録する。
+
+| 関数 | 説明 |
+|---|---|
+| `registra gradus nuntius` | 指定等級でログ出力 |
+| `registraIndicium nuntius` | INFO ログ |
+| `registraMonitum nuntius` | WARN ログ |
+| `registraErrorem nuntius` | ERROR ログ |
+| `registraM gradus nuntius` | SakuraIO 内でログ出力 |
+| `registraEtNotifica gradus nuntius` | SakuraIO 内でログ + SHIORI ErrorLevel/ErrorDescription に設定 |
+
+ログ等級 `GradusRegistri` は `.indicium`（INFO）、`.monitum`（WARN）、`.error`（ERROR）の3段階。
+`registraEtNotifica` は `StatusSakurae` の `errorLevel`/`errorDescription` にも設定するため、SSP 側のログにもエラー情報が記録される。
+
+グローバル設定:
+
+| 関数 | 説明 |
+|---|---|
+| `activaRegistrum` | ログ出力を有効にする |
+| `inactivaRegistrum` | ログ出力を無効にする |
+| `statuereDomusRegistri domus` | ログファイルのディレクトリを設定（exportaLoad から呼ばれる） |
+
+#### Utilia.Inspectio — 変数デバッグ支援
+
+`construe` が `inspiceVariabiles : IO Unit` を自動生成する。全 `varia perpetua` の名前・型・現在値を `ghost_log.txt` に出力する。
+
+| 関数 | 説明 |
+|---|---|
+| `inspiceVariabiles` | 全変数をログにダンプ（`construe` が自動生成） |
+| `inspiceEtMitte nomen obtineValorem` | 個別変数をログ出力 + SSTP でゴーストにも表示 |
+| `caputInspectionis` | ダンプのヘッダー文字列 |
+| `lineaInspectionis nomen typus valor` | ダンプの単一行を生成 |
+
+---
+
+### Signaculum.Eventum.* — イベント処理支援
+
+生の SHIORI イベントを加工して高レベルな抽象を提供するモジュール群。
+
+#### Eventum.NominaIaponica — 日本語イベント名
+
+里々方式の日本語イベント名エイリアス。`eventum "起動"` と書くと `OnBoot` に自動変換される。
+
+`tabulaEventorum : List (String × String)` に 70 以上のマッピングが定義済み。テーブルにない名前はカスタムイベント名としてそのまま使われる。
+
+| 関数 | 説明 |
+|---|---|
+| `resolveNomenEventi nomen` | 日本語名を SHIORI/3.0 イベント名に変換（テーブルにない場合はそのまま返す） |
+
+カテゴリ別マッピング例:
+
+| 日本語名 | SHIORI イベント名 |
+|---|---|
+| `起動` | `OnBoot` |
+| `終了` | `OnClose` |
+| `ランダムトーク` | `OnAITalk` |
+| `クリック` | `OnMouseClick` |
+| `毎秒` | `OnSecondChange` |
+| `選択肢選択` | `OnChoiceSelect` |
+
+#### Eventum.Involucra — イベントラッパー
+
+生の SHIORI イベントを加工して高レベルな抽象を提供する。里々の「なでられ」「つつかれ」や YAYA のシステム辞書に相当する。
+
+##### なでられ判定
+
+`OnMouseMove` の連続回数が閾値を超えたら「なでられた」と判定する。scope + area をキーにして個別にカウントする。
+
+| 関数 | 説明 |
+|---|---|
+| `iudicaNaderare scopeId areaName` | なでられ判定を行う（`IO Bool`） |
+| `configuraNaderareLimen limen` | 閾値を設定（デフォルト 10） |
+| `configuraNaderareIntervallum ms` | リセットまでの最大間隔を設定（デフォルト 2000ms） |
+
+##### マウスイベント名生成
+
+| 関数 | 説明 |
+|---|---|
+| `nomenEventumMusis rogatio suffix` | `"{scopeId}{areaName}{suffix}"` 形式のイベント名を生成 |
+
+##### ランダムトークタイマー
+
+`OnSecondChange` でカウントダウンし、0 に達したらランダムトーク発火を通知する。ゴーストが話し中（`talking`）や選択肢提示中（`choosing`）の場合は発火しない。
+
+| 関数 | 説明 |
+|---|---|
+| `pulsaTimerColloquii status` | タイマーパルス（0 到達で `true`、`IO Bool`） |
+| `configuraIntervallumColloquii secundae` | ランダムトーク間隔を設定（秒、デフォルト 180） |
+
+---
+
+### Signaculum.Sakura.Textus.Colloquium — 統一トーク管理
+
+ランダムトーク・条件付きトーク・チェイントークを `Colloquium` 帰納型で統一管理する DSL。旧 API（`OptioPiscinae` / `eligeVelCatena`）の改善版。
+
+```lean
+inductive Colloquium where
+  | loquela   (actio : SakuraIO Unit)           -- 通常トーク
+  | conditio  (cond : IO Bool) (actio : SakuraIO Unit)  -- 条件付き
+  | series    (c : Catena)                      -- チェイントーク
+  | seriesCum (cond : IO Bool) (c : Catena)     -- 条件付きチェイン
+```
+
+`Coe` インスタンスにより `SakuraIO Unit` と `Catena` は配列内で自動変換される。
+
+| 関数 | 説明 |
+|---|---|
+| `eligeColloquium colloquia` | 配列から均等確率で選択・実行（アクティブチェイン優先続行） |
+| `eligeColloquiumPonderatum colloquia` | 重み付き確率で選択・実行 |
+| `cum cond actio` | 条件付きトークの便利コンストラクタ |
+| `cumSeries cond catena` | 条件付きチェインの便利コンストラクタ |
+
+---
+
+### Signaculum.Utilia.ExpressioRegularis — 正規表現
+
+`pandaman64/lean-regex` ライブラリーのラッパー。ゴースト開發でのテクストゥス處理に便利な正規表現關數群を提供する。
+
+| 關數 | 説明 |
+|---|---|
+| `quaereRE exemplar textus` | 最初のマッチとキャプチャグループを檢索。マッチ全體が `[0]`、キャプチャグループが `[1]` 以降に入る。マッチしなければ `none` |
+| `congruatRE exemplar textus` | テクストゥスがパターンにマッチするか判定（`Bool`） |
+| `quaereOmnesRE exemplar textus` | 全マッチ文字列を配列で返す |
+| `substitueRE exemplar substitutio textus` | パターンにマッチした全箇所を `substitutio` に置換 |
+| `scindeRE exemplar textus` | パターンをデリミタとしてテクストゥスを分割 |
+| `numeraRE exemplar textus` | マッチした箇所の數を返す |
+
+全關數はパターンが不正な場合でも例外を投げず、`none` / `false` / 空配列 / 元テクストゥスを返す安全設計。`Regex.build` の `Except` を `.toOption` で變換してゐる。
+
+---
+
+### Signaculum.Sakura.Systema.Communicationis — ゴースト間通信
+
+SSTP/1.4 SEND プロトコルで他のゴーストにスクリプトゥムやテクストゥムを送信する。`Signaculum.Sstp` の低レベル關數を SakuraIO コンテクストにリフトしたラッパー。
+
+| 關數 | 説明 |
+|---|---|
+| `communicaScriptum ghostNomen scriptum` | 他ゴーストに SakuraScript を送信（SSTP SEND / `IfGhost` + `Script` ヘッダー） |
+| `communicaSentence ghostNomen sentence` | 他ゴーストにテクストゥムを送信（SSTP SEND / `IfGhost` + `Sentence` ヘッダー） |
+
+いづれも `mittens` 引數で Sender を指定可能（デフォルト: `mittensDefectus = "uka-lean"`）。
+
+低レベル（`Signaculum.Sstp`）:
+
+| 關數 | 説明 |
+|---|---|
+| `communicaSstpScriptum ghostNomen scriptum` | SSTP SEND で Script を送信（`IO Unit`） |
+| `communicaSstpSentence ghostNomen sentence` | SSTP SEND で Sentence を送信（`IO Unit`） |
+
+#### SSTP/1.4 SEND パケット形式
+
+Script 送信:
+```
+SEND SSTP/1.4\r\n
+Charset: UTF-8\r\n
+Sender: {mittens}\r\n
+Script: {scriptum}\r\n
+IfGhost: {ghostNomen}\r\n
+\r\n
+```
+
+Sentence 送信:
+```
+SEND SSTP/1.4\r\n
+Charset: UTF-8\r\n
+Sender: {mittens}\r\n
+Sentence: {sentence}\r\n
+IfGhost: {ghostNomen}\r\n
+\r\n
+```
+
+---
+
+### Signaculum.Saori — SAORI ブリッジ
+
+SAORI-universal（DLL）および SAORI-basic（.exe）の呼出し機構。
+SAORI-universal は procurator32 經由のパイプ通信で Win32 DLL を呼び出す。SAORI-basic は `IO.Process` で外部プロセスを直接起動する。
+
+#### SAORI-universal（DLL、procurator32 經由）
+
+| 關數 | 説明 |
+|---|---|
+| `onerareSaori via directorium` | SAORI DLL をロード（コマンド 0x04）。`via` は DLL パス、`directorium` は ghost ホームディレクトーリウム。成功なら `true` |
+| `vocareSaori via argumenta` | SAORI DLL にリクエスト送信（コマンド 0x05）。SAORI/1.0 リクエストゥムを自動組立。Result + Value の配列を返す |
+| `exonerareSaori via` | SAORI DLL をアンロード（コマンド 0x06） |
+| `vocareSaoriM via argumenta` | SakuraIO コンテクスト内から `vocareSaori` を呼ぶラッパー |
+
+#### SAORI-basic（.exe、IO.Process 經由）
+
+| 關數 | 説明 |
+|---|---|
+| `vocareSaoriBasic exeVia argumenta` | 外部プロセスを起動し stdout を結果として返す。異常終了時は `none` |
+
+#### SAORI/1.0 リクエスト形式
+
+```
+EXECUTE SAORI/1.0\r\n
+Charset: UTF-8\r\n
+Argument0: {arg0}\r\n
+Argument1: {arg1}\r\n
+\r\n
+```
+
+#### SAORI/1.0 應答パース
+
+應答文字列から `Result:` ヘッダーを最初の要素、`Value0:` `Value1:` ... を續く要素として配列に格納する。`parsaSaoriResponsum` が自動的にパースする。
+
+#### パイプ IPC プロトコル（SAORI 擴張）
+
+procurator32 と ghost.exe の間で SAORI 呼出しを中繼するコマンド。通常の SHIORI REQUEST 應答フローの中に SAORI コマンドが挟まる構造。詳細は [Procurator.md](Procurator.md) を参照。
+
+| コマンドバイト | 方向 | 説明 |
+|---|---|---|
+| `0x04` | ghost → procurator | SAORI DLL ロード |
+| `0x05` | ghost → procurator | SAORI DLL リクエスト |
+| `0x06` | ghost → procurator | SAORI DLL アンロード |
+| `0x00` | ghost → procurator | 最終 SHIORI 應答（SAORI ループ終了） |
+
+---
+
+### Signaculum.Utilia.Horologium — タイマー
+
+OnSecondChange 用の高レヴェルタイマー抽象。`Eventum.Involucra.pulsaTimerColloquii`（ランダムトーク用）とは異なり、汎用の名前付きタイマーを複數管理できる。
+
+```lean
+structure Horologium where
+  nomen       : String       -- タイマーの識別名にゃ
+  intervallum : Nat          -- 發火間隔（秒）にゃ
+  residuum    : IO.Ref Nat   -- 殘り秒數にゃん
+```
+
+| 關數 | 説明 |
+|---|---|
+| `creandum nomen intervallum` | タイマーを作成。`intervallum` 秒後に最初に發火する |
+| `pulsaHorologium h` | タイマーを1秒進める。發火時刻に達したら `true` を返してリセット |
+| `reinitia h` | タイマーをリセット（殘り秒數を `intervallum` に戻す） |
+| `pulsaOmnia horologia` | 複數タイマーの一括パルス。發火したタイマー名の配列を返す |
+
+---
+
+### Signaculum.Syntaxis — resourcea マクロ
+
+`resourcea` マクロで SHIORI Resource 応答を宣言的に定義できる。
+
+| 構文 | 説明 |
+|---|---|
+| `resourcea "nomen" := "valor"` | 静的文字列でリソース応答を宣言 |
+| `resourcea "nomen" body` | 動的（`IO String`）でリソース応答を宣言 |
+
+`construe` が `GhostAccumulatio.resourceae` から全リソース応答ハンドラを SHIORI ハンドラテーブルに登録する。
 
 ---
 
